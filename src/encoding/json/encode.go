@@ -205,10 +205,7 @@ func Marshal(v any) ([]byte, error) {
 	e := newEncodeState()
 	defer encodeStatePool.Put(e)
 
-	err := e.marshal(v, encOpts{escapeHTML: true})
-	if err != nil {
-		return nil, err
-	}
+	e.marshal(v, encOpts{escapeHTML: true})!
 	buf := append([]byte(nil), e.Bytes()...)
 
 	return buf, nil

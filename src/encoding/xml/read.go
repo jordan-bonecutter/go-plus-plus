@@ -231,10 +231,7 @@ func (d *Decoder) unmarshalTextInterface(val encoding.TextUnmarshaler) error {
 	var buf []byte
 	depth := 1
 	for depth > 0 {
-		t, err := d.Token()
-		if err != nil {
-			return err
-		}
+		t := d.Token()!
 		switch t := t.(type) {
 		case CharData:
 			if depth == 1 {
@@ -330,10 +327,7 @@ func (d *Decoder) unmarshal(val reflect.Value, start *StartElement) error {
 	// Find start element if we need it.
 	if start == nil {
 		for {
-			tok, err := d.Token()
-			if err != nil {
-				return err
-			}
+			tok := d.Token()!
 			if t, ok := tok.(StartElement); ok {
 				start = &t
 				break
@@ -485,9 +479,7 @@ func (d *Decoder) unmarshal(val reflect.Value, start *StartElement) error {
 				case fAttr:
 					strv := finfo.value(sv, initNilPointers)
 					if a.Name.Local == finfo.name && (finfo.xmlns == "" || finfo.xmlns == a.Name.Space) {
-						if err := d.unmarshalAttr(strv, a); err != nil {
-							return err
-						}
+						d.unmarshalAttr(strv, a)!
 						handled = true
 					}
 
@@ -500,9 +492,7 @@ func (d *Decoder) unmarshal(val reflect.Value, start *StartElement) error {
 			if !handled && any >= 0 {
 				finfo := &tinfo.fields[any]
 				strv := finfo.value(sv, initNilPointers)
-				if err := d.unmarshalAttr(strv, a); err != nil {
-					return err
-				}
+				d.unmarshalAttr(strv, a)!
 			}
 		}
 
@@ -561,15 +551,11 @@ Loop:
 				}
 				if !consumed && saveAny.IsValid() {
 					consumed = true
-					if err := d.unmarshal(saveAny, &t); err != nil {
-						return err
-					}
+					d.unmarshal(saveAny, &t)!
 				}
 			}
 			if !consumed {
-				if err := d.Skip(); err != nil {
-					return err
-				}
+				d.Skip()!
 			}
 
 		case EndElement:
@@ -595,9 +581,7 @@ Loop:
 
 	if saveData.IsValid() && saveData.CanInterface() {
 		if textUnmarshaler, ok := reflect.TypeAssert[encoding.TextUnmarshaler](saveData); ok {
-			if err := textUnmarshaler.UnmarshalText(data); err != nil {
-				return err
-			}
+			textUnmarshaler.UnmarshalText(data)!
 			saveData = reflect.Value{}
 		}
 	}
@@ -606,17 +590,13 @@ Loop:
 		pv := saveData.Addr()
 		if pv.CanInterface() {
 			if textUnmarshaler, ok := reflect.TypeAssert[encoding.TextUnmarshaler](pv); ok {
-				if err := textUnmarshaler.UnmarshalText(data); err != nil {
-					return err
-				}
+				textUnmarshaler.UnmarshalText(data)!
 				saveData = reflect.Value{}
 			}
 		}
 	}
 
-	if err := copyValue(saveData, data); err != nil {
-		return err
-	}
+	copyValue(saveData, data)!
 
 	switch t := saveComment; t.Kind() {
 	case reflect.String:
@@ -777,10 +757,7 @@ Loop:
 func (d *Decoder) Skip() error {
 	var depth int64
 	for {
-		tok, err := d.Token()
-		if err != nil {
-			return err
-		}
+		tok := d.Token()!
 		switch tok.(type) {
 		case StartElement:
 			depth++

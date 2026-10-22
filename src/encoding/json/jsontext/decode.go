@@ -425,9 +425,7 @@ func (d *decoderState) SkipValue() error {
 		// until the depth matches the starting depth.
 		depth := d.Tokens.Depth()
 		for {
-			if _, err := d.ReadToken(); err != nil {
-				return err
-			}
+			d.ReadToken()!
 			if depth >= d.Tokens.Depth() {
 				return nil
 			}
@@ -436,9 +434,7 @@ func (d *decoderState) SkipValue() error {
 		// Trying to skip a value when the next token is a '}' or ']'
 		// will result in an error being returned here.
 		var flags jsonwire.ValueFlags
-		if _, err := d.ReadValue(&flags); err != nil {
-			return err
-		}
+		d.ReadValue(&flags)!
 		return nil
 	}
 }
@@ -448,9 +444,7 @@ func (d *decoderState) SkipValue() error {
 func (d *decoderState) SkipValueRemainder() error {
 	if d.Tokens.Depth()-1 > 0 && d.Tokens.Last.Length() == 0 {
 		for n := d.Tokens.Depth(); d.Tokens.Depth() >= n; {
-			if _, err := d.ReadToken(); err != nil {
-				return err
-			}
+			d.ReadToken()!
 		}
 	}
 	return nil
@@ -460,9 +454,7 @@ func (d *decoderState) SkipValueRemainder() error {
 // is at or past the specified depth and length.
 func (d *decoderState) SkipUntil(depth int, length int64) error {
 	for d.Tokens.Depth() > depth || (d.Tokens.Depth() == depth && d.Tokens.Last.Length() < length) {
-		if _, err := d.ReadToken(); err != nil {
-			return err
-		}
+		d.ReadToken()!
 	}
 	return nil
 }

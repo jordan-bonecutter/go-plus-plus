@@ -84,18 +84,14 @@ func marshalEmbeddedFallbackAll(enc *jsontext.Encoder, va addressableValue, mo *
 					return newDuplicateNameError(enc.StackPointer().Parent(), val, enc.OutputOffset())
 				}
 			}
-			if err := enc.WriteValue(val); err != nil {
-				return err
-			}
+			enc.WriteValue(val)!
 
 			// Parse the JSON object value.
 			val, err = xd.ReadValue(&flags)
 			if err != nil {
 				return newMarshalErrorBefore(enc, v.Type(), err)
 			}
-			if err := enc.WriteValue(val); err != nil {
-				return err
-			}
+			enc.WriteValue(val)!
 		}
 		if _, err := dec.ReadToken(); err != nil {
 			return newMarshalErrorBefore(enc, v.Type(), err)
@@ -133,13 +129,9 @@ func marshalEmbeddedFallbackAll(enc *jsontext.Encoder, va addressableValue, mo *
 		if !mo.Flags.Get(jsonflags.Deterministic) || n <= 1 {
 			for iter := m.MapRange(); iter.Next(); {
 				mk.SetIterKey(iter)
-				if err := marshalKey(mk); err != nil {
-					return err
-				}
+				marshalKey(mk)!
 				mv.Set(iter.Value())
-				if err := marshalVal(enc, mv, mo); err != nil {
-					return err
-				}
+				marshalVal(enc, mv, mo)!
 			}
 		} else {
 			names := getStrings(n)
@@ -150,14 +142,10 @@ func marshalEmbeddedFallbackAll(enc *jsontext.Encoder, va addressableValue, mo *
 			slices.Sort(*names)
 			for _, name := range *names {
 				mk.SetString(name)
-				if err := marshalKey(mk); err != nil {
-					return err
-				}
+				marshalKey(mk)!
 				// TODO(https://go.dev/issue/57061): Use mv.SetMapIndexOf.
 				mv.Set(m.MapIndex(mk.Value))
-				if err := marshalVal(enc, mv, mo); err != nil {
-					return err
-				}
+				marshalVal(enc, mv, mo)!
 			}
 			putStrings(names)
 		}
@@ -193,10 +181,7 @@ func unmarshalEmbeddedFallbackNext(dec *jsontext.Decoder, va addressableValue, u
 		}
 		*b = append(*b, quotedName...)
 		*b = append(*b, ':')
-		val, err := dec.ReadValue()
-		if err != nil {
-			return err
-		}
+		val := dec.ReadValue()!
 		*b = append(*b, val...)
 		*b = append(*b, '}')
 		return nil

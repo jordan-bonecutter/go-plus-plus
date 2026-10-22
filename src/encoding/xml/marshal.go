@@ -87,12 +87,8 @@ const (
 func Marshal(v any) ([]byte, error) {
 	var b bytes.Buffer
 	enc := NewEncoder(&b)
-	if err := enc.Encode(v); err != nil {
-		return nil, err
-	}
-	if err := enc.Close(); err != nil {
-		return nil, err
-	}
+	enc.Encode(v)!
+	enc.Close()!
 	return b.Bytes(), nil
 }
 
@@ -138,12 +134,8 @@ func MarshalIndent(v any, prefix, indent string) ([]byte, error) {
 	var b bytes.Buffer
 	enc := NewEncoder(&b)
 	enc.Indent(prefix, indent)
-	if err := enc.Encode(v); err != nil {
-		return nil, err
-	}
-	if err := enc.Close(); err != nil {
-		return nil, err
-	}
+	enc.Encode(v)!
+	enc.Close()!
 	return b.Bytes(), nil
 }
 
@@ -174,10 +166,7 @@ func (enc *Encoder) Indent(prefix, indent string) {
 //
 // Encode calls [Encoder.Flush] before returning.
 func (enc *Encoder) Encode(v any) error {
-	err := enc.p.marshalValue(reflect.ValueOf(v), nil, nil)
-	if err != nil {
-		return err
-	}
+	enc.p.marshalValue(reflect.ValueOf(v), nil, nil)!
 	return enc.p.w.Flush()
 }
 
@@ -189,10 +178,7 @@ func (enc *Encoder) Encode(v any) error {
 //
 // EncodeElement calls [Encoder.Flush] before returning.
 func (enc *Encoder) EncodeElement(v any, start StartElement) error {
-	err := enc.p.marshalValue(reflect.ValueOf(v), nil, &start)
-	if err != nil {
-		return err
-	}
+	enc.p.marshalValue(reflect.ValueOf(v), nil, &start)!
 	return enc.p.w.Flush()
 }
 
@@ -219,13 +205,9 @@ func (enc *Encoder) EncodeToken(t Token) error {
 	p := &enc.p
 	switch t := t.(type) {
 	case StartElement:
-		if err := p.writeStart(&t); err != nil {
-			return err
-		}
+		p.writeStart(&t)!
 	case EndElement:
-		if err := p.writeEnd(t.Name); err != nil {
-			return err
-		}
+		p.writeEnd(t.Name)!
 	case CharData:
 		escapeText(p, t, false)
 	case Comment:
@@ -485,9 +467,7 @@ func (p *printer) marshalValue(val reflect.Value, finfo *fieldInfo, startTemplat
 	// Slices and arrays iterate over the elements. They do not have an enclosing tag.
 	if (kind == reflect.Slice || kind == reflect.Array) && typ.Elem().Kind() != reflect.Uint8 {
 		for i, n := 0, val.Len(); i < n; i++ {
-			if err := p.marshalValue(val.Index(i), finfo, startTemplate); err != nil {
-				return err
-			}
+			p.marshalValue(val.Index(i), finfo, startTemplate)!
 		}
 		return nil
 	}
@@ -566,9 +546,7 @@ func (p *printer) marshalValue(val reflect.Value, finfo *fieldInfo, startTemplat
 		}
 
 		name := Name{Space: finfo.xmlns, Local: finfo.name}
-		if err := p.marshalAttr(&start, name, fv); err != nil {
-			return err
-		}
+		p.marshalAttr(&start, name, fv)!
 	}
 
 	// If an empty name was found, namespace is overridden with an empty space
@@ -577,9 +555,7 @@ func (p *printer) marshalValue(val reflect.Value, finfo *fieldInfo, startTemplat
 		len(p.tags) != 0 && p.tags[len(p.tags)-1].Space != "" {
 		start.Attr = append(start.Attr, Attr{Name{"", xmlnsPrefix}, ""})
 	}
-	if err := p.writeStart(&start); err != nil {
-		return err
-	}
+	p.writeStart(&start)!
 
 	if val.Kind() == reflect.Struct {
 		err = p.marshalStruct(tinfo, val)
@@ -597,9 +573,7 @@ func (p *printer) marshalValue(val reflect.Value, finfo *fieldInfo, startTemplat
 		return err
 	}
 
-	if err := p.writeEnd(start.Name); err != nil {
-		return err
-	}
+	p.writeEnd(start.Name)!
 
 	return p.cachedWriteError()
 }
@@ -608,10 +582,7 @@ func (p *printer) marshalValue(val reflect.Value, finfo *fieldInfo, startTemplat
 func (p *printer) marshalAttr(start *StartElement, name Name, val reflect.Value) error {
 	if val.CanInterface() {
 		if marshaler, ok := reflect.TypeAssert[MarshalerAttr](val); ok {
-			attr, err := marshaler.MarshalXMLAttr(name)
-			if err != nil {
-				return err
-			}
+			attr := marshaler.MarshalXMLAttr(name)!
 			if attr.Name.Local != "" {
 				start.Attr = append(start.Attr, attr)
 			}
@@ -623,10 +594,7 @@ func (p *printer) marshalAttr(start *StartElement, name Name, val reflect.Value)
 		pv := val.Addr()
 		if pv.CanInterface() {
 			if marshaler, ok := reflect.TypeAssert[MarshalerAttr](pv); ok {
-				attr, err := marshaler.MarshalXMLAttr(name)
-				if err != nil {
-					return err
-				}
+				attr := marshaler.MarshalXMLAttr(name)!
 				if attr.Name.Local != "" {
 					start.Attr = append(start.Attr, attr)
 				}
@@ -637,10 +605,7 @@ func (p *printer) marshalAttr(start *StartElement, name Name, val reflect.Value)
 
 	if val.CanInterface() {
 		if textMarshaler, ok := reflect.TypeAssert[encoding.TextMarshaler](val); ok {
-			text, err := textMarshaler.MarshalText()
-			if err != nil {
-				return err
-			}
+			text := textMarshaler.MarshalText()!
 			start.Attr = append(start.Attr, Attr{name, string(text)})
 			return nil
 		}
@@ -650,10 +615,7 @@ func (p *printer) marshalAttr(start *StartElement, name Name, val reflect.Value)
 		pv := val.Addr()
 		if pv.CanInterface() {
 			if textMarshaler, ok := reflect.TypeAssert[encoding.TextMarshaler](pv); ok {
-				text, err := textMarshaler.MarshalText()
-				if err != nil {
-					return err
-				}
+				text := textMarshaler.MarshalText()!
 				start.Attr = append(start.Attr, Attr{name, string(text)})
 				return nil
 			}
@@ -673,9 +635,7 @@ func (p *printer) marshalAttr(start *StartElement, name Name, val reflect.Value)
 	if val.Kind() == reflect.Slice && val.Type().Elem().Kind() != reflect.Uint8 {
 		n := val.Len()
 		for i := 0; i < n; i++ {
-			if err := p.marshalAttr(start, name, val.Index(i)); err != nil {
-				return err
-			}
+			p.marshalAttr(start, name, val.Index(i))!
 		}
 		return nil
 	}
@@ -686,10 +646,7 @@ func (p *printer) marshalAttr(start *StartElement, name Name, val reflect.Value)
 		return nil
 	}
 
-	s, b, err := p.marshalSimple(val.Type(), val)
-	if err != nil {
-		return err
-	}
+	s, b := p.marshalSimple(val.Type(), val)!
 	if b != nil {
 		s = string(b)
 	}
@@ -726,10 +683,7 @@ func (p *printer) marshalInterface(val Marshaler, start StartElement) error {
 	p.tags = append(p.tags, Name{})
 	n := len(p.tags)
 
-	err := val.MarshalXML(p.encoder, start)
-	if err != nil {
-		return err
-	}
+	val.MarshalXML(p.encoder, start)!
 
 	// Make sure MarshalXML closed all its tags. p.tags[n-1] is the mark.
 	if len(p.tags) > n {
@@ -741,13 +695,8 @@ func (p *printer) marshalInterface(val Marshaler, start StartElement) error {
 
 // marshalTextInterface marshals a TextMarshaler interface value.
 func (p *printer) marshalTextInterface(val encoding.TextMarshaler, start StartElement) error {
-	if err := p.writeStart(&start); err != nil {
-		return err
-	}
-	text, err := val.MarshalText()
-	if err != nil {
-		return err
-	}
+	p.writeStart(&start)!
+	text := val.MarshalText()!
 	EscapeText(p, text)
 	return p.writeEnd(start.Name)
 }
@@ -886,18 +835,11 @@ func (p *printer) marshalStruct(tinfo *typeInfo, val reflect.Value) error {
 			if finfo.flags&fMode == fCDATA {
 				emit = emitCDATA
 			}
-			if err := s.trim(finfo.parents); err != nil {
-				return err
-			}
+			s.trim(finfo.parents)!
 			if vf.CanInterface() {
 				if textMarshaler, ok := reflect.TypeAssert[encoding.TextMarshaler](vf); ok {
-					data, err := textMarshaler.MarshalText()
-					if err != nil {
-						return err
-					}
-					if err := emit(p, data); err != nil {
-						return err
-					}
+					data := textMarshaler.MarshalText()!
+					emit(p, data)!
 					continue
 				}
 			}
@@ -905,13 +847,8 @@ func (p *printer) marshalStruct(tinfo *typeInfo, val reflect.Value) error {
 				pv := vf.Addr()
 				if pv.CanInterface() {
 					if textMarshaler, ok := reflect.TypeAssert[encoding.TextMarshaler](pv); ok {
-						data, err := textMarshaler.MarshalText()
-						if err != nil {
-							return err
-						}
-						if err := emit(p, data); err != nil {
-							return err
-						}
+						data := textMarshaler.MarshalText()!
+						emit(p, data)!
 						continue
 					}
 				}
@@ -921,38 +858,24 @@ func (p *printer) marshalStruct(tinfo *typeInfo, val reflect.Value) error {
 			vf = indirect(vf)
 			switch vf.Kind() {
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-				if err := emit(p, strconv.AppendInt(scratch[:0], vf.Int(), 10)); err != nil {
-					return err
-				}
+				emit(p, strconv.AppendInt(scratch[:0], vf.Int(), 10))!
 			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-				if err := emit(p, strconv.AppendUint(scratch[:0], vf.Uint(), 10)); err != nil {
-					return err
-				}
+				emit(p, strconv.AppendUint(scratch[:0], vf.Uint(), 10))!
 			case reflect.Float32, reflect.Float64:
-				if err := emit(p, strconv.AppendFloat(scratch[:0], vf.Float(), 'g', -1, vf.Type().Bits())); err != nil {
-					return err
-				}
+				emit(p, strconv.AppendFloat(scratch[:0], vf.Float(), 'g', -1, vf.Type().Bits()))!
 			case reflect.Bool:
-				if err := emit(p, strconv.AppendBool(scratch[:0], vf.Bool())); err != nil {
-					return err
-				}
+				emit(p, strconv.AppendBool(scratch[:0], vf.Bool()))!
 			case reflect.String:
-				if err := emit(p, []byte(vf.String())); err != nil {
-					return err
-				}
+				emit(p, []byte(vf.String()))!
 			case reflect.Slice:
 				if elem, ok := reflect.TypeAssert[[]byte](vf); ok {
-					if err := emit(p, elem); err != nil {
-						return err
-					}
+					emit(p, elem)!
 				}
 			}
 			continue
 
 		case fComment:
-			if err := s.trim(finfo.parents); err != nil {
-				return err
-			}
+			s.trim(finfo.parents)!
 			vf = indirect(vf)
 			k := vf.Kind()
 			if !(k == reflect.String || k == reflect.Slice && vf.Type().Elem().Kind() == reflect.Uint8) {
@@ -1006,20 +929,14 @@ func (p *printer) marshalStruct(tinfo *typeInfo, val reflect.Value) error {
 			}
 
 		case fElement, fElement | fAny:
-			if err := s.trim(finfo.parents); err != nil {
-				return err
-			}
+			s.trim(finfo.parents)!
 			if len(finfo.parents) > len(s.stack) {
 				if vf.Kind() != reflect.Pointer && vf.Kind() != reflect.Interface || !vf.IsNil() {
-					if err := s.push(finfo.parents[len(s.stack):]); err != nil {
-						return err
-					}
+					s.push(finfo.parents[len(s.stack):])!
 				}
 			}
 		}
-		if err := p.marshalValue(vf, finfo, nil); err != nil {
-			return err
-		}
+		p.marshalValue(vf, finfo, nil)!
 	}
 	s.trim(nil)
 	return p.cachedWriteError()
@@ -1066,9 +983,7 @@ func (p *printer) Close() error {
 		return nil
 	}
 	p.closed = true
-	if err := p.w.Flush(); err != nil {
-		return err
-	}
+	p.w.Flush()!
 	if len(p.tags) > 0 {
 		return fmt.Errorf("unclosed tag <%s>", p.tags[len(p.tags)-1].Local)
 	}
@@ -1128,9 +1043,7 @@ func (s *parentStack) trim(parents []string) error {
 		}
 	}
 	for i := len(s.stack) - 1; i >= split; i-- {
-		if err := s.p.writeEnd(Name{Local: s.stack[i]}); err != nil {
-			return err
-		}
+		s.p.writeEnd(Name{Local: s.stack[i]})!
 	}
 	s.stack = s.stack[:split]
 	return nil
@@ -1139,9 +1052,7 @@ func (s *parentStack) trim(parents []string) error {
 // push adds parent elements to the stack and writes open tags.
 func (s *parentStack) push(parents []string) error {
 	for i := 0; i < len(parents); i++ {
-		if err := s.p.writeStart(&StartElement{Name: Name{Local: parents[i]}}); err != nil {
-			return err
-		}
+		s.p.writeStart(&StartElement{Name: Name{Local: parents[i]}})!
 	}
 	s.stack = append(s.stack, parents...)
 	return nil

@@ -217,10 +217,7 @@ func makeBoolUnmarshaler(t reflect.Type) *unmarshaler {
 				return newInvalidFormatError(dec, t)
 			}
 		}
-		tok, err := dec.ReadToken()
-		if err != nil {
-			return err
-		}
+		tok := dec.ReadToken()!
 		k := tok.Kind()
 		switch k {
 		case 'n':
@@ -500,10 +497,7 @@ func makeBytesUnmarshaler(t reflect.Type, fnc *unmarshaler) *unmarshaler {
 			}
 		}
 		var flags jsonwire.ValueFlags
-		val, err := xd.ReadValue(&flags)
-		if err != nil {
-			return err
-		}
+		val := xd.ReadValue(&flags)!
 		k := val.Kind()
 		switch k {
 		case 'n':
@@ -591,10 +585,7 @@ func makeIntUnmarshaler(t reflect.Type) *unmarshaler {
 			return newInvalidFormatError(dec, t)
 		}
 		var flags jsonwire.ValueFlags
-		val, err := xd.ReadValue(&flags)
-		if err != nil {
-			return err
-		}
+		val := xd.ReadValue(&flags)!
 		k := val.Kind()
 		switch k {
 		case 'n':
@@ -695,10 +686,7 @@ func makeUintUnmarshaler(t reflect.Type) *unmarshaler {
 			return newInvalidFormatError(dec, t)
 		}
 		var flags jsonwire.ValueFlags
-		val, err := xd.ReadValue(&flags)
-		if err != nil {
-			return err
-		}
+		val := xd.ReadValue(&flags)!
 		k := val.Kind()
 		switch k {
 		case 'n':
@@ -814,10 +802,7 @@ func makeFloatUnmarshaler(t reflect.Type) *unmarshaler {
 		}
 
 		var flags jsonwire.ValueFlags
-		val, err := xd.ReadValue(&flags)
-		if err != nil {
-			return err
-		}
+		val := xd.ReadValue(&flags)!
 		k := val.Kind()
 		switch k {
 		case 'n':
@@ -945,9 +930,7 @@ func makeMapMarshaler(t reflect.Type) *marshaler {
 		}
 
 		once.Do(init)
-		if err := enc.WriteToken(jsontext.BeginObject); err != nil {
-			return err
-		}
+		enc.WriteToken(jsontext.BeginObject)!
 		if n > 0 {
 			nonDefaultKey := keyFncs.nonDefault
 			marshalKey := keyFncs.fnc
@@ -986,9 +969,7 @@ func makeMapMarshaler(t reflect.Type) *marshaler {
 						}
 					}
 					v.SetIterValue(iter)
-					if err := marshalVal(enc, v, mo); err != nil {
-						return err
-					}
+					marshalVal(enc, v, mo)!
 				}
 			case !nonDefaultKey && t.Key().Kind() == reflect.String:
 				names := getStrings(n)
@@ -998,15 +979,11 @@ func makeMapMarshaler(t reflect.Type) *marshaler {
 				}
 				slices.Sort(*names)
 				for _, name := range *names {
-					if err := enc.WriteToken(jsontext.String(name)); err != nil {
-						return err
-					}
+					enc.WriteToken(jsontext.String(name))!
 					// TODO(https://go.dev/issue/57061): Use v.SetMapIndexOf.
 					k.SetString(name)
 					v.Set(va.MapIndex(k.Value))
-					if err := marshalVal(enc, v, mo); err != nil {
-						return err
-					}
+					marshalVal(enc, v, mo)!
 				}
 				putStrings(names)
 			default:
@@ -1047,18 +1024,12 @@ func makeMapMarshaler(t reflect.Type) *marshaler {
 					return strings.Compare(x.name, y.name)
 				})
 				for _, member := range members {
-					if err := enc.WriteToken(jsontext.String(member.name)); err != nil {
-						return err
-					}
-					if err := marshalVal(enc, member.val, mo); err != nil {
-						return err
-					}
+					enc.WriteToken(jsontext.String(member.name))!
+					marshalVal(enc, member.val, mo)!
 				}
 			}
 		}
-		if err := enc.WriteToken(jsontext.EndObject); err != nil {
-			return err
-		}
+		enc.WriteToken(jsontext.EndObject)!
 		return nil
 	}
 	return &fnc
@@ -1096,10 +1067,7 @@ func makeMapUnmarshaler(t reflect.Type) *unmarshaler {
 				}
 			}
 		}
-		tok, err := dec.ReadToken()
-		if err != nil {
-			return err
-		}
+		tok := dec.ReadToken()!
 		k := tok.Kind()
 		switch k {
 		case 'n':
@@ -1151,9 +1119,7 @@ func makeMapUnmarshaler(t reflect.Type) *unmarshaler {
 					if isFatalError(err, uo.Flags) {
 						return err
 					}
-					if err := dec.SkipValue(); err != nil {
-						return err
-					}
+					dec.SkipValue()!
 					errUnmarshal = cmp.Or(errUnmarshal, err)
 					continue
 				}
@@ -1162,9 +1128,7 @@ func makeMapUnmarshaler(t reflect.Type) *unmarshaler {
 					if !uo.Flags.Get(jsonflags.ReportErrorsWithLegacySemantics) {
 						return err
 					}
-					if err2 := dec.SkipValue(); err2 != nil {
-						return err2
-					}
+					dec.SkipValue()!
 					errUnmarshal = cmp.Or(errUnmarshal, err)
 					continue
 				}
@@ -1198,9 +1162,7 @@ func makeMapUnmarshaler(t reflect.Type) *unmarshaler {
 					errUnmarshal = cmp.Or(errUnmarshal, err)
 				}
 			}
-			if _, err := dec.ReadToken(); err != nil {
-				return err
-			}
+			dec.ReadToken()!
 			return errUnmarshal
 		}
 		return newUnmarshalErrorAfterWithSkipping(dec, t, nil)
@@ -1273,9 +1235,7 @@ func makeStructMarshaler(t reflect.Type) *marshaler {
 			return newMarshalErrorBefore(enc, fields.errUnsupportedFormat.GoType, fields.errUnsupportedFormat.Err)
 		}
 
-		if err := enc.WriteToken(jsontext.BeginObject); err != nil {
-			return err
-		}
+		enc.WriteToken(jsontext.BeginObject)!
 		var seenIdxs uintSet
 		prevIdx := -1
 		xe.Tokens.Last.DisableNamespace() // we manually ensure unique names below
@@ -1352,9 +1312,7 @@ func makeStructMarshaler(t reflect.Type) *marshaler {
 				xe.Names.ReplaceLastQuotedOffset(n0)
 				xe.Tokens.Last.Increment()
 			} else {
-				if err := enc.WriteToken(jsontext.String(f.name)); err != nil {
-					return err
-				}
+				enc.WriteToken(jsontext.String(f.name))!
 			}
 
 			// Write the object member value.
@@ -1414,13 +1372,9 @@ func makeStructMarshaler(t reflect.Type) *marshaler {
 					return xe.Namespaces.Last().InsertUnquoted(name)
 				}
 			}
-			if err := marshalEmbeddedFallbackAll(enc, va, mo, fields.embeddedFallback, embeddedFallbackFnc, insertUnquotedName); err != nil {
-				return err
-			}
+			marshalEmbeddedFallbackAll(enc, va, mo, fields.embeddedFallback, embeddedFallbackFnc, insertUnquotedName)!
 		}
-		if err := enc.WriteToken(jsontext.EndObject); err != nil {
-			return err
-		}
+		enc.WriteToken(jsontext.EndObject)!
 		return nil
 	}
 	return &fnc
@@ -1460,10 +1414,7 @@ func makeStructUnmarshaler(t reflect.Type) *unmarshaler {
 				return newInvalidFormatError(dec, t)
 			}
 		}
-		tok, err := dec.ReadToken()
-		if err != nil {
-			return err
-		}
+		tok := dec.ReadToken()!
 		k := tok.Kind()
 		switch k {
 		case 'n':
@@ -1519,9 +1470,7 @@ func makeStructUnmarshaler(t reflect.Type) *unmarshaler {
 
 						if fields.embeddedFallback == nil {
 							// Skip unknown value since we have no place to store it.
-							if err := dec.SkipValue(); err != nil {
-								return err
-							}
+							dec.SkipValue()!
 						} else {
 							// Unmarshal into a value capable of storing arbitrary object members.
 							if err := unmarshalEmbeddedFallbackNext(dec, va, uo, fields.embeddedFallback, embeddedFallbackFnc, val, name); err != nil {
@@ -1576,9 +1525,7 @@ func makeStructUnmarshaler(t reflect.Type) *unmarshaler {
 					errUnmarshal = cmp.Or(errUnmarshal, err)
 				}
 			}
-			if _, err := dec.ReadToken(); err != nil {
-				return err
-			}
+			dec.ReadToken()!
 			return errUnmarshal
 		}
 		return newUnmarshalErrorAfterWithSkipping(dec, t, nil)
@@ -1684,22 +1631,16 @@ func makeSliceMarshaler(t reflect.Type) *marshaler {
 		}
 
 		once.Do(init)
-		if err := enc.WriteToken(jsontext.BeginArray); err != nil {
-			return err
-		}
+		enc.WriteToken(jsontext.BeginArray)!
 		marshal := valFncs.fnc
 		if mo.Marshalers != nil {
 			marshal, _ = mo.Marshalers.(*Marshalers).lookup(marshal, t.Elem())
 		}
 		for i := range n {
 			v := addressableValue{va.Index(i), false} // indexed slice element is always addressable
-			if err := marshal(enc, v, mo); err != nil {
-				return err
-			}
+			marshal(enc, v, mo)!
 		}
-		if err := enc.WriteToken(jsontext.EndArray); err != nil {
-			return err
-		}
+		enc.WriteToken(jsontext.EndArray)!
 		return nil
 	}
 	return &fnc
@@ -1729,10 +1670,7 @@ func makeSliceUnmarshaler(t reflect.Type) *unmarshaler {
 			}
 		}
 
-		tok, err := dec.ReadToken()
-		if err != nil {
-			return err
-		}
+		tok := dec.ReadToken()!
 		k := tok.Kind()
 		switch k {
 		case 'n':
@@ -1776,9 +1714,7 @@ func makeSliceUnmarshaler(t reflect.Type) *unmarshaler {
 			} else {
 				va.SetLen(i)
 			}
-			if _, err := dec.ReadToken(); err != nil {
-				return err
-			}
+			dec.ReadToken()!
 			return errUnmarshal
 		}
 		return newUnmarshalErrorAfterWithSkipping(dec, t, nil)
@@ -1809,22 +1745,16 @@ func makeArrayMarshaler(t reflect.Type) *marshaler {
 			}
 		}
 		once.Do(init)
-		if err := enc.WriteToken(jsontext.BeginArray); err != nil {
-			return err
-		}
+		enc.WriteToken(jsontext.BeginArray)!
 		marshal := valFncs.fnc
 		if mo.Marshalers != nil {
 			marshal, _ = mo.Marshalers.(*Marshalers).lookup(marshal, t.Elem())
 		}
 		for i := range n {
 			v := addressableValue{va.Index(i), va.forcedAddr} // indexed array element is addressable if array is addressable
-			if err := marshal(enc, v, mo); err != nil {
-				return err
-			}
+			marshal(enc, v, mo)!
 		}
-		if err := enc.WriteToken(jsontext.EndArray); err != nil {
-			return err
-		}
+		enc.WriteToken(jsontext.EndArray)!
 		return nil
 	}
 	return &fnc
@@ -1870,9 +1800,7 @@ func makeArrayUnmarshaler(t reflect.Type) *unmarshaler {
 			var errUnmarshal error
 			for dec.PeekKind() != ']' {
 				if i >= n {
-					if err := dec.SkipValue(); err != nil {
-						return err
-					}
+					dec.SkipValue()!
 					err = errArrayOverflow
 					continue
 				}
@@ -1892,9 +1820,7 @@ func makeArrayUnmarshaler(t reflect.Type) *unmarshaler {
 				va.Index(i).SetZero()
 				err = errArrayUnderflow
 			}
-			if _, err := dec.ReadToken(); err != nil {
-				return err
-			}
+			dec.ReadToken()!
 			if err != nil && !uo.Flags.Get(jsonflags.UnmarshalArrayFromAnyLength) {
 				return newUnmarshalErrorAfter(dec, t, err)
 			}
@@ -1957,9 +1883,7 @@ func makePointerUnmarshaler(t reflect.Type) *unmarshaler {
 	fnc.fnc = func(dec *jsontext.Decoder, va addressableValue, uo *jsonopts.Struct) error {
 		// NOTE: Struct.Format is forwarded to underlying unmarshal.
 		if dec.PeekKind() == 'n' {
-			if _, err := dec.ReadToken(); err != nil {
-				return err
-			}
+			dec.ReadToken()!
 			va.SetZero()
 			return nil
 		}
@@ -1978,9 +1902,7 @@ func makePointerUnmarshaler(t reflect.Type) *unmarshaler {
 			va.Set(reflect.New(t.Elem()))
 		}
 		v := addressableValue{va.Elem(), false} // dereferenced pointer is always addressable
-		if err := unmarshal(dec, v, uo); err != nil {
-			return err
-		}
+		unmarshal(dec, v, uo)!
 		if uo.Flags.Get(jsonflags.StringTag) && uo.Flags.Get(jsonflags.StringifyWithLegacySemantics) {
 			// A JSON null quoted within a JSON string should take effect
 			// within the pointer value, rather than the indirect value.
@@ -2091,9 +2013,7 @@ func makeInterfaceUnmarshaler(t reflect.Type) *unmarshaler {
 			e := va.Elem()
 			if e.Kind() == reflect.Pointer && !e.IsNil() {
 				if dec.PeekKind() == 'n' && e.Elem().Kind() == reflect.Pointer {
-					if _, err := dec.ReadToken(); err != nil {
-						return err
-					}
+					dec.ReadToken()!
 					va.Elem().Elem().SetZero()
 					return nil
 				}
@@ -2102,9 +2022,7 @@ func makeInterfaceUnmarshaler(t reflect.Type) *unmarshaler {
 			}
 		}
 		if dec.PeekKind() == 'n' {
-			if _, err := dec.ReadToken(); err != nil {
-				return err
-			}
+			dec.ReadToken()!
 			va.SetZero()
 			return nil
 		}

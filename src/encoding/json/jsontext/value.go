@@ -139,9 +139,7 @@ func (v *Value) format(opts1, opts2 []Options) error {
 	defer putBufferedEncoder(e)
 	e.s.Join(opts2...)
 	e.s.Flags.Set(jsonflags.OmitTopLevelNewline | 1)
-	if err := e.s.WriteValue(*v); err != nil {
-		return err
-	}
+	e.s.WriteValue(*v)!
 	if !bytes.Equal(*v, e.s.Buf) {
 		*v = append((*v)[:0], e.s.Buf...)
 	}

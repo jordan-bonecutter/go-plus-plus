@@ -80,21 +80,15 @@ func (tr *Reader) next() (*Header, error) {
 	format := FormatUSTAR | FormatPAX | FormatGNU
 	for {
 		// Discard the remainder of the file and any padding.
-		if err := discard(tr.r, tr.curr.physicalRemaining()); err != nil {
-			return nil, err
-		}
-		if _, err := tryReadFull(tr.r, tr.blk[:tr.pad]); err != nil {
-			return nil, err
-		}
+		discard(tr.r, tr.curr.physicalRemaining())!
+		tryReadFull(tr.r, tr.blk[:tr.pad])!
 		tr.pad = 0
 
 		hdr, rawHdr, err := tr.readHeader()
 		if err != nil {
 			return nil, err
 		}
-		if err := tr.handleRegularFile(hdr); err != nil {
-			return nil, err
-		}
+		tr.handleRegularFile(hdr)!
 		format.mayOnlyBe(hdr.Format)
 
 		// Check for PAX/GNU special headers and files.
@@ -118,10 +112,7 @@ func (tr *Reader) next() (*Header, error) {
 			continue // This is a meta header affecting the next header
 		case TypeGNULongName, TypeGNULongLink:
 			format.mayOnlyBe(FormatGNU)
-			realname, err := readSpecialFile(tr)
-			if err != nil {
-				return nil, err
-			}
+			realname := readSpecialFile(tr)!
 
 			var p parser
 			switch hdr.Typeflag {
@@ -135,9 +126,7 @@ func (tr *Reader) next() (*Header, error) {
 			// The old GNU sparse format is handled here since it is technically
 			// just a regular file with additional attributes.
 
-			if err := mergePAX(hdr, paxHdrs); err != nil {
-				return nil, err
-			}
+			mergePAX(hdr, paxHdrs)!
 			if gnuLongName != "" {
 				hdr.Name = gnuLongName
 			}
@@ -154,15 +143,11 @@ func (tr *Reader) next() (*Header, error) {
 
 			// The extended headers may have updated the size.
 			// Thus, setup the regFileReader again after merging PAX headers.
-			if err := tr.handleRegularFile(hdr); err != nil {
-				return nil, err
-			}
+			tr.handleRegularFile(hdr)!
 
 			// Sparse formats rely on being able to read from the logical data
 			// section; there must be a preceding call to handleRegularFile.
-			if err := tr.handleSparseFile(hdr, rawHdr); err != nil {
-				return nil, err
-			}
+			tr.handleSparseFile(hdr, rawHdr)!
 
 			// Set the final guess at the format.
 			if format.has(FormatUSTAR) && format.has(FormatPAX) {
@@ -314,10 +299,7 @@ func mergePAX(hdr *Header, paxHdrs map[string]string) (err error) {
 // parsePAX parses PAX headers.
 // If an extended header (type 'x') is invalid, ErrHeader is returned.
 func parsePAX(r io.Reader) (map[string]string, error) {
-	buf, err := readSpecialFile(r)
-	if err != nil {
-		return nil, err
-	}
+	buf := readSpecialFile(r)!
 	sbuf := string(buf)
 
 	// For GNU PAX sparse format 0.0 support.
@@ -521,9 +503,7 @@ func (tr *Reader) readOldGNUSparseMap(hdr *Header, blk *block) (sparseDatas, err
 
 		if s.isExtended()[0] > 0 {
 			// There are more entries. Read an extension header and parse its entries.
-			if _, err := mustReadFull(tr.r, blk[:]); err != nil {
-				return nil, err
-			}
+			mustReadFull(tr.r, blk[:])!
 			s = blk.toSparse()
 			totalSize += len(s)
 			continue
@@ -559,9 +539,7 @@ func readGNUSparseMap1x0(r io.Reader) (sparseDatas, error) {
 			if totalSize > maxSpecialFileSize {
 				return errSparseTooLong
 			}
-			if _, err := mustReadFull(r, blk[:]); err != nil {
-				return err
-			}
+			mustReadFull(r, blk[:])!
 			buf.Write(blk[:])
 			for _, c := range blk {
 				if c == '\n' {
@@ -582,9 +560,7 @@ func readGNUSparseMap1x0(r io.Reader) (sparseDatas, error) {
 
 	// Parse for the number of entries.
 	// Use integer overflow resistant math to check this.
-	if err := feedTokens(1); err != nil {
-		return nil, err
-	}
+	feedTokens(1)!
 	numEntries, err := strconv.ParseInt(nextToken(), 10, 0) // Intentionally parse as native int
 	if err != nil || numEntries < 0 || int(2*numEntries) < int(numEntries) {
 		return nil, ErrHeader
@@ -593,9 +569,7 @@ func readGNUSparseMap1x0(r io.Reader) (sparseDatas, error) {
 	// Parse for all member entries.
 	// numEntries is trusted after this since feedTokens limits the number of
 	// tokens based on maxSpecialFileSize.
-	if err := feedTokens(2 * numEntries); err != nil {
-		return nil, err
-	}
+	feedTokens(2 * numEntries)!
 	spd := make(sparseDatas, 0, numEntries)
 	for i := int64(0); i < numEntries; i++ {
 		offset, err1 := strconv.ParseInt(nextToken(), 10, 64)

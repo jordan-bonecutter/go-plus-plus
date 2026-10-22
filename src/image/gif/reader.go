@@ -230,10 +230,7 @@ func (d *decoder) decode(r io.Reader, configOnly, keepAllFrames bool) error {
 
 	d.loopCount = -1
 
-	err := d.readHeaderAndScreenDescriptor()
-	if err != nil {
-		return err
-	}
+	d.readHeaderAndScreenDescriptor()!
 	if configOnly {
 		return nil
 	}
@@ -527,9 +524,7 @@ func (d *decoder) readBlock() (int, error) {
 	if n == 0 || err != nil {
 		return 0, err
 	}
-	if err := readFull(d.r, d.tmp[:n]); err != nil {
-		return 0, err
-	}
+	readFull(d.r, d.tmp[:n])!
 	return int(n), nil
 }
 
@@ -573,9 +568,7 @@ func uninterlace(m *image.Paletted) {
 // avoided.
 func Decode(r io.Reader) (image.Image, error) {
 	var d decoder
-	if err := d.decode(r, false, false); err != nil {
-		return nil, err
-	}
+	d.decode(r, false, false)!
 	return d.image[0], nil
 }
 
@@ -618,9 +611,7 @@ type GIF struct {
 // logical screen size and reject inputs that would require excessive memory.
 func DecodeAll(r io.Reader) (*GIF, error) {
 	var d decoder
-	if err := d.decode(r, false, true); err != nil {
-		return nil, err
-	}
+	d.decode(r, false, true)!
 	gif := &GIF{
 		Image:     d.image,
 		LoopCount: d.loopCount,
@@ -644,9 +635,7 @@ func DecodeAll(r io.Reader) (*GIF, error) {
 // before calling [Decode] or [DecodeAll].
 func DecodeConfig(r io.Reader) (image.Config, error) {
 	var d decoder
-	if err := d.decode(r, true, false); err != nil {
-		return image.Config{}, err
-	}
+	d.decode(r, true, false)!
 	return image.Config{
 		ColorModel: d.globalColorTable,
 		Width:      d.width,

@@ -314,9 +314,7 @@ func UnmarshalFromFunc[T any](fn func(*jsontext.Decoder, T) error) *Unmarshalers
 					err = errUnsupportedMutation
 				}
 				if uo.Flags.Get(jsonflags.ReportErrorsWithLegacySemantics) {
-					if err2 := xd.SkipUntil(prevDepth, prevLength+1); err2 != nil {
-						return err2
-					}
+					xd.SkipUntil(prevDepth, prevLength+1)!
 					return err // unlike marshal, never wrapped
 				}
 				if !isSyntacticError(err) && !export.IsIOError(err) {

@@ -544,10 +544,7 @@ func newTypeObject(name string, ut *userTypeInfo, rt reflect.Type) (gobType, err
 				t := userType(f.Type).base
 				tname = t.String()
 			}
-			gt, err := getBaseType(tname, f.Type)
-			if err != nil {
-				return nil, err
-			}
+			gt := getBaseType(tname, f.Type)!
 			// Some mutually recursive types can cause us to be here while
 			// still defining the element. Fix the element type id here.
 			// We could do this more neatly by setting the id at the start of
@@ -731,17 +728,11 @@ func buildTypeInfo(ut *userTypeInfo, rt reflect.Type) (*typeInfo, error) {
 		return info, nil
 	}
 
-	gt, err := getBaseType(rt.Name(), rt)
-	if err != nil {
-		return nil, err
-	}
+	gt := getBaseType(rt.Name(), rt)!
 	info := &typeInfo{id: gt.id()}
 
 	if ut.externalEnc != 0 {
-		userType, err := getType(rt.Name(), ut, rt)
-		if err != nil {
-			return nil, err
-		}
+		userType := getType(rt.Name(), ut, rt)!
 		gt := userType.id().gobType().(*gobEncoderType)
 		switch ut.externalEnc {
 		case xGob:

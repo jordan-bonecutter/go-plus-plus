@@ -1954,12 +1954,8 @@ func escapeText(w io.Writer, s []byte, escapeNewline bool) error {
 			}
 			continue
 		}
-		if _, err := w.Write(s[last : i-width]); err != nil {
-			return err
-		}
-		if _, err := w.Write(esc); err != nil {
-			return err
-		}
+		w.Write(s[last : i-width])!
+		w.Write(esc)!
 		last = i
 	}
 	_, err := w.Write(s[last:])
@@ -2024,9 +2020,7 @@ func emitCDATA(w io.Writer, s []byte) error {
 	if len(s) == 0 {
 		return nil
 	}
-	if _, err := w.Write(cdataStart); err != nil {
-		return err
-	}
+	w.Write(cdataStart)!
 
 	for {
 		before, after, ok := bytes.Cut(s, cdataEnd)
@@ -2034,18 +2028,12 @@ func emitCDATA(w io.Writer, s []byte) error {
 			break
 		}
 		// Found a nested CDATA directive end.
-		if _, err := w.Write(before); err != nil {
-			return err
-		}
-		if _, err := w.Write(cdataEscape); err != nil {
-			return err
-		}
+		w.Write(before)!
+		w.Write(cdataEscape)!
 		s = after
 	}
 
-	if _, err := w.Write(s); err != nil {
-		return err
-	}
+	w.Write(s)!
 
 	_, err := w.Write(cdataEnd)
 	return err

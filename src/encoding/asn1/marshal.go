@@ -739,10 +739,7 @@ func Marshal(val any) ([]byte, error) {
 // MarshalWithParams allows field parameters to be specified for the
 // top-level element. The form of the params is the same as the field tags.
 func MarshalWithParams(val any, params string) ([]byte, error) {
-	e, err := makeField(reflect.ValueOf(val), parseFieldParameters(params))
-	if err != nil {
-		return nil, err
-	}
+	e := makeField(reflect.ValueOf(val), parseFieldParameters(params))!
 	b := make([]byte, e.Len())
 	e.Encode(b)
 	return b, nil

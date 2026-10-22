@@ -140,15 +140,11 @@ func (enc *Encoder) Encode(v any) error {
 
 	e := export.GetBufferedEncoder(enc.opts)
 	defer export.PutBufferedEncoder(e)
-	if err := jsonv2.MarshalEncode(e, v); err != nil {
-		return err
-	}
+	jsonv2.MarshalEncode(e, v)!
 	b := export.Encoder(e).Buf // b must not leak current scope
 	if len(enc.indentPrefix)+len(enc.indentValue) > 0 {
 		enc.indentBuf.Reset()
-		if err := Indent(&enc.indentBuf, b, enc.indentPrefix, enc.indentValue); err != nil {
-			return err
-		}
+		Indent(&enc.indentBuf, b, enc.indentPrefix, enc.indentValue)!
 		b = enc.indentBuf.Bytes()
 	}
 	b = append(b, '\n')

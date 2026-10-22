@@ -229,10 +229,7 @@ func (enc *Encoder) EncodeValue(value reflect.Value) error {
 	// Remove any nested writers remaining due to previous errors.
 	enc.w = enc.w[0:1]
 
-	ut, err := validUserType(value.Type())
-	if err != nil {
-		return err
-	}
+	ut := validUserType(value.Type())!
 
 	enc.err = nil
 	enc.byteBuf.Reset()

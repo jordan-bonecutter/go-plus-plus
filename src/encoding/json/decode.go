@@ -110,10 +110,7 @@ func Unmarshal(data []byte, v any) error {
 	// Avoids filling out half a data structure
 	// before discovering a JSON syntax error.
 	var d decodeState
-	err := checkValid(data, &d.scan)
-	if err != nil {
-		return err
-	}
+	checkValid(data, &d.scan)!
 
 	d.init(data)
 	return d.unmarshal(v)
@@ -374,9 +371,7 @@ func (d *decodeState) value(v reflect.Value) error {
 
 	case scanBeginArray:
 		if v.IsValid() {
-			if err := d.array(v); err != nil {
-				return err
-			}
+			d.array(v)!
 		} else {
 			d.skip()
 		}
@@ -384,9 +379,7 @@ func (d *decodeState) value(v reflect.Value) error {
 
 	case scanBeginObject:
 		if v.IsValid() {
-			if err := d.object(v); err != nil {
-				return err
-			}
+			d.object(v)!
 		} else {
 			d.skip()
 		}
@@ -398,9 +391,7 @@ func (d *decodeState) value(v reflect.Value) error {
 		d.rescanLiteral()
 
 		if v.IsValid() {
-			if err := d.literalStore(d.data[start:d.readIndex()], v, false); err != nil {
-				return err
-			}
+			d.literalStore(d.data[start:d.readIndex()], v, false)!
 		}
 	}
 	return nil
@@ -565,14 +556,10 @@ func (d *decodeState) array(v reflect.Value) error {
 
 		if i < v.Len() {
 			// Decode into element.
-			if err := d.value(v.Index(i)); err != nil {
-				return err
-			}
+			d.value(v.Index(i))!
 		} else {
 			// Ran out of fixed array: skip.
-			if err := d.value(reflect.Value{}); err != nil {
-				return err
-			}
+			d.value(reflect.Value{})!
 		}
 		i++
 
@@ -763,20 +750,14 @@ func (d *decodeState) object(v reflect.Value) error {
 		if destring {
 			switch qv := d.valueQuoted().(type) {
 			case nil:
-				if err := d.literalStore(nullLiteral, subv, false); err != nil {
-					return err
-				}
+				d.literalStore(nullLiteral, subv, false)!
 			case string:
-				if err := d.literalStore([]byte(qv), subv, true); err != nil {
-					return err
-				}
+				d.literalStore([]byte(qv), subv, true)!
 			default:
 				d.saveError(fmt.Errorf("json: invalid use of ,string struct tag, trying to unmarshal unquoted value into %v", subv.Type()))
 			}
 		} else {
-			if err := d.value(subv); err != nil {
-				return err
-			}
+			d.value(subv)!
 		}
 
 		// Write value back to map;
@@ -786,9 +767,7 @@ func (d *decodeState) object(v reflect.Value) error {
 			var kv reflect.Value
 			if reflect.PointerTo(kt).Implements(textUnmarshalerType) {
 				kv = reflect.New(kt)
-				if err := d.literalStore(item, kv, true); err != nil {
-					return err
-				}
+				d.literalStore(item, kv, true)!
 				kv = kv.Elem()
 			} else {
 				switch kt.Kind() {

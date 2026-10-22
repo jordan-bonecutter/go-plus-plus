@@ -53,9 +53,7 @@ func (dec *Decoder) Decode(v any) error {
 		return dec.err
 	}
 
-	if err := dec.tokenPrepareForDecode(); err != nil {
-		return err
-	}
+	dec.tokenPrepareForDecode()!
 
 	if !dec.tokenValueAllowed() {
 		return &SyntaxError{msg: "not at beginning of value", Offset: dec.InputOffset()}
@@ -321,20 +319,14 @@ func (dec *Decoder) tokenPrepareForDecode() error {
 	// peek is only called when using the Token API.
 	switch dec.tokenState {
 	case tokenArrayComma:
-		c, err := dec.peek()
-		if err != nil {
-			return err
-		}
+		c := dec.peek()!
 		if c != ',' {
 			return &SyntaxError{"expected comma after array element", dec.InputOffset()}
 		}
 		dec.scanp++
 		dec.tokenState = tokenArrayValue
 	case tokenObjectColon:
-		c, err := dec.peek()
-		if err != nil {
-			return err
-		}
+		c := dec.peek()!
 		if c != ':' {
 			return &SyntaxError{"expected colon after object key", dec.InputOffset()}
 		}
@@ -381,10 +373,7 @@ func (d Delim) String() string {
 // Commas and colons are elided.
 func (dec *Decoder) Token() (Token, error) {
 	for {
-		c, err := dec.peek()
-		if err != nil {
-			return nil, err
-		}
+		c := dec.peek()!
 		switch c {
 		case '[':
 			if !dec.tokenValueAllowed() {
@@ -465,9 +454,7 @@ func (dec *Decoder) Token() (Token, error) {
 				return dec.tokenError(c)
 			}
 			var x any
-			if err := dec.Decode(&x); err != nil {
-				return nil, err
-			}
+			dec.Decode(&x)!
 			return x, nil
 		}
 	}
