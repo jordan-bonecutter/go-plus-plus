@@ -91,10 +91,7 @@ func (c *IPConn) writeTo(b []byte, addr *IPAddr) (int, error) {
 	if addr == nil {
 		return 0, errMissingAddress
 	}
-	sa, err := addr.sockaddr(c.fd.family)
-	if err != nil {
-		return 0, err
-	}
+	sa := addr.sockaddr(c.fd.family)!
 	return c.fd.writeTo(b, sa)
 }
 
@@ -113,10 +110,7 @@ func (c *IPConn) writeMsg(b, oob []byte, addr *IPAddr) (n, oobn int, err error) 
 }
 
 func (sd *sysDialer) dialIP(ctx context.Context, laddr, raddr *IPAddr) (*IPConn, error) {
-	network, proto, err := parseNetwork(ctx, sd.network, true)
-	if err != nil {
-		return nil, err
-	}
+	network, proto := parseNetwork(ctx, sd.network, true)!
 	switch network {
 	case "ip", "ip4", "ip6":
 	default:
@@ -128,18 +122,12 @@ func (sd *sysDialer) dialIP(ctx context.Context, laddr, raddr *IPAddr) (*IPConn,
 			return sd.Dialer.Control(network, address, c)
 		}
 	}
-	fd, err := internetSocket(ctx, network, laddr, raddr, syscall.SOCK_RAW, proto, "dial", ctrlCtxFn)
-	if err != nil {
-		return nil, err
-	}
+	fd := internetSocket(ctx, network, laddr, raddr, syscall.SOCK_RAW, proto, "dial", ctrlCtxFn)!
 	return newIPConn(fd), nil
 }
 
 func (sl *sysListener) listenIP(ctx context.Context, laddr *IPAddr) (*IPConn, error) {
-	network, proto, err := parseNetwork(ctx, sl.network, true)
-	if err != nil {
-		return nil, err
-	}
+	network, proto := parseNetwork(ctx, sl.network, true)!
 	switch network {
 	case "ip", "ip4", "ip6":
 	default:
@@ -151,9 +139,6 @@ func (sl *sysListener) listenIP(ctx context.Context, laddr *IPAddr) (*IPConn, er
 			return sl.ListenConfig.Control(network, address, c)
 		}
 	}
-	fd, err := internetSocket(ctx, network, laddr, nil, syscall.SOCK_RAW, proto, "listen", ctrlCtxFn)
-	if err != nil {
-		return nil, err
-	}
+	fd := internetSocket(ctx, network, laddr, nil, syscall.SOCK_RAW, proto, "listen", ctrlCtxFn)!
 	return newIPConn(fd), nil
 }

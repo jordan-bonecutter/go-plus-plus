@@ -541,10 +541,7 @@ func (c *Cmd) argv() []string {
 
 func (c *Cmd) childStdin() (*os.File, error) {
 	if c.Stdin == nil {
-		f, err := os.Open(os.DevNull)
-		if err != nil {
-			return nil, err
-		}
+		f := os.Open(os.DevNull)!
 		c.childIOFiles = append(c.childIOFiles, f)
 		return f, nil
 	}
@@ -553,10 +550,7 @@ func (c *Cmd) childStdin() (*os.File, error) {
 		return f, nil
 	}
 
-	pr, pw, err := os.Pipe()
-	if err != nil {
-		return nil, err
-	}
+	pr, pw := os.Pipe()!
 
 	c.childIOFiles = append(c.childIOFiles, pr)
 	c.parentIOPipes = append(c.parentIOPipes, pw)
@@ -590,10 +584,7 @@ func (c *Cmd) childStderr(childStdout *os.File) (*os.File, error) {
 // If w is nil, writerDescriptor returns a File that writes to os.DevNull.
 func (c *Cmd) writerDescriptor(w io.Writer) (*os.File, error) {
 	if w == nil {
-		f, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0)
-		if err != nil {
-			return nil, err
-		}
+		f := os.OpenFile(os.DevNull, os.O_WRONLY, 0)!
 		c.childIOFiles = append(c.childIOFiles, f)
 		return f, nil
 	}
@@ -602,10 +593,7 @@ func (c *Cmd) writerDescriptor(w io.Writer) (*os.File, error) {
 		return f, nil
 	}
 
-	pr, pw, err := os.Pipe()
-	if err != nil {
-		return nil, err
-	}
+	pr, pw := os.Pipe()!
 
 	c.childIOFiles = append(c.childIOFiles, pw)
 	c.parentIOPipes = append(c.parentIOPipes, pr)
@@ -637,9 +625,7 @@ func closeDescriptors(closers []io.Closer) {
 // thread state (for example, Linux or Plan 9 name spaces), the new
 // process will inherit the caller's thread state.
 func (c *Cmd) Run() error {
-	if err := c.Start(); err != nil {
-		return err
-	}
+	c.Start()!
 	return c.Wait()
 }
 
@@ -1075,10 +1061,7 @@ func (c *Cmd) StdinPipe() (io.WriteCloser, error) {
 	if c.Process != nil {
 		return nil, errors.New("exec: StdinPipe after process started")
 	}
-	pr, pw, err := os.Pipe()
-	if err != nil {
-		return nil, err
-	}
+	pr, pw := os.Pipe()!
 	c.Stdin = pr
 	c.childIOFiles = append(c.childIOFiles, pr)
 	c.parentIOPipes = append(c.parentIOPipes, pw)
@@ -1100,10 +1083,7 @@ func (c *Cmd) StdoutPipe() (io.ReadCloser, error) {
 	if c.Process != nil {
 		return nil, errors.New("exec: StdoutPipe after process started")
 	}
-	pr, pw, err := os.Pipe()
-	if err != nil {
-		return nil, err
-	}
+	pr, pw := os.Pipe()!
 	c.Stdout = pw
 	c.childIOFiles = append(c.childIOFiles, pw)
 	c.parentIOPipes = append(c.parentIOPipes, pr)
@@ -1125,10 +1105,7 @@ func (c *Cmd) StderrPipe() (io.ReadCloser, error) {
 	if c.Process != nil {
 		return nil, errors.New("exec: StderrPipe after process started")
 	}
-	pr, pw, err := os.Pipe()
-	if err != nil {
-		return nil, err
-	}
+	pr, pw := os.Pipe()!
 	c.Stderr = pw
 	c.childIOFiles = append(c.childIOFiles, pw)
 	c.parentIOPipes = append(c.parentIOPipes, pr)

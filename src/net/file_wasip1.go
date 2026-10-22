@@ -13,14 +13,8 @@ import (
 )
 
 func fileListener(f *os.File) (Listener, error) {
-	filetype, err := fd_fdstat_get_type(f.PollFD().Sysfd)
-	if err != nil {
-		return nil, err
-	}
-	net, err := fileListenNet(filetype)
-	if err != nil {
-		return nil, err
-	}
+	filetype := fd_fdstat_get_type(f.PollFD().Sysfd)!
+	net := fileListenNet(filetype)!
 	pfd := f.PollFD().Copy()
 	fd := newPollFD(net, pfd)
 	if err := fd.init(); err != nil {
@@ -31,14 +25,8 @@ func fileListener(f *os.File) (Listener, error) {
 }
 
 func fileConn(f *os.File) (Conn, error) {
-	filetype, err := fd_fdstat_get_type(f.PollFD().Sysfd)
-	if err != nil {
-		return nil, err
-	}
-	net, err := fileConnNet(filetype)
-	if err != nil {
-		return nil, err
-	}
+	filetype := fd_fdstat_get_type(f.PollFD().Sysfd)!
+	net := fileConnNet(filetype)!
 	pfd := f.PollFD().Copy()
 	fd := newPollFD(net, pfd)
 	if err := fd.init(); err != nil {

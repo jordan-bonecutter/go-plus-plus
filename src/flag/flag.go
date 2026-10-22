@@ -537,10 +537,7 @@ func (f *FlagSet) set(name, value string) error {
 
 		return fmt.Errorf("no such flag -%v", name)
 	}
-	err := flag.Value.Set(value)
-	if err != nil {
-		return err
-	}
+	flag.Value.Set(value)!
 	flag.IsSet = true
 	if f.actual == nil {
 		f.actual = make(map[string]*Flag)

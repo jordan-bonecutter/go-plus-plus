@@ -279,10 +279,7 @@ func parseIPv6(in string) (Addr, error) {
 			if len(zone) > 0 {
 				end -= len(zone) + 1
 			}
-			err := parseIPv4Fields(in, end-len(s), end, ip[i:i+4])
-			if err != nil {
-				return Addr{}, err
-			}
+			parseIPv4Fields(in, end-len(s), end, ip[i:i+4])!
 			s = ""
 			i += 4
 			break
@@ -1267,10 +1264,7 @@ func (p *AddrPort) UnmarshalBinary(b []byte) error {
 		return errors.New("unexpected slice size")
 	}
 	var addr Addr
-	err := addr.UnmarshalBinary(b[:len(b)-2])
-	if err != nil {
-		return err
-	}
+	addr.UnmarshalBinary(b[:len(b)-2])!
 	*p = AddrPortFrom(addr, byteorder.LEUint16(b[len(b)-2:]))
 	return nil
 }
@@ -1573,10 +1567,7 @@ func (p *Prefix) UnmarshalBinary(b []byte) error {
 		return errors.New("unexpected slice size")
 	}
 	var addr Addr
-	err := addr.UnmarshalBinary(b[:len(b)-1])
-	if err != nil {
-		return err
-	}
+	addr.UnmarshalBinary(b[:len(b)-1])!
 	*p = PrefixFrom(addr, int(b[len(b)-1]))
 	return nil
 }

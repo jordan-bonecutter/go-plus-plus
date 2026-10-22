@@ -176,9 +176,7 @@ func splitHeaderBlock(ctx writeContext, headerBlock []byte, fn func(ctx writeCon
 			frag = frag[:maxFrameSize]
 		}
 		headerBlock = headerBlock[len(frag):]
-		if err := fn(ctx, frag, first, len(headerBlock) == 0); err != nil {
-			return err
-		}
+		fn(ctx, frag, first, len(headerBlock) == 0)!
 		first = false
 	}
 	return nil

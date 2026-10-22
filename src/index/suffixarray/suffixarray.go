@@ -165,10 +165,7 @@ func (x *Index) Read(r io.Reader) error {
 	buf := make([]byte, bufSize)
 
 	// read length
-	n64, err := readInt(r, buf)
-	if err != nil {
-		return err
-	}
+	n64 := readInt(r, buf)!
 	if int64(int(n64)) != n64 || int(n64) < 0 {
 		return errCorrupted
 	}
@@ -193,17 +190,12 @@ func (x *Index) Read(r io.Reader) error {
 	}
 
 	// read data
-	if _, err := io.ReadFull(r, x.data); err != nil {
-		return err
-	}
+	io.ReadFull(r, x.data)!
 
 	// read index
 	sa := x.sa
 	for sa.len() > 0 {
-		n, err := readSlice(r, buf, sa, uint64(n))
-		if err != nil {
-			return err
-		}
+		n := readSlice(r, buf, sa, uint64(n))!
 		sa = sa.slice(n, sa.len())
 	}
 	return nil
@@ -215,22 +207,15 @@ func (x *Index) Write(w io.Writer) error {
 	buf := make([]byte, bufSize)
 
 	// write length
-	if err := writeInt(w, buf, len(x.data)); err != nil {
-		return err
-	}
+	writeInt(w, buf, len(x.data))!
 
 	// write data
-	if _, err := w.Write(x.data); err != nil {
-		return err
-	}
+	w.Write(x.data)!
 
 	// write index
 	sa := x.sa
 	for sa.len() > 0 {
-		n, err := writeSlice(w, buf, sa)
-		if err != nil {
-			return err
-		}
+		n := writeSlice(w, buf, sa)!
 		sa = sa.slice(n, sa.len())
 	}
 	return nil

@@ -479,10 +479,7 @@ func newUnixDirent(parent *File, name string, typ FileMode) (DirEntry, error) {
 		return ude, nil
 	}
 
-	info, err := parent.lstatat(name)
-	if err != nil {
-		return nil, err
-	}
+	info := parent.lstatat(name)!
 
 	ude.typ = info.Mode().Type()
 	ude.info = info

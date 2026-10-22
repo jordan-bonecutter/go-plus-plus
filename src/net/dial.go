@@ -345,10 +345,7 @@ func (r *Resolver) resolveAddrList(ctx context.Context, op, network, addr string
 	}
 	switch afnet {
 	case "unix", "unixgram", "unixpacket":
-		addr, err := ResolveUnixAddr(afnet, addr)
-		if err != nil {
-			return nil, err
-		}
+		addr := ResolveUnixAddr(afnet, addr)!
 		if op == "dial" && hint != nil && addr.Network() != hint.Network() {
 			return nil, &AddrError{Err: "mismatched local address type", Addr: hint.String()}
 		}

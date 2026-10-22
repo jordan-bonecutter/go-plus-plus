@@ -246,10 +246,7 @@ func (defaultConverter) ConvertValue(v any) (Value, error) {
 
 	switch vr := v.(type) {
 	case Valuer:
-		sv, err := callValuerValue(vr)
-		if err != nil {
-			return nil, err
-		}
+		sv := callValuerValue(vr)!
 		if !IsValue(sv) {
 			return nil, fmt.Errorf("non-Value type %T returned from Value", sv)
 		}

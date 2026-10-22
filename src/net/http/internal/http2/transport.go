@@ -514,10 +514,7 @@ func shouldRetryRequest(req *ClientRequest, err error) (*ClientRequest, error) {
 	// If the request body can be reset back to its original
 	// state via the optional req.GetBody, do that.
 	if req.GetBody != nil {
-		body, err := req.GetBody()
-		if err != nil {
-			return nil, err
-		}
+		body := req.GetBody()!
 		newReq := req.Clone()
 		newReq.Body = body
 		return newReq, nil
@@ -553,10 +550,7 @@ func (t *Transport) expectContinueTimeout() time.Duration {
 }
 
 func (t *Transport) NewClientConn(c net.Conn, internalStateHook func()) (NetHTTPClientConn, error) {
-	cc, err := t.newClientConn(c, t.disableKeepAlives(), internalStateHook)
-	if err != nil {
-		return NetHTTPClientConn{}, err
-	}
+	cc := t.newClientConn(c, t.disableKeepAlives(), internalStateHook)!
 
 	// RoundTrip should block when the conn is at its concurrency limit,
 	// not return an error. Setting strictMaxConcurrentStreams enables this.
@@ -913,9 +907,7 @@ var shutdownEnterWaitStateHook = func() {}
 
 // Shutdown gracefully closes the client connection, waiting for running streams to complete.
 func (cc *ClientConn) Shutdown(ctx context.Context) error {
-	if err := cc.sendGoAway(); err != nil {
-		return err
-	}
+	cc.sendGoAway()!
 	// Wait for all in-flight streams to complete or connection to close
 	done := make(chan struct{})
 	cancelled := false // guarded by cc.mu
@@ -963,12 +955,8 @@ func (cc *ClientConn) sendGoAway() error {
 	cc.wmu.Lock()
 	defer cc.wmu.Unlock()
 	// Send a graceful shutdown frame to server
-	if err := cc.fr.WriteGoAway(maxStreamID, ErrCodeNo, nil); err != nil {
-		return err
-	}
-	if err := cc.bw.Flush(); err != nil {
-		return err
-	}
+	cc.fr.WriteGoAway(maxStreamID, ErrCodeNo, nil)!
+	cc.bw.Flush()!
 	// Prevent new requests
 	return nil
 }
@@ -1119,9 +1107,7 @@ func (cc *ClientConn) roundTrip(req *ClientRequest, streamf func(*clientStream))
 			// If there isn't a request or response body still being
 			// written, then wait for the stream to be closed before
 			// RoundTrip returns.
-			if err := waitDone(); err != nil {
-				return nil, err
-			}
+			waitDone()!
 		}
 		return res, nil
 	}
@@ -2311,9 +2297,7 @@ func (rl *clientConnReadLoop) handleResponse(cs *clientStream, f *MetaHeadersFra
 			// If the 1xx response is being delivered to the user,
 			// then they're responsible for limiting the number
 			// of responses.
-			if err := fn(statusCode, textproto.MIMEHeader(header)); err != nil {
-				return nil, err
-			}
+			fn(statusCode, textproto.MIMEHeader(header))!
 		} else {
 			// If the user didn't examine the 1xx response, then we
 			// limit the size of all 1xx headers.
@@ -2789,9 +2773,7 @@ func (rl *clientConnReadLoop) processSettings(f *SettingsFrame) error {
 	cc.wmu.Lock()
 	defer cc.wmu.Unlock()
 
-	if err := rl.processSettingsNoWrite(f); err != nil {
-		return err
-	}
+	rl.processSettingsNoWrite(f)!
 	if !f.IsAck() {
 		cc.fr.WriteSettingsAck()
 		cc.bw.Flush()
@@ -2815,9 +2797,7 @@ func (rl *clientConnReadLoop) processSettingsNoWrite(f *SettingsFrame) error {
 
 	var seenMaxConcurrentStreams bool
 	err := f.ForeachSetting(func(s Setting) error {
-		if err := s.Valid(); err != nil {
-			return err
-		}
+		s.Valid()!
 		switch s.ID {
 		case SettingMaxFrameSize:
 			cc.maxFrameSize = s.Val
@@ -2927,9 +2907,7 @@ func (cc *ClientConn) Ping(ctx context.Context) error {
 	// Generate a random payload
 	var p [8]byte
 	for {
-		if _, err := rand.Read(p[:]); err != nil {
-			return err
-		}
+		rand.Read(p[:])!
 		cc.mu.Lock()
 		// check for dup before insert
 		if _, found := cc.pings[p]; !found {
@@ -2988,9 +2966,7 @@ func (rl *clientConnReadLoop) processPing(f *PingFrame) error {
 	cc := rl.cc
 	cc.wmu.Lock()
 	defer cc.wmu.Unlock()
-	if err := cc.fr.WritePing(true, f.Data); err != nil {
-		return err
-	}
+	cc.fr.WritePing(true, f.Data)!
 	return cc.bw.Flush()
 }
 

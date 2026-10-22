@@ -513,9 +513,7 @@ func parse(rawURL string, viaRequest bool) (*URL, error) {
 	// RawPath is a hint of the encoding of Path. We don't want to set it if
 	// the default escaping of Path is equivalent, to help make sure that people
 	// don't rely on it in general.
-	if err := url.setPath(rest); err != nil {
-		return nil, err
-	}
+	url.setPath(rest)!
 	return url, nil
 }
 
@@ -586,14 +584,8 @@ func parseHost(scheme, host string) (string, error) {
 		// like newlines.
 		zoneIdx := strings.Index(hostname, "%25")
 		if zoneIdx >= 0 {
-			hostPart, err := unescape(hostname[:zoneIdx], encodeHost)
-			if err != nil {
-				return "", err
-			}
-			zonePart, err := unescape(hostname[zoneIdx:], encodeZone)
-			if err != nil {
-				return "", err
-			}
+			hostPart := unescape(hostname[:zoneIdx], encodeHost)!
+			zonePart := unescape(hostname[zoneIdx:], encodeZone)!
 			unescapedHostname = hostPart + zonePart
 		} else {
 			var err error
@@ -668,10 +660,7 @@ func parseHost(scheme, host string) (string, error) {
 //
 //go:linkname badSetPath net/url.(*URL).setPath
 func (u *URL) setPath(p string) error {
-	path, err := unescape(p, encodePath)
-	if err != nil {
-		return err
-	}
+	path := unescape(p, encodePath)!
 	u.Path = path
 	if escp := escape(path, encodePath); p == escp {
 		// Default encoding is fine.
@@ -735,10 +724,7 @@ func validEncoded(s string, mode encoding) bool {
 
 // setFragment is like setPath but for Fragment/RawFragment.
 func (u *URL) setFragment(f string) error {
-	frag, err := unescape(f, encodeFragment)
-	if err != nil {
-		return err
-	}
+	frag := unescape(f, encodeFragment)!
 	u.Fragment = frag
 	if escf := escape(frag, encodeFragment); f == escf {
 		// Default encoding is fine.
@@ -1116,10 +1102,7 @@ func (u *URL) IsAbs() bool {
 // may be relative or absolute. Parse returns nil, err on parse
 // failure, otherwise its return value is the same as [URL.ResolveReference].
 func (u *URL) Parse(ref string) (*URL, error) {
-	refURL, err := Parse(ref)
-	if err != nil {
-		return nil, err
-	}
+	refURL := Parse(ref)!
 	return u.ResolveReference(refURL), nil
 }
 
@@ -1243,10 +1226,7 @@ func (u *URL) AppendBinary(b []byte) ([]byte, error) {
 }
 
 func (u *URL) UnmarshalBinary(text []byte) error {
-	u1, err := Parse(string(text))
-	if err != nil {
-		return err
-	}
+	u1 := Parse(string(text))!
 	*u = *u1
 	return nil
 }

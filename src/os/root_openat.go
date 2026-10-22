@@ -247,10 +247,7 @@ func rootRename(r *Root, oldname, newname string) error {
 		}
 		_, err := doInRoot(r, newname, flags, nil, func(newparent sysfdType, newname string, newEndsInSlash bool) (struct{}, error) {
 			if runtime.GOOS != "windows" && newEndsInSlash {
-				oldMode, err := modeAt(oldparent, oldname)
-				if err != nil {
-					return struct{}{}, err
-				}
+				oldMode := modeAt(oldparent, oldname)!
 				if oldMode.Type() != fs.ModeDir {
 					return struct{}{}, syscall.ENOTDIR
 				}
@@ -500,10 +497,7 @@ Loop:
 }
 
 func modeAt(parent sysfdType, name string) (FileMode, error) {
-	fi, err := lstatat(parent, name)
-	if err != nil {
-		return 0, err
-	}
+	fi := lstatat(parent, name)!
 	return fi.Mode(), nil
 }
 

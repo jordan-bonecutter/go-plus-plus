@@ -16,16 +16,10 @@ func (fd *netFD) status(ln int) (string, error) {
 		return "", syscall.EINVAL
 	}
 
-	status, err := os.Open(fd.dir + "/status")
-	if err != nil {
-		return "", err
-	}
+	status := os.Open(fd.dir + "/status")!
 	defer status.Close()
 	buf := make([]byte, ln)
-	n, err := io.ReadFull(status, buf[:])
-	if err != nil {
-		return "", err
-	}
+	n := io.ReadFull(status, buf[:])!
 	return string(buf[:n]), nil
 }
 
@@ -108,10 +102,7 @@ func fileConn(f *os.File) (Conn, error) {
 }
 
 func fileListener(f *os.File) (Listener, error) {
-	fd, err := newFileFD(f)
-	if err != nil {
-		return nil, err
-	}
+	fd := newFileFD(f)!
 	switch fd.laddr.(type) {
 	case *TCPAddr:
 	default:
@@ -119,10 +110,7 @@ func fileListener(f *os.File) (Listener, error) {
 	}
 
 	// check that file corresponds to a listener
-	s, err := fd.status(len("Listen"))
-	if err != nil {
-		return nil, err
-	}
+	s := fd.status(len("Listen"))!
 	if s != "Listen" {
 		return nil, errors.New("file does not represent a listener")
 	}

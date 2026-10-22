@@ -69,10 +69,7 @@ func (f *file) stat() (fs.FileInfo, error) {
 }
 
 func open(name string) (*file, error) {
-	fd, err := os.Open(name)
-	if err != nil {
-		return nil, err
-	}
+	fd := os.Open(name)!
 	return &file{fd, make([]byte, 0, 64*1024), false}, nil
 }
 
@@ -234,9 +231,7 @@ func foreachField(x string, fn func(field string) error) error {
 			return fn(x)
 		}
 		if field := trimSpace(x[:sp]); len(field) > 0 {
-			if err := fn(field); err != nil {
-				return err
-			}
+			fn(field)!
 		}
 		x = trimSpace(x[sp+1:])
 	}

@@ -120,16 +120,10 @@ func (c *UDPConn) writeTo(b []byte, addr *UDPAddr) (int, error) {
 
 	switch c.fd.family {
 	case syscall.AF_INET:
-		sa, err := ipToSockaddrInet4(addr.IP, addr.Port)
-		if err != nil {
-			return 0, err
-		}
+		sa := ipToSockaddrInet4(addr.IP, addr.Port)!
 		return c.fd.writeToInet4(b, &sa)
 	case syscall.AF_INET6:
-		sa, err := ipToSockaddrInet6(addr.IP, addr.Port, addr.Zone)
-		if err != nil {
-			return 0, err
-		}
+		sa := ipToSockaddrInet6(addr.IP, addr.Port, addr.Zone)!
 		return c.fd.writeToInet6(b, &sa)
 	default:
 		return 0, &AddrError{Err: "invalid address family", Addr: addr.IP.String()}
@@ -146,10 +140,7 @@ func (c *UDPConn) writeToAddrPort(b []byte, addr netip.AddrPort) (int, error) {
 
 	switch c.fd.family {
 	case syscall.AF_INET:
-		sa, err := addrPortToSockaddrInet4(addr)
-		if err != nil {
-			return 0, err
-		}
+		sa := addrPortToSockaddrInet4(addr)!
 		return c.fd.writeToInet4(b, &sa)
 	case syscall.AF_INET6:
 		sa := addrPortToSockaddrInet6(addr)
@@ -211,10 +202,7 @@ func (sd *sysDialer) dialUDP(ctx context.Context, laddr, raddr *UDPAddr) (*UDPCo
 			return sd.Dialer.Control(network, address, c)
 		}
 	}
-	fd, err := internetSocket(ctx, sd.network, laddr, raddr, syscall.SOCK_DGRAM, 0, "dial", ctrlCtxFn)
-	if err != nil {
-		return nil, err
-	}
+	fd := internetSocket(ctx, sd.network, laddr, raddr, syscall.SOCK_DGRAM, 0, "dial", ctrlCtxFn)!
 	return newUDPConn(fd), nil
 }
 
@@ -225,10 +213,7 @@ func (sl *sysListener) listenUDP(ctx context.Context, laddr *UDPAddr) (*UDPConn,
 			return sl.ListenConfig.Control(network, address, c)
 		}
 	}
-	fd, err := internetSocket(ctx, sl.network, laddr, nil, syscall.SOCK_DGRAM, 0, "listen", ctrlCtxFn)
-	if err != nil {
-		return nil, err
-	}
+	fd := internetSocket(ctx, sl.network, laddr, nil, syscall.SOCK_DGRAM, 0, "listen", ctrlCtxFn)!
 	return newUDPConn(fd), nil
 }
 
@@ -239,10 +224,7 @@ func (sl *sysListener) listenMulticastUDP(ctx context.Context, ifi *Interface, g
 			return sl.ListenConfig.Control(network, address, c)
 		}
 	}
-	fd, err := internetSocket(ctx, sl.network, gaddr, nil, syscall.SOCK_DGRAM, 0, "listen", ctrlCtxFn)
-	if err != nil {
-		return nil, err
-	}
+	fd := internetSocket(ctx, sl.network, gaddr, nil, syscall.SOCK_DGRAM, 0, "listen", ctrlCtxFn)!
 	c := newUDPConn(fd)
 	if ip4 := gaddr.IP.To4(); ip4 != nil {
 		if err := listenIPv4MulticastUDP(c, ifi, ip4); err != nil {
@@ -260,30 +242,18 @@ func (sl *sysListener) listenMulticastUDP(ctx context.Context, ifi *Interface, g
 
 func listenIPv4MulticastUDP(c *UDPConn, ifi *Interface, ip IP) error {
 	if ifi != nil {
-		if err := setIPv4MulticastInterface(c.fd, ifi); err != nil {
-			return err
-		}
+		setIPv4MulticastInterface(c.fd, ifi)!
 	}
-	if err := setIPv4MulticastLoopback(c.fd, false); err != nil {
-		return err
-	}
-	if err := joinIPv4Group(c.fd, ifi, ip); err != nil {
-		return err
-	}
+	setIPv4MulticastLoopback(c.fd, false)!
+	joinIPv4Group(c.fd, ifi, ip)!
 	return nil
 }
 
 func listenIPv6MulticastUDP(c *UDPConn, ifi *Interface, ip IP) error {
 	if ifi != nil {
-		if err := setIPv6MulticastInterface(c.fd, ifi); err != nil {
-			return err
-		}
+		setIPv6MulticastInterface(c.fd, ifi)!
 	}
-	if err := setIPv6MulticastLoopback(c.fd, false); err != nil {
-		return err
-	}
-	if err := joinIPv6Group(c.fd, ifi, ip); err != nil {
-		return err
-	}
+	setIPv6MulticastLoopback(c.fd, false)!
+	joinIPv6Group(c.fd, ifi, ip)!
 	return nil
 }

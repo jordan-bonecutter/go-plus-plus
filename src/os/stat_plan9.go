@@ -56,9 +56,7 @@ func dirstat(arg any) (*syscall.Dir, error) {
 		switch a := arg.(type) {
 		case *File:
 			name = a.name
-			if err := a.incref("fstat"); err != nil {
-				return nil, err
-			}
+			a.incref("fstat")!
 			n, err = syscall.Fstat(a.sysfd, buf)
 			a.decref()
 		case string:
@@ -96,10 +94,7 @@ func dirstat(arg any) (*syscall.Dir, error) {
 
 // statNolog implements Stat for Plan 9.
 func statNolog(name string) (FileInfo, error) {
-	d, err := dirstat(name)
-	if err != nil {
-		return nil, err
-	}
+	d := dirstat(name)!
 	return fileInfoFromStat(d), nil
 }
 

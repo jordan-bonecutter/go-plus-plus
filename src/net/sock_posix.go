@@ -96,9 +96,7 @@ func (fd *netFD) dial(ctx context.Context, laddr, raddr sockaddr, ctrlCtxFn func
 		} else if laddr != nil {
 			ctrlAddr = laddr.String()
 		}
-		if err := ctrlCtxFn(ctx, fd.ctrlNetwork(), ctrlAddr, c); err != nil {
-			return err
-		}
+		ctrlCtxFn(ctx, fd.ctrlNetwork(), ctrlAddr, c)!
 	}
 
 	var lsa syscall.Sockaddr
@@ -123,9 +121,7 @@ func (fd *netFD) dial(ctx context.Context, laddr, raddr sockaddr, ctrlCtxFn func
 		}
 		fd.isConnected = true
 	} else {
-		if err := fd.init(); err != nil {
-			return err
-		}
+		fd.init()!
 	}
 	// Record the local and remote addresses from the actual socket.
 	// Get the local address by calling Getsockname.
@@ -156,9 +152,7 @@ func (fd *netFD) listenStream(ctx context.Context, laddr sockaddr, backlog int, 
 
 	if ctrlCtxFn != nil {
 		c := newRawConn(fd)
-		if err := ctrlCtxFn(ctx, fd.ctrlNetwork(), laddr.String(), c); err != nil {
-			return err
-		}
+		ctrlCtxFn(ctx, fd.ctrlNetwork(), laddr.String(), c)!
 	}
 
 	if err = syscall.Bind(fd.pfd.Sysfd, lsa); err != nil {
@@ -186,9 +180,7 @@ func (fd *netFD) listenDatagram(ctx context.Context, laddr sockaddr, ctrlCtxFn f
 		// multiple UDP listeners that listen on the same UDP
 		// port to join the same group address.
 		if addr.IP != nil && addr.IP.IsMulticast() {
-			if err := setDefaultMulticastSockopts(fd.pfd.Sysfd); err != nil {
-				return err
-			}
+			setDefaultMulticastSockopts(fd.pfd.Sysfd)!
 			addr := *addr
 			switch fd.family {
 			case syscall.AF_INET:
@@ -207,9 +199,7 @@ func (fd *netFD) listenDatagram(ctx context.Context, laddr sockaddr, ctrlCtxFn f
 
 	if ctrlCtxFn != nil {
 		c := newRawConn(fd)
-		if err := ctrlCtxFn(ctx, fd.ctrlNetwork(), laddr.String(), c); err != nil {
-			return err
-		}
+		ctrlCtxFn(ctx, fd.ctrlNetwork(), laddr.String(), c)!
 	}
 	if err = syscall.Bind(fd.pfd.Sysfd, lsa); err != nil {
 		return os.NewSyscallError("bind", err)

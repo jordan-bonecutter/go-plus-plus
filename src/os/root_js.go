@@ -33,10 +33,7 @@ func checkPathEscapesInternal(r *Root, name string, lstat bool) error {
 	if r.root.closed.Load() {
 		return ErrClosed
 	}
-	parts, endsInSlash, err := splitPathInRoot(name, nil, nil)
-	if err != nil {
-		return err
-	}
+	parts, endsInSlash := splitPathInRoot(name, nil, nil)!
 
 	i := 0
 	symlinks := 0

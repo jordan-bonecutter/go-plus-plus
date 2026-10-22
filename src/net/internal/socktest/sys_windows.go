@@ -168,14 +168,9 @@ func (sw *Switch) AcceptEx(ls syscall.Handle, as syscall.Handle, b *byte, rxdata
 	f, _ := sw.fltab[FilterAccept]
 	sw.fmu.RUnlock()
 
-	af, err := f.apply(so)
-	if err != nil {
-		return err
-	}
+	af := f.apply(so)!
 	so.Err = syscall.AcceptEx(ls, as, b, rxdatalen, laddrlen, raddrlen, rcvd, overlapped)
-	if err = af.apply(so); err != nil {
-		return err
-	}
+	af.apply(so)!
 
 	sw.smu.Lock()
 	defer sw.smu.Unlock()

@@ -271,10 +271,7 @@ func DialHTTPPath(network, address, path string) (*Client, error) {
 
 // Dial connects to an RPC server at the specified network address.
 func Dial(network, address string) (*Client, error) {
-	conn, err := net.Dial(network, address)
-	if err != nil {
-		return nil, err
-	}
+	conn := net.Dial(network, address)!
 	return NewClient(conn), nil
 }
 

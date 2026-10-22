@@ -629,10 +629,7 @@ func (dc *driverConn) validateConnection(needsReset bool) bool {
 // prepareLocked prepares the query on dc. When cg == nil the dc must keep track of
 // the prepared statements in a pool.
 func (dc *driverConn) prepareLocked(ctx context.Context, cg stmtConnGrabber, query string) (*driverStmt, error) {
-	si, err := ctxDriverPrepare(ctx, dc.ci, query)
-	if err != nil {
-		return nil, err
-	}
+	si := ctxDriverPrepare(ctx, dc.ci, query)!
 	ds := &driverStmt{Locker: dc, si: si}
 
 	// No need to manage open statements if there is a single connection grabber.
@@ -874,10 +871,7 @@ func Open(driverName, dataSourceName string) (*DB, error) {
 	}
 
 	if driverCtx, ok := driveri.(driver.DriverContext); ok {
-		connector, err := driverCtx.OpenConnector(dataSourceName)
-		if err != nil {
-			return nil, err
-		}
+		connector := driverCtx.OpenConnector(dataSourceName)!
 		return OpenDB(connector), nil
 	}
 
@@ -1627,10 +1621,7 @@ func (db *DB) prepare(ctx context.Context, query string, strategy connReuseStrat
 	// to a connection, and to execute this prepared statement
 	// we either need to use this connection (if it's free), else
 	// get a new connection + re-prepare + execute on that one.
-	dc, err := db.conn(ctx, strategy)
-	if err != nil {
-		return nil, err
-	}
+	dc := db.conn(ctx, strategy)!
 	return db.prepareDC(ctx, dc, dc.releaseConn, nil, query)
 }
 
@@ -1691,10 +1682,7 @@ func (db *DB) Exec(query string, args ...any) (Result, error) {
 }
 
 func (db *DB) exec(ctx context.Context, query string, args []any, strategy connReuseStrategy) (Result, error) {
-	dc, err := db.conn(ctx, strategy)
-	if err != nil {
-		return nil, err
-	}
+	dc := db.conn(ctx, strategy)!
 	return db.execDC(ctx, dc, dc.releaseConn, query, args)
 }
 
@@ -1761,10 +1749,7 @@ func (db *DB) Query(query string, args ...any) (*Rows, error) {
 }
 
 func (db *DB) query(ctx context.Context, query string, args []any, strategy connReuseStrategy) (*Rows, error) {
-	dc, err := db.conn(ctx, strategy)
-	if err != nil {
-		return nil, err
-	}
+	dc := db.conn(ctx, strategy)!
 
 	return db.queryDC(ctx, nil, dc, dc.releaseConn, query, args)
 }
@@ -2015,30 +2000,21 @@ func (c *Conn) grabConn(context.Context) (*driverConn, releaseConn, error) {
 
 // PingContext verifies the connection to the database is still alive.
 func (c *Conn) PingContext(ctx context.Context) error {
-	dc, release, err := c.grabConn(ctx)
-	if err != nil {
-		return err
-	}
+	dc, release := c.grabConn(ctx)!
 	return c.db.pingDC(ctx, dc, release)
 }
 
 // ExecContext executes a query without returning any rows.
 // The args are for any placeholder parameters in the query.
 func (c *Conn) ExecContext(ctx context.Context, query string, args ...any) (Result, error) {
-	dc, release, err := c.grabConn(ctx)
-	if err != nil {
-		return nil, err
-	}
+	dc, release := c.grabConn(ctx)!
 	return c.db.execDC(ctx, dc, release, query, args)
 }
 
 // QueryContext executes a query that returns rows, typically a SELECT.
 // The args are for any placeholder parameters in the query.
 func (c *Conn) QueryContext(ctx context.Context, query string, args ...any) (*Rows, error) {
-	dc, release, err := c.grabConn(ctx)
-	if err != nil {
-		return nil, err
-	}
+	dc, release := c.grabConn(ctx)!
 	return c.db.queryDC(ctx, nil, dc, release, query, args)
 }
 
@@ -2062,10 +2038,7 @@ func (c *Conn) QueryRowContext(ctx context.Context, query string, args ...any) *
 // The provided context is used for the preparation of the statement, not for the
 // execution of the statement.
 func (c *Conn) PrepareContext(ctx context.Context, query string) (*Stmt, error) {
-	dc, release, err := c.grabConn(ctx)
-	if err != nil {
-		return nil, err
-	}
+	dc, release := c.grabConn(ctx)!
 	return c.db.prepareDC(ctx, dc, release, c, query)
 }
 
@@ -2113,10 +2086,7 @@ func (c *Conn) Raw(f func(driverConn any) error) (err error) {
 // If a non-default isolation level is used that the driver doesn't support,
 // an error will be returned.
 func (c *Conn) BeginTx(ctx context.Context, opts *TxOptions) (*Tx, error) {
-	dc, release, err := c.grabConn(ctx)
-	if err != nil {
-		return nil, err
-	}
+	dc, release := c.grabConn(ctx)!
 	return c.db.beginDC(ctx, dc, release, opts)
 }
 
@@ -2375,15 +2345,9 @@ func (tx *Tx) Rollback() error {
 // for the execution of the returned statement. The returned statement
 // will run in the transaction context.
 func (tx *Tx) PrepareContext(ctx context.Context, query string) (*Stmt, error) {
-	dc, release, err := tx.grabConn(ctx)
-	if err != nil {
-		return nil, err
-	}
+	dc, release := tx.grabConn(ctx)!
 
-	stmt, err := tx.db.prepareDC(ctx, dc, release, tx, query)
-	if err != nil {
-		return nil, err
-	}
+	stmt := tx.db.prepareDC(ctx, dc, release, tx, query)!
 	tx.stmts.Lock()
 	tx.stmts.v = append(tx.stmts.v, stmt)
 	tx.stmts.Unlock()
@@ -2514,10 +2478,7 @@ func (tx *Tx) Stmt(stmt *Stmt) *Stmt {
 // ExecContext executes a query that doesn't return rows.
 // For example: an INSERT and UPDATE.
 func (tx *Tx) ExecContext(ctx context.Context, query string, args ...any) (Result, error) {
-	dc, release, err := tx.grabConn(ctx)
-	if err != nil {
-		return nil, err
-	}
+	dc, release := tx.grabConn(ctx)!
 	return tx.db.execDC(ctx, dc, release, query, args)
 }
 
@@ -2532,10 +2493,7 @@ func (tx *Tx) Exec(query string, args ...any) (Result, error) {
 
 // QueryContext executes a query that returns rows, typically a SELECT.
 func (tx *Tx) QueryContext(ctx context.Context, query string, args ...any) (*Rows, error) {
-	dc, release, err := tx.grabConn(ctx)
-	if err != nil {
-		return nil, err
-	}
+	dc, release := tx.grabConn(ctx)!
 
 	return tx.db.queryDC(ctx, tx.ctx, dc, release, query, args)
 }
@@ -2677,15 +2635,9 @@ func resultFromStatement(ctx context.Context, ci driver.Conn, ds *driverStmt, ar
 	ds.Lock()
 	defer ds.Unlock()
 
-	dargs, err := driverArgsConnLocked(ci, ds, args)
-	if err != nil {
-		return nil, err
-	}
+	dargs := driverArgsConnLocked(ci, ds, args)!
 
-	resi, err := ctxDriverStmtExec(ctx, ds.si, dargs)
-	if err != nil {
-		return nil, err
-	}
+	resi := ctxDriverStmtExec(ctx, ds.si, dargs)!
 	return driverResult{ds.Locker, resi}, nil
 }
 
@@ -2774,10 +2726,7 @@ func (s *Stmt) connStmt(ctx context.Context, strategy connReuseStrategy) (dc *dr
 // prepareOnConnLocked prepares the query in Stmt s on dc and adds it to the list of
 // open connStmt on the statement. It assumes the caller is holding the lock on dc.
 func (s *Stmt) prepareOnConnLocked(ctx context.Context, dc *driverConn) (*driverStmt, error) {
-	si, err := dc.prepareLocked(ctx, s.cg, s.query)
-	if err != nil {
-		return nil, err
-	}
+	si := dc.prepareLocked(ctx, s.cg, s.query)!
 	cs := connStmt{dc, si}
 	s.mu.Lock()
 	s.css = append(s.css, cs)
@@ -2846,10 +2795,7 @@ func (s *Stmt) Query(args ...any) (*Rows, error) {
 func rowsiFromStatement(ctx context.Context, ci driver.Conn, ds *driverStmt, args ...any) (driver.Rows, error) {
 	ds.Lock()
 	defer ds.Unlock()
-	dargs, err := driverArgsConnLocked(ci, ds, args)
-	if err != nil {
-		return nil, err
-	}
+	dargs := driverArgsConnLocked(ci, ds, args)!
 	return ctxDriverStmtQuery(ctx, ds.si, dargs)
 }
 
@@ -3556,15 +3502,10 @@ func (r *Row) Scan(dest ...any) error {
 	}
 
 	if !r.rows.Next() {
-		if err := r.rows.Err(); err != nil {
-			return err
-		}
+		r.rows.Err()!
 		return ErrNoRows
 	}
-	err := r.rows.Scan(dest...)
-	if err != nil {
-		return err
-	}
+	r.rows.Scan(dest...)!
 	// Make sure the query can be processed to completion with no errors.
 	return r.rows.Close()
 }

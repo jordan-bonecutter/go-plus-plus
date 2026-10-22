@@ -153,15 +153,9 @@ func (c *conn) writeRecord(recType recType, reqId uint16, b []byte) error {
 	defer c.mutex.Unlock()
 	c.buf.Reset()
 	c.h.init(recType, reqId, len(b))
-	if err := binary.Write(&c.buf, binary.BigEndian, c.h); err != nil {
-		return err
-	}
-	if _, err := c.buf.Write(b); err != nil {
-		return err
-	}
-	if _, err := c.buf.Write(pad[:c.h.PaddingLength]); err != nil {
-		return err
-	}
+	binary.Write(&c.buf, binary.BigEndian, c.h)!
+	c.buf.Write(b)!
+	c.buf.Write(pad[:c.h.PaddingLength])!
 	_, err := c.rwc.Write(c.buf.Bytes())
 	return err
 }
@@ -179,15 +173,9 @@ func (c *conn) writePairs(recType recType, reqId uint16, pairs map[string]string
 	for k, v := range pairs {
 		n := encodeSize(b, uint32(len(k)))
 		n += encodeSize(b[n:], uint32(len(v)))
-		if _, err := w.Write(b[:n]); err != nil {
-			return err
-		}
-		if _, err := w.WriteString(k); err != nil {
-			return err
-		}
-		if _, err := w.WriteString(v); err != nil {
-			return err
-		}
+		w.Write(b[:n])!
+		w.WriteString(k)!
+		w.WriteString(v)!
 	}
 	return w.Close()
 }

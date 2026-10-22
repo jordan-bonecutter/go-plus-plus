@@ -198,37 +198,25 @@ func findUsername(name string, r io.Reader) (*User, error) {
 }
 
 func lookupGroup(groupname string) (*Group, error) {
-	f, err := os.Open(groupFile)
-	if err != nil {
-		return nil, err
-	}
+	f := os.Open(groupFile)!
 	defer f.Close()
 	return findGroupName(groupname, f)
 }
 
 func lookupGroupId(id string) (*Group, error) {
-	f, err := os.Open(groupFile)
-	if err != nil {
-		return nil, err
-	}
+	f := os.Open(groupFile)!
 	defer f.Close()
 	return findGroupId(id, f)
 }
 
 func lookupUser(username string) (*User, error) {
-	f, err := os.Open(userFile)
-	if err != nil {
-		return nil, err
-	}
+	f := os.Open(userFile)!
 	defer f.Close()
 	return findUsername(username, f)
 }
 
 func lookupUserId(uid string) (*User, error) {
-	f, err := os.Open(userFile)
-	if err != nil {
-		return nil, err
-	}
+	f := os.Open(userFile)!
 	defer f.Close()
 	return findUserId(uid, f)
 }

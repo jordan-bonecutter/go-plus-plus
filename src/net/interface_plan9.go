@@ -16,25 +16,16 @@ import (
 // interface.
 func interfaceTable(ifindex int) ([]Interface, error) {
 	if ifindex == 0 {
-		n, err := interfaceCount()
-		if err != nil {
-			return nil, err
-		}
+		n := interfaceCount()!
 		ifcs := make([]Interface, n)
 		for i := range ifcs {
-			ifc, err := readInterface(i)
-			if err != nil {
-				return nil, err
-			}
+			ifc := readInterface(i)!
 			ifcs[i] = *ifc
 		}
 		return ifcs, nil
 	}
 
-	ifc, err := readInterface(ifindex - 1)
-	if err != nil {
-		return nil, err
-	}
+	ifc := readInterface(ifindex - 1)!
 	return []Interface{*ifc}, nil
 }
 
@@ -45,10 +36,7 @@ func readInterface(i int) (*Interface, error) {
 	}
 
 	ifcstat := ifc.Name + "/status"
-	ifcstatf, err := open(ifcstat)
-	if err != nil {
-		return nil, err
-	}
+	ifcstatf := open(ifcstat)!
 	defer ifcstatf.close()
 
 	line, ok := ifcstatf.readLine()
@@ -83,10 +71,7 @@ func readInterface(i int) (*Interface, error) {
 
 	// Not a loopback device ("/dev/null") or packet interface (e.g. "pkt2")
 	if stringslite.HasPrefix(device, netdir+"/") {
-		deviceaddrf, err := open(device + "/addr")
-		if err != nil {
-			return nil, err
-		}
+		deviceaddrf := open(device + "/addr")!
 		defer deviceaddrf.close()
 
 		line, ok = deviceaddrf.readLine()
@@ -159,10 +144,7 @@ func interfaceAddrTable(ifi *Interface) ([]Addr, error) {
 	var addrs []Addr
 	for _, ifc := range ifcs {
 		status := ifc.Name + "/status"
-		statusf, err := open(status)
-		if err != nil {
-			return nil, err
-		}
+		statusf := open(status)!
 		defer statusf.close()
 
 		// Read but ignore first line as it only contains the table header.

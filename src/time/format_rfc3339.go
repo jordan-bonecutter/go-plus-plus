@@ -155,10 +155,7 @@ func parseRFC3339[bytes []byte | string](s bytes, local *Location) (Time, bool) 
 func parseStrictRFC3339(b []byte) (Time, error) {
 	t, ok := parseRFC3339(b, Local)
 	if !ok {
-		t, err := Parse(RFC3339, string(b))
-		if err != nil {
-			return Time{}, err
-		}
+		t := Parse(RFC3339, string(b))!
 
 		// The parse template syntax cannot correctly validate RFC 3339.
 		// Explicitly check for cases that Parse is unable to validate for.

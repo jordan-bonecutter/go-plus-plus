@@ -1513,10 +1513,7 @@ func (t Time) AppendBinary(b []byte) ([]byte, error) {
 
 // MarshalBinary implements the [encoding.BinaryMarshaler] interface.
 func (t Time) MarshalBinary() ([]byte, error) {
-	b, err := t.AppendBinary(make([]byte, 0, 16))
-	if err != nil {
-		return nil, err
-	}
+	b := t.AppendBinary(make([]byte, 0, 16))!
 	return b, nil
 }
 

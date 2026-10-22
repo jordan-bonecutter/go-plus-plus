@@ -3632,10 +3632,7 @@ func (s *Server) ListenAndServe() error {
 	if addr == "" {
 		addr = ":http"
 	}
-	ln, err := net.Listen("tcp", addr)
-	if err != nil {
-		return err
-	}
+	ln := net.Listen("tcp", addr)!
 	return s.Serve(ln)
 }
 
@@ -3710,9 +3707,7 @@ func (s *Server) Serve(l net.Listener) error {
 	l = &onceCloseListener{Listener: l}
 	defer l.Close()
 
-	if err := s.setupHTTP2_Serve(); err != nil {
-		return err
-	}
+	s.setupHTTP2_Serve()!
 
 	if !s.trackListener(&l, true) {
 		return ErrServerClosed
@@ -3798,9 +3793,7 @@ func (s *Server) setupTLSConfig(certFile, keyFile string, nextProtos []string) (
 func (s *Server) ServeTLS(l net.Listener, certFile, keyFile string) error {
 	// Setup HTTP/2 before s.Serve, to initialize s.TLSConfig
 	// before we clone it and create the TLS Listener.
-	if err := s.setupHTTP2_ServeTLS(); err != nil {
-		return err
-	}
+	s.setupHTTP2_ServeTLS()!
 	if s.h3Server != nil {
 		// Temporary, test-only way to serve HTTP/3 from a PacketConn:
 		// Pass it to ServeTLS wrapped in a net.Listener.
@@ -3817,10 +3810,7 @@ func (s *Server) ServeTLS(l net.Listener, certFile, keyFile string) error {
 	if s.TLSConfig != nil {
 		nextProtos = s.TLSConfig.NextProtos
 	}
-	config, err := s.setupTLSConfig(certFile, keyFile, adjustNextProtos(nextProtos, s.protocols()))
-	if err != nil {
-		return err
-	}
+	config := s.setupTLSConfig(certFile, keyFile, adjustNextProtos(nextProtos, s.protocols()))!
 
 	tlsListener := tls.NewListener(l, config)
 	return s.Serve(tlsListener)
@@ -4107,10 +4097,7 @@ func (s *Server) ListenAndServeTLS(certFile, keyFile string) error {
 		return errors.New("http: no protocols configured")
 	}
 
-	ln, err := net.Listen("tcp", addr)
-	if err != nil {
-		return err
-	}
+	ln := net.Listen("tcp", addr)!
 	defer ln.Close()
 	return s.ServeTLS(ln, certFile, keyFile)
 }

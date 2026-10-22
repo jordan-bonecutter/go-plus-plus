@@ -250,10 +250,7 @@ func ReadFrameHeader(r io.Reader) (FrameHeader, error) {
 }
 
 func readFrameHeader(buf []byte, r io.Reader) (FrameHeader, error) {
-	_, err := io.ReadFull(r, buf[:frameHeaderLen])
-	if err != nil {
-		return FrameHeader{}, err
-	}
+	io.ReadFull(r, buf[:frameHeaderLen])!
 	return FrameHeader{
 		Length:   (uint32(buf[0])<<16 | uint32(buf[1])<<8 | uint32(buf[2])),
 		Type:     FrameType(buf[3]),
@@ -704,10 +701,7 @@ func (fr *Framer) ReadFrame() (Frame, error) {
 	// frame-sized read buffer while waiting, possibly for a long time,
 	// for the next frame to arrive.
 	fr.releaseReadBuf()
-	fh, err := fr.ReadFrameHeader()
-	if err != nil {
-		return nil, err
-	}
+	fh := fr.ReadFrameHeader()!
 	return fr.ReadFrameForHeader(fh)
 }
 
@@ -847,9 +841,7 @@ func (f *Framer) WriteData(streamID uint32, endStream bool, data []byte) error {
 // It is the caller's responsibility not to violate the maximum frame size
 // and to not call other Write methods concurrently.
 func (f *Framer) WriteDataPadded(streamID uint32, endStream bool, data, pad []byte) error {
-	if err := f.startWriteDataPadded(streamID, endStream, data, pad); err != nil {
-		return err
-	}
+	f.startWriteDataPadded(streamID, endStream, data, pad)!
 	return f.endWrite()
 }
 
@@ -998,9 +990,7 @@ func (f *SettingsFrame) HasDuplicates() bool {
 func (f *SettingsFrame) ForeachSetting(fn func(Setting) error) error {
 	f.checkValid()
 	for i := 0; i < f.NumSettings(); i++ {
-		if err := fn(f.Setting(i)); err != nil {
-			return err
-		}
+		fn(f.Setting(i))!
 	}
 	return nil
 }

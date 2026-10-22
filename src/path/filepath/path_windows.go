@@ -59,10 +59,7 @@ func abs(path string) (string, error) {
 		// special-case empty path by changing it to "." path. See golang.org/issue/24441.
 		path = "."
 	}
-	fullPath, err := syscall.FullPath(path)
-	if err != nil {
-		return "", err
-	}
+	fullPath := syscall.FullPath(path)!
 	return Clean(fullPath), nil
 }
 

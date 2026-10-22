@@ -52,9 +52,7 @@ func newFD(sysfd syscall.Handle, family, sotype int, net string) *netFD {
 }
 
 func (fd *netFD) init() error {
-	if err := fd.pfd.Init(fd.net, new(true)); err != nil {
-		return err
-	}
+	fd.pfd.Init(fd.net, new(true))!
 	switch fd.net {
 	case "udp", "udp4", "udp6":
 		// Disable reporting of PORT_UNREACHABLE errors.
@@ -84,9 +82,7 @@ func (fd *netFD) connect(ctx context.Context, la, ra syscall.Sockaddr) (syscall.
 	// Do not need to call fd.writeLock here,
 	// because fd is not yet accessible to user,
 	// so no concurrent operations are possible.
-	if err := fd.init(); err != nil {
-		return nil, err
-	}
+	fd.init()!
 
 	if ctx.Done() != nil {
 		// Propagate the Context's deadline and cancellation.
@@ -235,9 +231,7 @@ func (fd *netFD) dup() (*os.File, error) {
 	// Disassociate the IOCP from the socket,
 	// it is not safe to share a duplicated handle
 	// that is associated with IOCP.
-	if err := fd.pfd.DisassociateIOCP(); err != nil {
-		return nil, err
-	}
+	fd.pfd.DisassociateIOCP()!
 	var h syscall.Handle
 	var syserr error
 	err := fd.pfd.RawControl(func(fd uintptr) {

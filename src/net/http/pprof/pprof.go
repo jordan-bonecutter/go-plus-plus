@@ -338,14 +338,9 @@ func (name handler) serveDeltaProfile(w http.ResponseWriter, r *http.Request, p 
 
 func collectProfile(p *pprof.Profile) (*profile.Profile, error) {
 	var buf bytes.Buffer
-	if err := p.WriteTo(&buf, 0); err != nil {
-		return nil, err
-	}
+	p.WriteTo(&buf, 0)!
 	ts := time.Now().UnixNano()
-	p0, err := profile.Parse(&buf)
-	if err != nil {
-		return nil, err
-	}
+	p0 := profile.Parse(&buf)!
 	p0.TimeNanos = ts
 	return p0, nil
 }

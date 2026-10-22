@@ -163,13 +163,8 @@ func (tr *transport) dial(ctx context.Context, target string, tlsConfig *tls.Con
 	tr.incInFlightDials()
 	defer tr.decInFlightDials()
 
-	if err := tr.initEndpoint(); err != nil {
-		return nil, err
-	}
-	qconn, err := tr.endpoint.Dial(ctx, "udp", target, newQUICConfig(tr.opts.QUICConfig, tlsConfig))
-	if err != nil {
-		return nil, err
-	}
+	tr.initEndpoint()!
+	qconn := tr.endpoint.Dial(ctx, "udp", target, newQUICConfig(tr.opts.QUICConfig, tlsConfig))!
 	return tr.newClientConn(ctx, qconn, stateHook)
 }
 
@@ -351,10 +346,7 @@ func (cc *clientConn) handleControlStream(st *stream) error {
 	}
 
 	for {
-		ftype, err := st.readFrameHeader()
-		if err != nil {
-			return err
-		}
+		ftype := st.readFrameHeader()!
 		switch ftype {
 		case frameTypeCancelPush:
 			// "If a CANCEL_PUSH frame is received that references a push ID
@@ -370,9 +362,7 @@ func (cc *clientConn) handleControlStream(st *stream) error {
 			return errH3NoError
 		default:
 			// Unknown frames are ignored.
-			if err := st.discardUnknownFrame(ftype); err != nil {
-				return err
-			}
+			st.discardUnknownFrame(ftype)!
 		}
 	}
 }

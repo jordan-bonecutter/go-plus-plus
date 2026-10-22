@@ -206,9 +206,7 @@ func (c *child) handleRecord(rec *record) error {
 		}
 
 		var br beginRequest
-		if err := br.read(rec.content()); err != nil {
-			return err
-		}
+		br.read(rec.content())!
 		if br.role != roleResponder {
 			c.conn.writeEndRequest(rec.h.Id, 0, statusUnknownRole)
 			return nil
@@ -349,10 +347,7 @@ func Serve(l net.Listener, handler http.Handler) error {
 		handler = http.DefaultServeMux
 	}
 	for {
-		rw, err := l.Accept()
-		if err != nil {
-			return err
-		}
+		rw := l.Accept()!
 		c := newChild(rw, handler)
 		go c.serve()
 	}

@@ -189,9 +189,7 @@ func checkPidfd() error {
 	// This shouldn't be necessary since pidfd_open was added in Linux 5.3,
 	// after CLONE_PIDFD in Linux 5.2, but some alternative Linux
 	// implementations may not adhere to this ordering.
-	if err := checkClonePidfd(); err != nil {
-		return err
-	}
+	checkClonePidfd()!
 
 	return nil
 }

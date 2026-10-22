@@ -140,9 +140,7 @@ func (f *subFS) Lstat(name string) (FileInfo, error) {
 
 func (f *subFS) Glob(pattern string) ([]string, error) {
 	// Check pattern is well-formed.
-	if _, err := path.Match(pattern, ""); err != nil {
-		return nil, err
-	}
+	path.Match(pattern, "")!
 	if pattern == "." {
 		return []string{"."}, nil
 	}
@@ -163,9 +161,6 @@ func (f *subFS) Sub(dir string) (FS, error) {
 	if dir == "." {
 		return f, nil
 	}
-	full, err := f.fullName("sub", dir)
-	if err != nil {
-		return nil, err
-	}
+	full := f.fullName("sub", dir)!
 	return &subFS{f.fsys, full}, nil
 }

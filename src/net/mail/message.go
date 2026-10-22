@@ -342,10 +342,7 @@ func (p *addrParser) parseAddressList() ([]*Address, error) {
 			continue
 		}
 
-		addrs, err := p.parseAddress(true)
-		if err != nil {
-			return nil, err
-		}
+		addrs := p.parseAddress(true)!
 		list = append(list, addrs...)
 
 		if !p.skipCFWS() {
@@ -370,10 +367,7 @@ func (p *addrParser) parseAddressList() ([]*Address, error) {
 }
 
 func (p *addrParser) parseSingleAddress() (*Address, error) {
-	addrs, err := p.parseAddress(true)
-	if err != nil {
-		return nil, err
-	}
+	addrs := p.parseAddress(true)!
 	if !p.skipCFWS() {
 		return nil, errors.New("mail: misformatted parenthetical comment")
 	}
@@ -487,10 +481,7 @@ func (p *addrParser) consumeGroupList() ([]*Address, error) {
 	for {
 		p.skipSpace()
 		// embedded groups not allowed.
-		addrs, err := p.parseAddress(false)
-		if err != nil {
-			return nil, err
-		}
+		addrs := p.parseAddress(false)!
 		group = append(group, addrs...)
 
 		if !p.skipCFWS() {
@@ -788,10 +779,7 @@ func (p *addrParser) consumeDisplayNameComment() (string, error) {
 	// TODO(stapelberg): parse quoted-string within comment
 	words := strings.FieldsFunc(comment, func(r rune) bool { return r == ' ' || r == '\t' })
 	for idx, word := range words {
-		decoded, isEncoded, err := p.decodeRFC2047Word(word)
-		if err != nil {
-			return "", err
-		}
+		decoded, isEncoded := p.decodeRFC2047Word(word)!
 		if isEncoded {
 			words[idx] = decoded
 		}

@@ -14,10 +14,7 @@ func getModuleFileName(handle syscall.Handle) (string, error) {
 	var buf []uint16
 	for {
 		buf = make([]uint16, n)
-		r, err := windows.GetModuleFileName(handle, &buf[0], n)
-		if err != nil {
-			return "", err
-		}
+		r := windows.GetModuleFileName(handle, &buf[0], n)!
 		if r < n {
 			break
 		}

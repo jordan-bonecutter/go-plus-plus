@@ -113,18 +113,13 @@ func (fd *netFD) closeWrite() error {
 }
 
 func (fd *netFD) Close() error {
-	if err := fd.pfd.Close(); err != nil {
-		return err
-	}
+	fd.pfd.Close()!
 	if !fd.ok() {
 		return syscall.EINVAL
 	}
 	if fd.net == "tcp" {
 		// The following line is required to unblock Reads.
-		_, err := fd.ctl.WriteString("close")
-		if err != nil {
-			return err
-		}
+		fd.ctl.WriteString("close")!
 	}
 	if fd.net == "udp" {
 		// The following line is required to unblock Reads.

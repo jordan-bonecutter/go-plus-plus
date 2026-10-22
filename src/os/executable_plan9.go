@@ -13,10 +13,7 @@ import (
 
 func executable() (string, error) {
 	fn := "/proc/" + strconv.Itoa(Getpid()) + "/text"
-	f, err := Open(fn)
-	if err != nil {
-		return "", err
-	}
+	f := Open(fn)!
 	defer f.Close()
 	return syscall.Fd2path(int(f.Fd()))
 }

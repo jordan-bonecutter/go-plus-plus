@@ -21,19 +21,13 @@ func (qd *qpackDecoder) decode(st *stream, f func(itype indexType, name, value s
 
 	// We set SETTINGS_QPACK_MAX_TABLE_CAPACITY to 0,
 	// so the Required Insert Count must be 0.
-	_, requiredInsertCount, err := st.readPrefixedInt(8)
-	if err != nil {
-		return err
-	}
+	_, requiredInsertCount := st.readPrefixedInt(8)!
 	if requiredInsertCount != 0 {
 		return errQPACKDecompressionFailed
 	}
 
 	// Delta Base. We don't use the dynamic table yet, so this may be ignored.
-	_, _, err = st.readPrefixedInt(7)
-	if err != nil {
-		return err
-	}
+	st.readPrefixedInt(7)!
 
 	sawNonPseudo := false
 	for st.lim > 0 {
@@ -73,9 +67,7 @@ func (qd *qpackDecoder) decode(st *stream, f func(itype indexType, name, value s
 		} else {
 			sawNonPseudo = true
 		}
-		if err := f(itype, name, value); err != nil {
-			return err
-		}
+		f(itype, name, value)!
 	}
 	return nil
 }

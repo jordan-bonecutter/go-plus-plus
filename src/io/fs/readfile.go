@@ -34,10 +34,7 @@ func ReadFile(fsys FS, name string) ([]byte, error) {
 		return fsys.ReadFile(name)
 	}
 
-	file, err := fsys.Open(name)
-	if err != nil {
-		return nil, err
-	}
+	file := fsys.Open(name)!
 	defer file.Close()
 
 	var size int

@@ -165,22 +165,12 @@ const (
 // holding the global RTNL lock. Since Linux 6.9, per-family address
 // dumps don't take the RTNL lock at all, but AF_UNSPEC dumps still do.
 func netlinkAddrMessages(index int) ([]syscall.NetlinkMessage, error) {
-	s, err := syscall.Socket(syscall.AF_NETLINK, syscall.SOCK_RAW|syscall.SOCK_CLOEXEC, syscall.NETLINK_ROUTE)
-	if err != nil {
-		return nil, err
-	}
+	s := syscall.Socket(syscall.AF_NETLINK, syscall.SOCK_RAW|syscall.SOCK_CLOEXEC, syscall.NETLINK_ROUTE)!
 	defer syscall.Close(s)
-	if err := syscall.SetsockoptInt(s, sysSOL_NETLINK, sysNETLINK_GET_STRICT_CHK, 1); err != nil {
-		return nil, err
-	}
+	syscall.SetsockoptInt(s, sysSOL_NETLINK, sysNETLINK_GET_STRICT_CHK, 1)!
 	sa := &syscall.SockaddrNetlink{Family: syscall.AF_NETLINK}
-	if err := syscall.Bind(s, sa); err != nil {
-		return nil, err
-	}
-	lsa, err := syscall.Getsockname(s)
-	if err != nil {
-		return nil, err
-	}
+	syscall.Bind(s, sa)!
+	lsa := syscall.Getsockname(s)!
 	lsanl, ok := lsa.(*syscall.SockaddrNetlink)
 	if !ok {
 		return nil, syscall.EINVAL
@@ -203,23 +193,15 @@ func netlinkAddrMessages(index int) ([]syscall.NetlinkMessage, error) {
 		}
 		req.hdr.Len = uint32(unsafe.Sizeof(req))
 		wb := unsafe.Slice((*byte)(unsafe.Pointer(&req)), unsafe.Sizeof(req))
-		if err := syscall.Sendto(s, wb, 0, sa); err != nil {
-			return nil, err
-		}
+		syscall.Sendto(s, wb, 0, sa)!
 	recv:
 		for {
-			nr, _, err := syscall.Recvfrom(s, rb, 0)
-			if err != nil {
-				return nil, err
-			}
+			nr, _ := syscall.Recvfrom(s, rb, 0)!
 			if nr < syscall.NLMSG_HDRLEN {
 				return nil, syscall.EINVAL
 			}
 			// Copy the batch, as the parsed messages refer to it.
-			batch, err := syscall.ParseNetlinkMessage(slices.Clone(rb[:nr]))
-			if err != nil {
-				return nil, err
-			}
+			batch := syscall.ParseNetlinkMessage(slices.Clone(rb[:nr]))!
 			for _, m := range batch {
 				if m.Header.Seq != seq || m.Header.Pid != lsanl.Pid {
 					return nil, syscall.EINVAL
@@ -237,9 +219,7 @@ func netlinkAddrMessages(index int) ([]syscall.NetlinkMessage, error) {
 					}
 					break recv
 				case syscall.NLMSG_ERROR:
-					if err := netlinkErrno(&m); err != nil {
-						return nil, err
-					}
+					netlinkErrno(&m)!
 					return nil, syscall.EINVAL
 				case syscall.RTM_NEWADDR:
 					if len(m.Data) < syscall.SizeofIfAddrmsg {

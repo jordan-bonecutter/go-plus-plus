@@ -1162,10 +1162,7 @@ func (t *Transport) getConn(treq *transportRequest, cm connectMethod) (_ *persis
 }
 
 func (t *Transport) tlsConfigForDial(host string) (*tls.Config, error) {
-	firstTLSHost, _, err := net.SplitHostPort(host)
-	if err != nil {
-		return nil, err
-	}
+	firstTLSHost, _ := net.SplitHostPort(host)!
 	cfg := cloneTLSConfig(t.TLSClientConfig)
 	if cfg.ServerName == "" {
 		cfg.ServerName = firstTLSHost
@@ -1786,9 +1783,7 @@ func (pc *persistConn) mapRoundTripError(req *transportRequest, startBytesWritte
 	// If the request was canceled, that's better than network
 	// failures that were likely the result of tearing down the
 	// connection.
-	if cerr := pc.canceled(); cerr != nil {
-		return cerr
-	}
+	pc.canceled()!
 
 	// See if an error was set explicitly.
 	req.mu.Lock()
@@ -2003,9 +1998,7 @@ func (pc *persistConn) readLoop() {
 				} else {
 					waitForBodyRead <- bodyReadError
 					if err != nil {
-						if cerr := pc.canceled(); cerr != nil {
-							return cerr
-						}
+						pc.canceled()!
 					}
 				}
 				return err

@@ -905,10 +905,7 @@ func NewRequestWithContext(ctx context.Context, method, url string, body io.Read
 	if ctx == nil {
 		return nil, errors.New("net/http: nil Context")
 	}
-	u, err := urlpkg.Parse(url)
-	if err != nil {
-		return nil, err
-	}
+	u := urlpkg.Parse(url)!
 	rc, ok := body.(io.ReadCloser)
 	if !ok && body != nil {
 		rc = io.NopCloser(body)
@@ -1062,10 +1059,7 @@ func putTextprotoReader(r *textproto.Reader) {
 // requests and handle them via the [Handler] interface. ReadRequest
 // only supports HTTP/1.x requests. For HTTP/2, use golang.org/x/net/http2.
 func ReadRequest(b *bufio.Reader) (*Request, error) {
-	req, err := readRequest(b)
-	if err != nil {
-		return nil, err
-	}
+	req := readRequest(b)!
 
 	delete(req.Header, "Host")
 	return req, nil
@@ -1400,15 +1394,9 @@ func (r *Request) ParseMultipartForm(maxMemory int64) error {
 		return nil
 	}
 
-	mr, err := r.multipartReader(false)
-	if err != nil {
-		return err
-	}
+	mr := r.multipartReader(false)!
 
-	f, err := mr.ReadForm(maxMemory)
-	if err != nil {
-		return err
-	}
+	f := mr.ReadForm(maxMemory)!
 
 	if r.PostForm == nil {
 		r.PostForm = make(url.Values)
@@ -1467,10 +1455,7 @@ func (r *Request) FormFile(key string) (multipart.File, *multipart.FileHeader, e
 		return nil, nil, errors.New("http: multipart handled by MultipartReader")
 	}
 	if r.MultipartForm == nil {
-		err := r.ParseMultipartForm(defaultMaxMemory)
-		if err != nil {
-			return nil, nil, err
-		}
+		r.ParseMultipartForm(defaultMaxMemory)!
 	}
 	if r.MultipartForm != nil && r.MultipartForm.File != nil {
 		if fhs := r.MultipartForm.File[key]; len(fhs) > 0 {

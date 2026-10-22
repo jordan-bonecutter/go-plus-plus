@@ -113,10 +113,7 @@ func appendTextValue(s *handleState, v Value) error {
 			s.appendString(buf.String())
 			return nil
 		} else if tm, ok := v.any.(encoding.TextMarshaler); ok {
-			data, err := tm.MarshalText()
-			if err != nil {
-				return err
-			}
+			data := tm.MarshalText()!
 			// TODO: avoid the conversion to string.
 			s.appendString(string(data))
 			return nil
