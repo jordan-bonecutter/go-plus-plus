@@ -174,10 +174,7 @@ func TestingOnlyNewDecapsulationKey1024(b []byte) (*DecapsulationKey1024, error)
 		b = b[encodingSize12:]
 	}
 
-	ek, err := NewEncapsulationKey1024(b[:EncapsulationKeySize1024])
-	if err != nil {
-		return nil, err
-	}
+	ek := NewEncapsulationKey1024(b[:EncapsulationKeySize1024])!
 	dk.ρ = ek.ρ
 	dk.h = ek.h
 	dk.encryptionKey1024 = ek.encryptionKey1024
@@ -259,10 +256,7 @@ func kemKeyGen1024(dk *DecapsulationKey1024, d, z *[32]byte) {
 func kemPCT1024(dk *DecapsulationKey1024) error {
 	ek := dk.EncapsulationKey()
 	K, c := ek.Encapsulate()
-	K1, err := dk.Decapsulate(c)
-	if err != nil {
-		return err
-	}
+	K1 := dk.Decapsulate(c)!
 	if subtle.ConstantTimeCompare(K, K1) != 1 {
 		return errors.New("mlkem: PCT failed")
 	}
@@ -410,6 +404,8 @@ func (dk *DecapsulationKey1024) Decapsulate(ciphertext []byte) (sharedKey []byte
 	return kemDecaps1024(dk, c), nil
 }
 
+var testingOnlyRejectionOutcome1024 func(int)
+
 // kemDecaps1024 produces a shared key from a ciphertext.
 //
 // It implements ML-KEM.Decaps_internal according to FIPS 203, Algorithm 18.
@@ -428,6 +424,10 @@ func kemDecaps1024(dk *DecapsulationKey1024, c *[CiphertextSize1024]byte) (K []b
 	J.Read(Kout)
 	var cc [CiphertextSize1024]byte
 	c1 := pkeEncrypt1024(&cc, &dk.encryptionKey1024, (*[32]byte)(m), r)
+
+	if testingOnlyRejectionOutcome1024 != nil {
+		testingOnlyRejectionOutcome1024(subtle.ConstantTimeCompare(c[:], c1))
+	}
 
 	subtle.ConstantTimeCopy(subtle.ConstantTimeCompare(c[:], c1), Kout, Kprime)
 	return Kout
