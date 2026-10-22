@@ -1,0 +1,77 @@
+Postfix error propagation
+=========================
+
+A function call whose final result has type error can be followed by !:
+
+    func read() (string, error) {
+        data := load()!
+        return string(data), nil
+    }
+
+The enclosing function must also have error as its final result. Aliases of
+error are accepted; other types implementing error are not a final error result.
+
+The call is evaluated once. If its final error is nil, the expression produces
+all results except that error. A call returning only error produces no values
+on success and can be used as a statement.
+
+If the error is non-nil, the enclosing function returns immediately:
+
+* Unnamed results are set to their zero values, followed by the call's error.
+* Named results retain their current values, except that the final error is
+  replaced by the call's error. Blank result names have zero values.
+
+Ordinary return semantics apply, including deferred calls. A successful call
+does not overwrite the enclosing function's named error result. The operator
+uses the innermost enclosing function, including function literals. It preserves
+normal expression evaluation order and short-circuit behavior.
+
+The operator is not permitted on a conversion, builtin, non-call expression,
+or the outer call of a go or defer statement. Prefix ! remains boolean negation.
+A newline after postfix ! terminates the statement as it does after a call.
+
+Editor support
+--------------
+
+Rebuild the installed command tools (including vet and cover), then build
+and test the matching editor server:
+
+    bin/go install cmd/...
+    bash misc/test-bang-toolchain.sh
+    bash misc/build-gopls-unions.sh
+    python3 misc/test-gopls-unions.py
+    python3 misc/test-gopls-bang.py
+
+Configure the editor to use this checkout's bin/go, bin/gofmt, and bin/gopls.
+The gopls build patches both analysis engines to preserve the error branch of
+postfix calls, including returns through iterator callbacks. The build also
+checks the generated analysis representations and executes the SSA regression
+program. A stock gopls binary does not understand the extended language.
+
+For a deeper release check, run the generated differential comparison:
+
+    python3 misc/test-bang-differential.py
+
+It compares postfix calls with explicit error checks, including short-circuit
+expressions, named results, defers, and iterator callbacks, under optimized,
+no-inlining, unoptimized, and race-instrumented builds.
+
+SSA-based editor analyses model union constructors and variant payload matches
+as opaque operations. They preserve payload types and all variant branches,
+including variants sharing a payload type, without assuming ordinary struct
+layout for the union's overlapping storage. Runtime union behavior is tested
+with the compiler; the analysis interpreter does not execute these opaque
+operations.
+
+The editor regression also checks union variant references and rename across
+generic instantiations, aliases, and reverse dependencies. Variant renames
+reject existing variant/member names and changes that would hide a variant
+still used from another package. Local unions sharing a name in different
+scopes remain independent.
+
+Parser/type-checker fuzzing can be run from src:
+
+    ../bin/go test ./go/types -run '^$' -fuzz '^FuzzBang$' -fuzztime=30s
+
+Editor refactoring refuses extraction or inlining that would move postfix !
+across a function boundary. Nested function literals retain their own scope.

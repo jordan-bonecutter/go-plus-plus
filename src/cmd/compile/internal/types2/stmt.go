@@ -164,6 +164,10 @@ func (check *Checker) closeScope() {
 }
 
 func (check *Checker) suspendedCall(keyword string, call syntax.Expr) {
+	if c, ok := call.(*syntax.CallExpr); ok && c.Bang {
+		check.errorf(call, InvalidSyntaxTree, "postfix ! is not allowed in %s call", keyword)
+		return
+	}
 	code := InvalidDefer
 	if keyword == "go" {
 		code = InvalidGo

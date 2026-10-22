@@ -120,25 +120,26 @@ func main() {
 	//     41  .  .  .  .  .  .  .  }
 	//     42  .  .  .  .  .  .  .  Ellipsis: -
 	//     43  .  .  .  .  .  .  .  Rparen: 4:25
-	//     44  .  .  .  .  .  .  }
-	//     45  .  .  .  .  .  }
-	//     46  .  .  .  .  }
-	//     47  .  .  .  .  Rbrace: 5:1
-	//     48  .  .  .  }
-	//     49  .  .  }
-	//     50  .  }
-	//     51  .  FileStart: 1:1
-	//     52  .  FileEnd: 5:3
-	//     53  .  Scope: *ast.Scope {
-	//     54  .  .  Objects: map[string]*ast.Object (len = 1) {
-	//     55  .  .  .  "main": *(obj @ 11)
-	//     56  .  .  }
-	//     57  .  }
-	//     58  .  Unresolved: []*ast.Ident (len = 1) {
-	//     59  .  .  0: *(obj @ 29)
-	//     60  .  }
-	//     61  .  GoVersion: ""
-	//     62  }
+	//     44  .  .  .  .  .  .  .  Bang: -
+	//     45  .  .  .  .  .  .  }
+	//     46  .  .  .  .  .  }
+	//     47  .  .  .  .  }
+	//     48  .  .  .  .  Rbrace: 5:1
+	//     49  .  .  .  }
+	//     50  .  .  }
+	//     51  .  }
+	//     52  .  FileStart: 1:1
+	//     53  .  FileEnd: 5:3
+	//     54  .  Scope: *ast.Scope {
+	//     55  .  .  Objects: map[string]*ast.Object (len = 1) {
+	//     56  .  .  .  "main": *(obj @ 11)
+	//     57  .  .  }
+	//     58  .  }
+	//     59  .  Unresolved: []*ast.Ident (len = 1) {
+	//     60  .  .  0: *(obj @ 29)
+	//     61  .  }
+	//     62  .  GoVersion: ""
+	//     63  }
 }
 
 func ExamplePreorder() {

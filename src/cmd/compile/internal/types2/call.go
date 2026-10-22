@@ -186,6 +186,10 @@ func (check *Checker) callExpr(x *operand, call *syntax.CallExpr) exprKind {
 	}
 	// x.typ may be generic
 
+	if call.Bang && (x.mode() == typexpr || x.mode() == builtin) {
+		check.error(call, InvalidSyntaxTree, "postfix ! requires an error-returning function call")
+		x.invalidate()
+	}
 	switch x.mode() {
 	case invalid:
 		check.use(call.ArgList...)
@@ -316,8 +320,25 @@ func (check *Checker) callExpr(x *operand, call *syntax.CallExpr) exprKind {
 		check.recordTypeAndValue(call.Fun, value, sig, nil)
 	}
 
+	results := sig.results
+	if call.Bang {
+		errType := universeError
+		if check.sig == nil || check.sig.results.Len() == 0 || !Identical(check.sig.results.At(check.sig.results.Len()-1).typ, errType) {
+			check.error(call, InvalidSyntaxTree, "postfix ! requires enclosing function to return a final error")
+			x.invalidate()
+			x.expr = call
+			return statement
+		}
+		if results.Len() == 0 || !Identical(results.At(results.Len()-1).typ, errType) {
+			check.error(call, InvalidSyntaxTree, "postfix ! requires call to return a final error")
+			x.invalidate()
+			x.expr = call
+			return statement
+		}
+		results = NewTuple(results.vars[:results.Len()-1]...)
+	}
 	// determine result
-	switch sig.results.Len() {
+	switch results.Len() {
 	case 0:
 		x.mode_ = novalue
 	case 1:
@@ -326,7 +347,7 @@ func (check *Checker) callExpr(x *operand, call *syntax.CallExpr) exprKind {
 		} else {
 			x.mode_ = value
 		}
-		typ := sig.results.vars[0].typ // unpack tuple
+		typ := results.vars[0].typ // unpack tuple
 		// We cannot return a value of an incomplete type; make sure it's complete.
 		if !check.isComplete(typ) {
 			x.invalidate()
@@ -336,7 +357,7 @@ func (check *Checker) callExpr(x *operand, call *syntax.CallExpr) exprKind {
 		x.typ_ = typ
 	default:
 		x.mode_ = value
-		x.typ_ = sig.results
+		x.typ_ = results
 	}
 	x.expr = call
 	check.hasCallOrRecv = true

@@ -770,3 +770,25 @@ func TestIssue33961(t *testing.T) {
 		}
 	}
 }
+
+func TestBangSemicolons(t *testing.T) {
+	cases := []struct {
+		source string
+		want   []token
+	}{
+		{"return !\nfalse", []token{_Return, _Operator, _Name, _Semi, _EOF}},
+		{"return ! /*\ncomment*/ false", []token{_Return, _Operator, _Name, _Semi, _EOF}},
+		{"f()!\nreturn", []token{_Name, _Lparen, _Rparen, _Operator, _Semi, _Return, _Semi, _EOF}},
+		{"f() /*comment*/ !\nreturn", []token{_Name, _Lparen, _Rparen, _Operator, _Semi, _Return, _Semi, _EOF}},
+	}
+	var scan scanner
+	for _, tt := range cases {
+		scan.init(strings.NewReader(tt.source), errh, 0)
+		for _, want := range tt.want {
+			scan.next()
+			if scan.tok != want {
+				t.Errorf("%q: got %s, want %s", tt.source, scan.tok, want)
+			}
+		}
+	}
+}

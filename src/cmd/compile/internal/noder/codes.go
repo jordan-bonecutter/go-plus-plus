@@ -63,6 +63,8 @@ const (
 	exprRecv
 	exprReshape
 	exprRuntimeBuiltin // a reference to a runtime function from transformed syntax. Followed by string name, e.g., "panicrangeexit"
+	exprBang
+	exprBangError
 )
 
 type codeAssign int

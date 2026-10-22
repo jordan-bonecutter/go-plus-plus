@@ -1746,6 +1746,14 @@ func (p *parser) parsePrimaryExpr(x ast.Expr) ast.Expr {
 	for n = 1; ; n++ {
 		incNestLev(p)
 		switch p.tok {
+		case token.NOT:
+			call, ok := x.(*ast.CallExpr)
+			if !ok || call.Bang.IsValid() {
+				p.error(p.pos, "postfix ! requires a function call")
+			} else {
+				call.Bang = p.pos
+			}
+			p.next()
 		case token.PERIOD:
 			p.next()
 			switch p.tok {

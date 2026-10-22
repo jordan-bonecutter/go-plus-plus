@@ -112,6 +112,7 @@ type reader struct {
 	// separately so that it doesn't take up space in every reader
 	// instance.
 
+	bangError   ir.Node // error operand while reading a rewritten propagation exit
 	curfn       *ir.Func
 	locals      []*ir.Name
 	closureVars []*ir.Name
@@ -2443,6 +2444,63 @@ func (r *reader) expr() (res ir.Node) {
 		}
 		return x
 
+	case exprBangError:
+		assert(r.bangError != nil)
+		return r.bangError
+
+	case exprBang:
+		pos := r.pos()
+		call := r.expr()
+		var body ir.Nodes
+		var values []ir.Node
+		if call.Type().IsFuncArgStruct() {
+			as := ir.NewAssignListStmt(pos, ir.OAS2, nil, []ir.Node{call})
+			for _, field := range call.Type().Fields() {
+				tmp := r.temp(pos, field.Type)
+				body.Append(ir.NewDecl(pos, ir.ODCL, tmp))
+				values = append(values, tmp)
+			}
+			// Ordering rewrites Lhs; keep the expression results separate.
+			as.Lhs = append([]ir.Node(nil), values...)
+			body.Append(typecheck.Stmt(r.curfn, as))
+		} else {
+			values = []ir.Node{r.tempCopy(pos, call, &body)}
+		}
+		err := values[len(values)-1]
+		cond := typecheck.Expr(r.curfn, ir.NewBinaryExpr(pos, ir.ONE, err, typecheck.NodNil()))
+		var ret ir.Node
+		if r.Bool() {
+			old := r.bangError
+			r.bangError = err
+			ret = r.stmt()
+			r.bangError = old
+		} else {
+			fields := r.curfn.Type().Results()
+			results := make([]ir.Node, len(fields))
+			for i, field := range fields {
+				if r.Bool() {
+					sig := r.curfn.Type()
+					results[i] = r.curfn.Dcl[sig.NumRecvs()+sig.NumParams()+i]
+				} else {
+					results[i] = ir.NewZero(pos, field.Type)
+				}
+			}
+			results[len(results)-1] = err
+			ret = typecheck.Stmt(r.curfn, ir.NewReturnStmt(pos, results))
+		}
+		body.Append(typecheck.Stmt(r.curfn, ir.NewIfStmt(pos, cond, []ir.Node{ret}, nil)))
+		values = values[:len(values)-1]
+		n := ir.NewInlinedCallExpr(pos, body, values)
+		switch len(values) {
+		case 0:
+		case 1:
+			n.SetType(values[0].Type())
+		default:
+			n.SetType(types.NewSignature(nil, nil, call.Type().Fields()[:len(values)]).ResultsTuple())
+		}
+		n.SetTypecheck(1)
+		return n
+
 	case exprCall:
 		var fun ir.Node
 		var args ir.Nodes
@@ -3128,6 +3186,14 @@ func (r *reader) multiExpr() []ir.Node {
 
 		results := make([]ir.Node, r.Len())
 		as := ir.NewAssignListStmt(pos, ir.OAS2, nil, []ir.Node{expr})
+		var init []ir.Node
+		if call, ok := expr.(*ir.InlinedCallExpr); ok {
+			// A propagation expression already materialized its results.
+			// Keep its body before the copies and conversions below.
+			as.Rhs = append([]ir.Node(nil), call.ReturnVars...)
+			init = append(init, call.Init()...)
+			init = append(init, call.Body...)
+		}
 		as.Def = true
 		for i := range results {
 			tmp := r.temp(pos, r.typ())
@@ -3146,7 +3212,7 @@ func (r *reader) multiExpr() []ir.Node {
 		}
 
 		// TODO(mdempsky): Could use ir.InlinedCallExpr instead?
-		results[0] = ir.InitExpr([]ir.Node{typecheck.Stmt(r.curfn, as)}, results[0])
+		results[0] = ir.InitExpr(append(init, typecheck.Stmt(r.curfn, as)), results[0])
 		return results
 	}
 

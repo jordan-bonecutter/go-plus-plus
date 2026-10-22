@@ -1,0 +1,200 @@
+--- a/go/ssa/builder.go
++++ b/go/ssa/builder.go
+@@ -287,6 +287,9 @@
+ 		return b.exprN(fn, e.X)
+ 
+ 	case *ast.CallExpr:
++		if e.Bang.IsValid() {
++			return b.bang(fn, e)
++		}
+ 		// Currently, no built-in function nor type conversion
+ 		// has multiple results, so we can avoid some of the
+ 		// cases for single-valued CallExpr.
+@@ -666,6 +669,9 @@
+ 		return emitTypeAssert(fn, b.expr(fn, e.X), fn.typ(tv.Type), e.Lparen)
+ 
+ 	case *ast.CallExpr:
++		if e.Bang.IsValid() {
++			return b.bang(fn, e)
++		}
+ 		if fn.info.Types[e.Fun].IsType() {
+ 			// Explicit type conversion, e.g. string(x) or big.Int(x)
+ 			x := b.expr(fn, e.Args[0])
+@@ -807,6 +813,9 @@
+ 		return emitLoad(fn, fn.lookup(obj.(*types.Var), false)) // var (address)
+ 
+ 	case *ast.SelectorExpr:
++		if value := b.unionConstructor(fn, e); value != nil {
++			return value
++		}
+ 		sel := fn.selection(e)
+ 		if sel == nil {
+ 			// builtin unsafe.{Add,Slice}
+@@ -1078,7 +1087,7 @@
+ 	// args; a suffix of them may end up in a varargs slice.
+ 	for _, arg := range e.Args {
+ 		v := b.expr(fn, arg)
+-		if ttuple, ok := v.Type().(*types.Tuple); ok { // MRV chain
++		if ttuple, ok := fn.typeOf(arg).(*types.Tuple); ok { // MRV chain
+ 			for i, n := 0, ttuple.Len(); i < n; i++ {
+ 				args = append(args, emitExtract(fn, v, i))
+ 			}
+@@ -1502,6 +1511,9 @@
+ // typeSwitchStmt emits to fn code for the type switch statement s, optionally
+ // labelled by label.
+ func (b *builder) typeSwitchStmt(fn *Function, s *ast.TypeSwitchStmt, label *lblock) {
++	if b.unionSwitch(fn, s, label) {
++		return
++	}
+ 	// We treat TypeSwitchStmt like a sequential if-else chain.
+ 	// Multiway dispatch can be recovered later by ssautil.Switches().
+ 
+@@ -2835,6 +2847,139 @@
+ 	fn.currentBlock = fn.newBasicBlock("unreachable")
+ }
+ 
++// isAnalysisUnion recognizes the private metadata shared by local and imported
++// tagged unions. Analysis deliberately keeps payload construction opaque rather
++// than confusing the runtime's overlapping storage with ordinary Go fields.
++func isAnalysisUnion(t types.Type) bool {
++	st, ok := t.Underlying().(*types.Struct)
++	return ok && st.NumFields() == 3 && st.Field(0).Name() == "union·data" && st.Field(1).Name() == "union·anchor" && st.Field(2).Name() == "union·tag"
++}
++
++func (b *builder) unionConstructor(fn *Function, e *ast.SelectorExpr) Value {
++	if fn.info.Selections[e] != nil || !fn.info.Types[e.X].IsType() || !isAnalysisUnion(fn.typeOf(e.X)) {
++		return nil
++	}
++	if _, ok := fn.info.Uses[e.Sel].(*types.Func); !ok {
++		return nil
++	}
++	sig := fn.typ(fn.typeOf(e)).(*types.Signature)
++	return fn.Prog.NewFunction("union."+e.Sel.Name, sig, "opaque tagged union constructor")
++}
++
++// unionSwitch emits conservative variant tests with correctly typed bindings.
++// Separate tests are essential: two variants may have the same payload type.
++func (b *builder) unionSwitch(fn *Function, s *ast.TypeSwitchStmt, label *lblock) bool {
++	var guard *ast.TypeAssertExpr
++	switch ass := s.Assign.(type) {
++	case *ast.ExprStmt:
++		guard, _ = ast.Unparen(ass.X).(*ast.TypeAssertExpr)
++	case *ast.AssignStmt:
++		guard, _ = ast.Unparen(ass.Rhs[0]).(*ast.TypeAssertExpr)
++	}
++	if guard == nil || !isAnalysisUnion(fn.typeOf(guard.X)) {
++		return false
++	}
++	name, ok := guard.Type.(*ast.Ident)
++	if !ok || name.Name != "variant" {
++		return false
++	}
++	if s.Init != nil {
++		b.stmt(fn, s.Init)
++	}
++	x := b.expr(fn, guard.X)
++	done := fn.newBasicBlock("variant.done")
++	if label != nil {
++		label._break = done
++	}
++	var fallback *ast.CaseClause
++	body := func(cc *ast.CaseClause, value Value) {
++		if obj, ok := fn.info.Implicits[cc].(*types.Var); ok {
++			emitStore(fn, emitLocalVar(fn, obj), value, obj.Pos())
++		}
++		fn.targets = &targets{tail: fn.targets, _break: done}
++		b.stmtList(fn, cc.Body)
++		fn.targets = fn.targets.tail
++		emitJump(fn, done)
++	}
++	for _, clause := range s.Body.List {
++		cc := clause.(*ast.CaseClause)
++		if cc.List == nil {
++			fallback = cc
++			continue
++		}
++		payload := fn.typ(fn.typeOf(cc.List[0]))
++		result := types.NewTuple(types.NewVar(token.NoPos, nil, "value", payload), types.NewVar(token.NoPos, nil, "ok", tBool))
++		param := types.NewTuple(types.NewParam(token.NoPos, nil, "union", x.Type()))
++		sig := types.NewSignatureType(nil, nil, nil, param, result, false)
++		test := fn.Prog.NewFunction("union.match."+cc.List[0].(*ast.Ident).Name, sig, "opaque tagged union match")
++		var call Call
++		call.Call.Value = test
++		call.Call.Args = []Value{x}
++		call.setType(result)
++		tuple := emitCall(fn, &call)
++		matched, next := fn.newBasicBlock("variant.body"), fn.newBasicBlock("variant.next")
++		emitIf(fn, emitExtract(fn, tuple, 1), matched, next)
++		fn.currentBlock = matched
++		body(cc, emitExtract(fn, tuple, 0))
++		fn.currentBlock = next
++	}
++	if fallback != nil {
++		body(fallback, x)
++	} else {
++		fn.emit(&Panic{X: emitConv(fn, stringConst("union has no active variant"), tEface)})
++	}
++	fn.currentBlock = done
++	return true
++}
++
++// bang evaluates a postfix ! call once and emits its implicit error return.
++// A multi-valued expression retains the full call tuple internally; consumers
++// expand only the prefix described by the type-checked source expression.
++func (b *builder) bang(fn *Function, e *ast.CallExpr) Value {
++	var call Call
++	b.setCall(fn, e, &call.Call)
++	results := call.Call.Signature().Results()
++	if results.Len() == 1 {
++		call.setType(results.At(0).Type())
++	} else {
++		call.setType(results)
++	}
++	value := emitCall(fn, &call)
++	err := value
++	if results.Len() > 1 {
++		err = emitExtract(fn, value, results.Len()-1)
++	}
++	failed := fn.newBasicBlock("bang.error")
++	success := fn.newBasicBlock("bang.success")
++	emitIf(fn, emitCompare(fn, token.NEQ, err, zeroConst(err.Type()), e.Bang), failed, success)
++	fn.currentBlock = failed
++	sig := fn.source.Signature
++	for i := 0; i < sig.Results().Len(); i++ {
++		result := sig.Results().At(i)
++		var value Value
++		if i == sig.Results().Len()-1 {
++			value = err
++		} else if result.Name() == "" || result.Name() == "_" {
++			value = zeroConst(fn.typ(result.Type()))
++		} else {
++			continue
++		}
++		var addr Value
++		if fn == fn.source {
++			addr = fn.results[i]
++		} else {
++			addr = fn.lookup(fn.returnVars[i], false)
++		}
++		emitStore(fn, addr, value, e.Bang)
++	}
++	b.returnStmt(fn, &ast.ReturnStmt{Return: e.Bang})
++	fn.currentBlock = success
++	if results.Len() == 2 {
++		return emitExtract(fn, value, 0)
++	}
++	return value
++}
++
+ func (b *builder) returnStmt(fn *Function, s *ast.ReturnStmt) {
+ 	var results []Value
+ 
+@@ -2844,7 +2989,7 @@
+ 	if len(s.Results) == 1 && sig.Results().Len() > 1 {
+ 		// Return of one expression in a multi-valued function.
+ 		tuple := b.exprN(fn, s.Results[0])
+-		ttuple := tuple.Type().(*types.Tuple)
++		ttuple := fn.typeOf(s.Results[0]).(*types.Tuple)
+ 		for i, n := 0, ttuple.Len(); i < n; i++ {
+ 			results = append(results,
+ 				emitConv(fn, emitExtract(fn, tuple, i),

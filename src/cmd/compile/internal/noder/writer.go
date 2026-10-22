@@ -1904,6 +1904,14 @@ func (w *writer) expr(expr syntax.Expr) {
 	}
 	if name, ok := expr.(*syntax.Name); ok {
 		switch name.Value {
+		case syntax.BangError:
+			w.Code(exprBangError)
+			return
+		case syntax.BangZero:
+			w.Code(exprZero)
+			w.pos(name)
+			w.typ(w.p.typeOf(name))
+			return
 		case syntax.UnionAnchor:
 			w.Code(exprRuntimeBuiltin)
 			w.String("unionanchor")
@@ -2110,6 +2118,29 @@ func (w *writer) expr(expr syntax.Expr) {
 		w.implicitConvExpr(commonType, expr.Y)
 
 	case *syntax.CallExpr:
+		if expr.Bang {
+			w.Code(exprBang)
+			w.pos(expr)
+			// Encode an ordinary call inside the propagation expression.
+			call := *expr
+			call.Bang = false
+			sig := types2.CoreType(w.p.typeOf(expr.Fun)).(*types2.Signature)
+			tv := syntax.TypeAndValue{Type: sig.Results()}
+			if sig.Results().Len() == 1 {
+				tv.Type = sig.Results().At(0).Type()
+			}
+			tv.SetIsValue()
+			call.SetTypeInfo(tv)
+			w.expr(&call)
+			if w.Bool(expr.BangExit != nil) {
+				w.stmt(expr.BangExit)
+			} else {
+				for _, named := range expr.BangNamed {
+					w.Bool(named)
+				}
+			}
+			break
+		}
 		tv := w.p.typeAndValue(expr.Fun)
 		if tv.IsType() {
 			assert(len(expr.ArgList) == 1)

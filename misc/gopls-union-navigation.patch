@@ -1,0 +1,186 @@
+--- a/internal/golang/rename.go
++++ b/internal/golang/rename.go
+@@ -621,6 +621,10 @@
+ 		return nil, err
+ 	}
+ 
++	if unionVariantOwner(obj) != nil {
++		return renameUnionVariant(ctx, snapshot, pkg, obj, newName)
++	}
++
+ 	// This covers the case where we are renaming an embedded field at its
+ 	// declaration (see golang/go#45199). Perform the rename on the field's type declaration.
+ 	if is[*types.Var](obj) && obj.(*types.Var).Embedded() {
+--- a/internal/golang/references.go
++++ b/internal/golang/references.go
+@@ -248,6 +248,9 @@
+ 	// The case variables of a type switch have different
+ 	// types but that difference is immaterial here.
+ 	obj := candidates[0].obj
++	if unionVariantOwner(obj) != nil {
++		return unionVariantReferences(ctx, snapshot, pkg, obj)
++	}
+ 
+ 	// nil, error, error.Error, iota, or other built-in?
+ 	if isBuiltin(obj) {
+--- /dev/null
++++ b/internal/golang/union_rename.go
+@@ -0,0 +1,158 @@
++// Copyright 2026 The Go Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style
++// license that can be found in the LICENSE file.
++
++package golang
++
++import (
++	"context"
++	"fmt"
++	"go/ast"
++	"go/token"
++	"go/types"
++	"sort"
++
++	"golang.org/x/tools/gopls/internal/cache"
++	"golang.org/x/tools/gopls/internal/protocol"
++	"golang.org/x/tools/internal/diff"
++)
++
++// Union constructors are synthetic functions outside lexical scopes and method
++// sets. Their identity is the originating named union plus its variant name,
++// including constructors of different instantiations of a generic union.
++func unionVariantOwner(obj types.Object) *types.Named {
++	fn, ok := obj.(*types.Func)
++	if !ok || fn.Parent() != nil {
++		return nil
++	}
++	sig := fn.Signature()
++	if sig.Recv() != nil || sig.Params().Len() != 1 || sig.Results().Len() != 1 {
++		return nil
++	}
++	named, ok := types.Unalias(sig.Results().At(0).Type()).(*types.Named)
++	if !ok {
++		return nil
++	}
++	st, ok := named.Underlying().(*types.Struct)
++	if !ok || st.NumFields() != 3 || st.Field(0).Name() != "union·data" || st.Field(1).Name() != "union·anchor" || st.Field(2).Name() != "union·tag" {
++		return nil
++	}
++	data, ok := st.Field(0).Type().Underlying().(*types.Struct)
++	if !ok {
++		return nil
++	}
++	for field := range data.Fields() {
++		if field.Name() == "union·variant·"+fn.Name() {
++			return named.Origin()
++		}
++	}
++	return nil
++}
++
++// visitUnionVariant searches syntax instead of objectpath: synthetic constructors
++// have no ordinary export path. Declaration locations also distinguish local
++// unions with the same name in separate lexical scopes.
++func visitUnionVariant(ctx context.Context, snapshot *cache.Snapshot, pkg *cache.Package, obj types.Object, visit func(*cache.Package, *ast.Ident, bool) error) error {
++	owner := unionVariantOwner(obj)
++	declaration, err := ObjectLocation(ctx, pkg.FileSet(), snapshot, owner.Obj())
++	if err != nil {
++		return err
++	}
++	pkgs, err := typeCheckReverseDependencies(ctx, snapshot, declaration.URI, true)
++	if err != nil {
++		return err
++	}
++	for _, p := range pkgs {
++		matched := make(map[*types.Named]bool)
++		same := func(candidate types.Object) bool {
++			if candidate == nil || candidate.Name() != obj.Name() {
++				return false
++			}
++			typ := unionVariantOwner(candidate)
++			if typ == nil || typ.Obj().Name() != owner.Obj().Name() || typ.Obj().Pkg().Path() != owner.Obj().Pkg().Path() {
++				return false
++			}
++			if result, ok := matched[typ]; ok {
++				return result
++			}
++			loc, err := ObjectLocation(ctx, p.FileSet(), snapshot, typ.Obj())
++			result := err == nil && loc == declaration
++			matched[typ] = result
++			return result
++		}
++		for id, candidate := range p.TypesInfo().Defs {
++			if same(candidate) {
++				if err := visit(p, id, true); err != nil {
++					return err
++				}
++			}
++		}
++		for id, candidate := range p.TypesInfo().Uses {
++			if same(candidate) {
++				if err := visit(p, id, false); err != nil {
++					return err
++				}
++			}
++		}
++	}
++	return nil
++}
++
++func renameUnionVariant(ctx context.Context, snapshot *cache.Snapshot, pkg *cache.Package, obj types.Object, to string) (map[protocol.DocumentURI][]diff.Edit, error) {
++	owner := unionVariantOwner(obj)
++	if to == "_" {
++		return nil, fmt.Errorf("a union variant cannot be named _")
++	}
++	data := owner.Underlying().(*types.Struct).Field(0).Type().Underlying().(*types.Struct)
++	for field := range data.Fields() {
++		if field.Name() == "union·variant·"+to {
++			return nil, fmt.Errorf("union %s already has variant %s", owner.Obj().Name(), to)
++		}
++	}
++	if member, _, _ := types.LookupFieldOrMethod(owner, false, obj.Pkg(), to); member != nil {
++		return nil, fmt.Errorf("union %s already has member %s", owner.Obj().Name(), to)
++	}
++	edits := make(map[protocol.DocumentURI]map[int]diff.Edit)
++	err := visitUnionVariant(ctx, snapshot, pkg, obj, func(p *cache.Package, id *ast.Ident, decl bool) error {
++		if p.Types().Path() != owner.Obj().Pkg().Path() && !token.IsExported(to) {
++			return fmt.Errorf("variant %s is used from another package and cannot become unexported", obj.Name())
++		}
++		file, err := p.FileEnclosing(id.Pos())
++		if err != nil {
++			return err
++		}
++		edit, err := posEdit(file.Tok, id.Pos(), id.End(), to)
++		if err != nil {
++			return err
++		}
++		if edits[file.URI] == nil {
++			edits[file.URI] = make(map[int]diff.Edit)
++		}
++		edits[file.URI][edit.Start] = edit
++		return nil
++	})
++	if err != nil {
++		return nil, err
++	}
++	result := make(map[protocol.DocumentURI][]diff.Edit)
++	for uri, byOffset := range edits {
++		for _, edit := range byOffset {
++			result[uri] = append(result[uri], edit)
++		}
++		sort.Slice(result[uri], func(i, j int) bool { return result[uri][i].Start < result[uri][j].Start })
++	}
++	return result, nil
++}
++
++func unionVariantReferences(ctx context.Context, snapshot *cache.Snapshot, pkg *cache.Package, obj types.Object) ([]reference, error) {
++	var result []reference
++	err := visitUnionVariant(ctx, snapshot, pkg, obj, func(p *cache.Package, id *ast.Ident, decl bool) error {
++		file, err := p.FileEnclosing(id.Pos())
++		if err != nil {
++			return err
++		}
++		result = append(result, reference{isDeclaration: decl, location: mustLocation(file, id), pkgPath: PackagePath(obj.Pkg().Path())})
++		return nil
++	})
++	return result, err
++}

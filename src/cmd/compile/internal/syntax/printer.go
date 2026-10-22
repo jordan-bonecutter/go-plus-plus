@@ -436,6 +436,9 @@ func (p *printer) printRawNode(n Node) {
 			p.print(_DotDotDot)
 		}
 		p.print(_Rparen)
+		if n.Bang {
+			p.print(Not)
+		}
 
 	case *Operation:
 		if n.Y == nil {

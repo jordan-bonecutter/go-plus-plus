@@ -1003,6 +1003,10 @@ func (p *printer) expr1(expr ast.Expr, prec1, depth int) {
 		}
 		p.setPos(x.Rparen)
 		p.print(token.RPAREN)
+		if x.Bang.IsValid() {
+			p.setPos(x.Bang)
+			p.print(token.NOT)
+		}
 		if wasIndented {
 			p.print(unindent)
 		}
