@@ -892,6 +892,15 @@ func mapKeyError2(t *abi.Type, p unsafe.Pointer) error {
 		return nil
 	case abi.Struct:
 		s := (*abi.StructType)(unsafe.Pointer(t))
+		if len(s.Fields) == 2 && s.Fields[0].Name.Name() == "union·data" {
+			index := uintptr(0)
+			if tag := *(*unsafe.Pointer)(unsafe.Add(p, s.Fields[1].Offset)); tag != nil {
+				index = *(*uintptr)(tag)
+			}
+			data := (*abi.StructType)(unsafe.Pointer(s.Fields[0].Typ))
+			payload := (*abi.ArrayType)(unsafe.Pointer(data.Fields[index].Typ)).Elem
+			return mapKeyError2(payload, p)
+		}
 		for _, f := range s.Fields {
 			if f.Name.IsBlank() {
 				continue

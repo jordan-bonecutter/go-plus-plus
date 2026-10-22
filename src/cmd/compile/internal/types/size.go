@@ -7,6 +7,7 @@ package types
 import (
 	"math"
 	"slices"
+	"strings"
 
 	"cmd/compile/internal/base"
 	"cmd/internal/src"
@@ -531,6 +532,16 @@ func CalcStructSize(t *Type) {
 	}
 
 	fields := t.Fields()
+	if len(fields) >= 3 && fields[len(fields)-1].Sym != nil && fields[0].Sym != nil && fields[len(fields)-1].Sym.Name == "union·raw" && strings.HasPrefix(fields[0].Sym.Name, "union·variant·") {
+		var largest int64
+		for _, f := range fields[:len(fields)-2] {
+			CalcSize(f.Type.Elem())
+			if size := f.Type.Elem().Size(); size > largest {
+				largest = size
+			}
+		}
+		fields[len(fields)-1].Type = NewArray(Types[TUINT8], largest)
+	}
 
 	size := calcStructOffset(t, fields, 0)
 
@@ -595,6 +606,9 @@ func CalcStructSize(t *Type) {
 			}
 			t.setAlg(a)
 		}
+	}
+	if IsTaggedUnion(t) {
+		t.setAlg(ASPECIAL)
 	}
 	// Compute ptrBytes.
 	for i := len(fields) - 1; i >= 0; i-- {

@@ -620,7 +620,11 @@ func (check *Checker) stmt(ctxt stmtContext, s syntax.Stmt) {
 		check.simpleStmt(s.Init)
 
 		if g, _ := s.Tag.(*syntax.TypeSwitchGuard); g != nil {
-			check.typeSwitchStmt(inner|inTypeSwitch, s, g)
+			if g.Variant {
+				check.variantSwitchStmt(inner, s, g)
+			} else {
+				check.typeSwitchStmt(inner|inTypeSwitch, s, g)
+			}
 		} else {
 			check.switchStmt(inner, s)
 		}

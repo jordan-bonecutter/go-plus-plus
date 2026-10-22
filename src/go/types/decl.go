@@ -546,6 +546,9 @@ func (check *Checker) typeDecl(obj *TypeName, tdecl *ast.TypeSpec) {
 		rhs = check.declaredType(tdecl.Type, obj)
 		assert(rhs != nil)
 		alias.fromRHS = rhs
+		if e, ok := tdecl.Type.(*ast.StructType); ok && e.Union {
+			check.taggedUnionConstructors(alias, e)
+		}
 
 		// spec: In an alias declaration the given type cannot be a type parameter declared in the same declaration."
 		// (see also go.dev/issue/75884, go.dev/issue/#75885)
@@ -572,6 +575,9 @@ func (check *Checker) typeDecl(obj *TypeName, tdecl *ast.TypeSpec) {
 	rhs = check.declaredType(tdecl.Type, obj)
 	assert(rhs != nil)
 	named.fromRHS = rhs
+	if e, ok := tdecl.Type.(*ast.StructType); ok && e.Union {
+		check.taggedUnionConstructors(named, e)
+	}
 
 	// spec: "In a type definition the given type cannot be a type parameter."
 	// (See also go.dev/issue/45639.)

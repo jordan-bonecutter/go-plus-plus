@@ -13,6 +13,7 @@ import (
 	"iter"
 	"math"
 	"runtime"
+	"unicode"
 	"unsafe"
 )
 
@@ -1702,6 +1703,9 @@ func (v Value) IsZero() bool {
 	case String:
 		return v.Len() == 0
 	case Struct:
+		if payload, index, ok := v.unionPayload(); ok {
+			return index == 0 && payload.IsZero()
+		}
 		if v.flag&flagIndir == 0 {
 			return v.ptr == nil
 		}
@@ -3227,6 +3231,10 @@ func (v Value) Comparable() bool {
 		return false
 
 	case Array:
+		// Zero elements do not make an array of noncomparable elements comparable.
+		if !v.Type().Comparable() {
+			return false
+		}
 		switch v.Type().Elem().Kind() {
 		case Interface, Array, Struct:
 			for i := 0; i < v.Type().Len(); i++ {
@@ -3242,6 +3250,9 @@ func (v Value) Comparable() bool {
 		return v.IsNil() || v.Elem().Comparable()
 
 	case Struct:
+		if payload, _, ok := v.unionPayload(); ok {
+			return v.Type().Comparable() && payload.Comparable()
+		}
 		for _, value := range v.Fields() {
 			if !value.Comparable() {
 				return false
@@ -3314,6 +3325,13 @@ func (v Value) Equal(u Value) bool {
 		}
 		return true
 	case Struct:
+		if _, _, ok := v.unionPayload(); ok {
+			eq := v.typ().Equal
+			if eq == nil {
+				break
+			}
+			return eq(v.ptr, u.ptr)
+		}
 		// u and v have the same type so they have the same fields
 		nf := v.NumField()
 		for i := 0; i < nf; i++ {
@@ -3826,4 +3844,46 @@ func contentEscapes(x unsafe.Pointer) {
 	if dummy.b {
 		escapes(*(*any)(x)) // the dereference may not always be safe, but never executed
 	}
+}
+
+// unionPayload exposes the active inline value only within reflection.
+func (v Value) unionPayload() (Value, uintptr, bool) {
+	st := (*abi.StructType)(unsafe.Pointer(v.typ()))
+	if len(st.Fields) != 2 || st.Fields[0].Name.Name() != "union·data" {
+		return Value{}, 0, false
+	}
+	// Unions are always indirect: their anchors do not determine equality.
+	p := v.ptr
+	index := uintptr(0)
+	if tag := *(*unsafe.Pointer)(add(p, st.Fields[1].Offset, "union tag")); tag != nil {
+		index = *(*uintptr)(tag)
+	}
+	data := (*abi.StructType)(unsafe.Pointer(st.Fields[0].Typ))
+	t := (*abi.ArrayType)(unsafe.Pointer(data.Fields[index].Typ)).Elem
+	return Value{t, p, flag(t.Kind()) | flagIndir | v.flag&flagRO}, index, true
+}
+
+// Variant returns the active variant's name and payload for a tagged union.
+// For other values, including an invalid Value, it returns an empty name and
+// an invalid Value. The payload is not settable and retains v's restrictions
+// on accessing unexported fields. Unexported variants also return a payload
+// that cannot be accessed through Interface.
+func (v Value) Variant() (string, Value) {
+	if v.Kind() != Struct {
+		return "", Value{}
+	}
+	payload, index, ok := v.unionPayload()
+	if !ok {
+		return "", Value{}
+	}
+	st := (*abi.StructType)(unsafe.Pointer(v.typ()))
+	data := (*abi.StructType)(unsafe.Pointer(st.Fields[0].Typ))
+	name := data.Fields[index].Name.Name()[len("union·variant·"):]
+	for _, r := range name {
+		if !unicode.IsUpper(r) {
+			payload.flag |= flagStickyRO
+		}
+		break
+	}
+	return name, payload
 }

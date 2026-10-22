@@ -27,7 +27,8 @@ type parser struct {
 	first     error    // first error encountered
 	errcnt    int      // number of errors encountered
 	pragma    Pragma   // pragmas
-	goVersion string   // Go version from //go:build line
+	hasUnion  bool
+	goVersion string // Go version from //go:build line
 
 	top    bool   // in top of file (before package clause)
 	fnest  int    // function nesting level (for error handling)
@@ -95,6 +96,7 @@ func (p *parser) init(file *PosBase, r io.Reader, errh ErrorHandler, pragh Pragm
 	p.pragma = nil
 
 	p.fnest = 0
+	p.hasUnion = false
 	p.xnest = 0
 	p.indent = nil
 }
@@ -483,6 +485,14 @@ func (p *parser) fileOrNil() *File {
 
 	p.clearPragma()
 	f.EOF = p.pos()
+	if p.hasUnion {
+		Inspect(f, func(n Node) bool {
+			if d, ok := n.(*TypeDecl); ok {
+				lowerUnion(d)
+			}
+			return true
+		})
+	}
 
 	return f
 }
@@ -660,11 +670,21 @@ func (p *parser) typeDecl(group *Group) Decl {
 				// d.Name "[" pname ptype "," ...
 				d.TParamList = p.paramList(pname, ptype, _Rbrack, true, false) // ptype may be nil
 				d.Alias = p.gotAssign()
-				d.Type = p.typeOrNil()
+				d.Type = p.unionTypeOrNil()
 			} else {
 				// d.Name "[" pname "]" ...
 				// d.Name "[" x ...
 				d.Type = p.arrayType(pos, x)
+				if name, ok := x.(*Name); ok && p.tok == _Lbrace {
+					if elem, ok := d.Type.(*ArrayType).Elem.(*Name); ok && elem.Value == "union" {
+						p.errorAt(name.Pos(), fmt.Sprintf("missing constraint for type parameter %s (use [%s any])", name.Value, name.Value))
+						// Recover as a generic declaration to avoid an undefined-T cascade.
+						bound := new(InterfaceType)
+						bound.pos = name.Pos()
+						d.TParamList = []*Field{unionField(name.Pos(), name.Value, bound)}
+						d.Type = p.unionType(elem.Pos())
+					}
+				}
 			}
 		case _Rbrack:
 			// d.Name "[" "]" ...
@@ -676,7 +696,7 @@ func (p *parser) typeDecl(group *Group) Decl {
 		}
 	} else {
 		d.Alias = p.gotAssign()
-		d.Type = p.typeOrNil()
+		d.Type = p.unionTypeOrNil()
 	}
 
 	if d.Type == nil {
@@ -2154,6 +2174,9 @@ func (p *parser) simpleStmt(lhs Expr, keyword token) SimpleStmt {
 	if lhs == nil {
 		lhs = p.exprList()
 	}
+	if keyword == _Switch {
+		lhs = variantGuard(lhs)
+	}
 
 	if _, ok := lhs.(*ListExpr); !ok && p.tok != _Assign && p.tok != _Define {
 		// expr
@@ -2206,6 +2229,9 @@ func (p *parser) simpleStmt(lhs Expr, keyword token) SimpleStmt {
 
 		// expr_list op= expr_list
 		rhs := p.exprList()
+		if keyword == _Switch {
+			rhs = variantGuard(rhs)
+		}
 
 		if x, ok := rhs.(*TypeSwitchGuard); ok && keyword == _Switch && op == Def {
 			if lhs, ok := lhs.(*Name); ok {

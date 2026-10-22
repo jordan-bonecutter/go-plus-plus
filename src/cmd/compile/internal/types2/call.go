@@ -687,9 +687,10 @@ var cgoPrefixes = [...]string{
 func (check *Checker) selector(x *operand, e *syntax.SelectorExpr, wantType bool) {
 	// these must be declared before the "goto Error" statements
 	var (
-		obj      Object
-		index    []int
-		indirect bool
+		obj       Object
+		index     []int
+		indirect  bool
+		lookupPkg *Package
 	)
 
 	sel := e.Sel.Value
@@ -804,6 +805,22 @@ func (check *Checker) selector(x *operand, e *syntax.SelectorExpr, wantType bool
 		goto Error
 	}
 
+	if x.mode() == typexpr && !wantType {
+		if i := unionVariant(x.typ(), sel); i >= 0 {
+			field := unionStruct(x.typ()).fields[i]
+			if field.pkg != check.pkg && !isExported(sel) {
+				check.errorf(e.Sel, UnexportedName, "variant %s is not exported", sel)
+				goto Error
+			}
+			if e.Lowered == nil {
+				e.Lowered = unionFunction(e.Pos(), x.typ(), i, "construct")
+			}
+			check.expr(nil, x, e.Lowered)
+			x.expr = e
+			return
+		}
+	}
+
 	// Avoid crashing when checking an invalid selector in a method declaration.
 	//
 	//   type S[T any] struct{}
@@ -825,7 +842,18 @@ func (check *Checker) selector(x *operand, e *syntax.SelectorExpr, wantType bool
 		goto Error
 	}
 
-	obj, index, indirect = lookupFieldOrMethod(x.typ(), x.mode() == variable, check.pkg, sel, false)
+	lookupPkg = check.pkg
+	if strings.HasPrefix(sel, "union·") {
+		if st, ok := x.typ().Underlying().(*Struct); ok {
+			for _, f := range st.fields {
+				if f.name == sel {
+					lookupPkg = f.pkg
+					break
+				}
+			}
+		}
+	}
+	obj, index, indirect = lookupFieldOrMethod(x.typ(), x.mode() == variable, lookupPkg, sel, false)
 	if obj == nil {
 		// Don't report another error if the underlying type was invalid (go.dev/issue/49541).
 		if !isValid(x.typ().Underlying()) {

@@ -1858,7 +1858,25 @@ func IsReflexive(t *Type) bool {
 // Can this type be stored directly in an interface word?
 // Yes, if the representation is a single pointer.
 func IsDirectIface(t *Type) bool {
-	return t.Size() == int64(PtrSize) && PtrDataSize(t) == int64(PtrSize)
+	if t.Size() != int64(PtrSize) || PtrDataSize(t) != int64(PtrSize) {
+		return false
+	}
+	// Direct interfaces compare their data words as pointers. A union's anchor
+	// identity is not its equality, even when every payload has size zero.
+	switch t.Kind() {
+	case TSTRUCT:
+		if IsTaggedUnion(t) {
+			return false
+		}
+		for _, f := range t.Fields() {
+			if f.Type.Size() != 0 && !IsDirectIface(f.Type) {
+				return false
+			}
+		}
+	case TARRAY:
+		return IsDirectIface(t.Elem())
+	}
+	return true
 }
 
 // IsInterfaceMethod reports whether (field) m is

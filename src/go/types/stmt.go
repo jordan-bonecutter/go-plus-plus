@@ -724,6 +724,10 @@ func (check *Checker) stmt(ctxt stmtContext, s ast.Stmt) {
 
 		// rhs must be of the form: expr.(type) and expr must be an ordinary interface
 		expr, _ := rhs.(*ast.TypeAssertExpr)
+		if isVariantAssertion(expr) {
+			check.variantSwitch(inner, s, expr, lhs)
+			return
+		}
 		if expr == nil || expr.Type != nil {
 			check.error(s, InvalidSyntaxTree, "incorrect form of type switch guard")
 			return

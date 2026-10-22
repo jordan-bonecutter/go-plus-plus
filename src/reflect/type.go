@@ -2605,8 +2605,14 @@ func StructOf(fields []StructField) Type {
 		}
 	}
 
+	direct := typ.Size_ == goarch.PtrSize && typ.PtrBytes == goarch.PtrSize
+	for _, f := range typ.Fields {
+		if f.Typ.Size_ != 0 && !f.Typ.IsDirectIface() {
+			direct = false
+		}
+	}
 	switch {
-	case typ.Size_ == goarch.PtrSize && typ.PtrBytes == goarch.PtrSize:
+	case direct:
 		typ.TFlag |= abi.TFlagDirectIface
 	default:
 		typ.TFlag &^= abi.TFlagDirectIface
@@ -2779,7 +2785,7 @@ func ArrayOf(length int, elem Type) Type {
 	}
 
 	switch {
-	case array.Size_ == goarch.PtrSize && array.PtrBytes == goarch.PtrSize:
+	case length == 1 && etyp.IsDirectIface():
 		array.TFlag |= abi.TFlagDirectIface
 	default:
 		array.TFlag &^= abi.TFlagDirectIface

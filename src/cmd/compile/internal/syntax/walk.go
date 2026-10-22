@@ -132,6 +132,9 @@ func (w walker) node(n Node) {
 		w.node(n.X)
 
 	case *SelectorExpr:
+		if n.Lowered != nil {
+			w.node(n.Lowered)
+		}
 		w.node(n.X)
 		w.node(n.Sel)
 

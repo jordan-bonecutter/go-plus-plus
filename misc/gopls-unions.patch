@@ -1,0 +1,57 @@
+--- a/internal/golang/completion/completion.go
++++ b/internal/golang/completion/completion.go
+@@ -1344,6 +1344,9 @@
+ 
+ 	// True selector?
+ 	if tv, ok := c.pkg.TypesInfo().Types[sel.X]; ok {
++		if tv.IsType() {
++			c.unionConstructors(tv.Type)
++		}
+ 		c.methodsAndFields(tv.Type, tv.Addressable(), nil, c.deepState.enqueue)
+ 		c.addPostfixSnippetCandidates(ctx, sel)
+ 		return nil
+@@ -1461,6 +1464,9 @@
+ 
+ 	// Add fields of T.
+ 	eachField(typ, func(v *types.Var) {
++		if strings.HasPrefix(v.Name(), "union·") {
++			return
++		}
+ 		if c.tooNew(v) {
+ 			return // std field too new for file's Go version
+ 		}
+@@ -1471,6 +1477,34 @@
+ 			addressable: addressable || isPointer(typ),
+ 		})
+ 	})
++}
++
++// unionConstructors completes the static constructors carried in the union's
++// private export metadata. Constructors are functions, not receiver methods.
++func (c *completer) unionConstructors(typ types.Type) {
++	st, ok := typ.Underlying().(*types.Struct)
++	if !ok || st.NumFields() != 2 || st.Field(0).Name() != "union·data" || st.Field(1).Name() != "union·tag" {
++		return
++	}
++	data, ok := st.Field(0).Type().Underlying().(*types.Struct)
++	if !ok {
++		return
++	}
++	for field := range data.Fields() {
++		name, ok := strings.CutPrefix(field.Name(), "union·variant·")
++		if !ok || (field.Pkg() != c.pkg.Types() && !token.IsExported(name)) {
++			continue
++		}
++		marker, ok := field.Type().(*types.Array)
++		if !ok {
++			continue
++		}
++		param := types.NewParam(field.Pos(), field.Pkg(), "value", marker.Elem())
++		result := types.NewVar(field.Pos(), field.Pkg(), "", typ)
++		sig := types.NewSignatureType(nil, nil, nil, types.NewTuple(param), types.NewTuple(result), false)
++		fn := types.NewFunc(field.Pos(), field.Pkg(), name, sig)
++		c.deepState.enqueue(candidate{obj: fn, score: stdScore})
++	}
+ }
+ 
+ // isStarTestingDotF reports whether typ is *testing.F.

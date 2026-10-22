@@ -90,3 +90,8 @@ func IsPaddedField(t *Type, i int) bool {
 	}
 	return t.Field(i).End() != end
 }
+
+// IsTaggedUnion reports whether t has the private tagged-union representation.
+func IsTaggedUnion(t *Type) bool {
+	return t.Kind() == TSTRUCT && t.NumFields() == 2 && t.Field(0).Sym != nil && t.Field(0).Sym.Name == "union·data" && t.Field(1).Sym != nil && t.Field(1).Sym.Name == "union·tag"
+}
