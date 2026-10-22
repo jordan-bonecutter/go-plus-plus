@@ -356,14 +356,8 @@ const (
 )
 
 func Rename(oldpath, newpath string) error {
-	from, err := syscall.UTF16PtrFromString(oldpath)
-	if err != nil {
-		return err
-	}
-	to, err := syscall.UTF16PtrFromString(newpath)
-	if err != nil {
-		return err
-	}
+	from := syscall.UTF16PtrFromString(oldpath)!
+	to := syscall.UTF16PtrFromString(newpath)!
 	return MoveFileEx(from, to, MOVEFILE_REPLACE_EXISTING)
 }
 
@@ -492,10 +486,7 @@ const (
 func FinalPath(h syscall.Handle, flags uint32) (string, error) {
 	buf := make([]uint16, 100)
 	for {
-		n, err := GetFinalPathNameByHandle(h, &buf[0], uint32(len(buf)), flags)
-		if err != nil {
-			return "", err
-		}
+		n := GetFinalPathNameByHandle(h, &buf[0], uint32(len(buf)), flags)!
 		if n < uint32(len(buf)) {
 			break
 		}

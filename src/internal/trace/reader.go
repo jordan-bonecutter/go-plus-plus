@@ -53,16 +53,10 @@ type Reader struct {
 // NewReader creates a new trace reader.
 func NewReader(r io.Reader) (*Reader, error) {
 	br := bufio.NewReader(r)
-	v, err := version.ReadHeader(br)
-	if err != nil {
-		return nil, err
-	}
+	v := version.ReadHeader(br)!
 	switch v {
 	case version.Go111, version.Go119, version.Go121:
-		tr, err := tracev1.Parse(br, v)
-		if err != nil {
-			return nil, err
-		}
+		tr := tracev1.Parse(br, v)!
 		return &Reader{
 			v1Events: convertV1Trace(tr),
 		}, nil
@@ -177,10 +171,7 @@ func (r *Reader) ReadEvent() (e Event, err error) {
 		}
 
 		// Refresh the cursor's event.
-		ok, err := bc.nextEvent(r.gen.batches[bc.m], r.gen.freq)
-		if err != nil {
-			return false, err
-		}
+		ok := bc.nextEvent(r.gen.batches[bc.m], r.gen.freq)!
 		if ok {
 			// If we successfully refreshed, update the heap.
 			heapUpdate(r.frontier, i)
@@ -290,10 +281,7 @@ func (r *Reader) installGen(gen *generation) (Event, error) {
 	for _, m := range r.gen.batchMs {
 		batches := r.gen.batches[m]
 		bc := &batchCursor{m: m}
-		ok, err := bc.nextEvent(batches, r.gen.freq)
-		if err != nil {
-			return Event{}, err
-		}
+		ok := bc.nextEvent(batches, r.gen.freq)!
 		if !ok {
 			// Turns out there aren't actually any events in these batches.
 			continue

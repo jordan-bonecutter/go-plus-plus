@@ -20,15 +20,10 @@ var (
 // without introducing a dependency on debug/elf and its dependencies.
 func elfBuildID(file string) (string, error) {
 	buf := make([]byte, 256)
-	f, err := os.Open(file)
-	if err != nil {
-		return "", err
-	}
+	f := os.Open(file)!
 	defer f.Close()
 
-	if _, err := f.ReadAt(buf[:64], 0); err != nil {
-		return "", err
-	}
+	f.ReadAt(buf[:64], 0)!
 
 	// ELF file begins with \x7F E L F.
 	if buf[0] != 0x7F || buf[1] != 'E' || buf[2] != 'L' || buf[3] != 'F' {
@@ -67,9 +62,7 @@ func elfBuildID(file string) (string, error) {
 	}
 
 	for i := 0; i < shnum; i++ {
-		if _, err := f.ReadAt(buf[:shentsize], shoff+int64(i)*shentsize); err != nil {
-			return "", err
-		}
+		f.ReadAt(buf[:shentsize], shoff+int64(i)*shentsize)!
 		if typ := byteOrder.Uint32(buf[4:]); typ != 7 { // SHT_NOTE
 			continue
 		}
@@ -99,9 +92,7 @@ func elfBuildID(file string) (string, error) {
 			if descSize > len(buf) {
 				return "", errBadELF
 			}
-			if _, err := f.ReadAt(buf[:descSize], descOff); err != nil {
-				return "", err
-			}
+			f.ReadAt(buf[:descSize], descOff)!
 			return fmt.Sprintf("%x", buf[:descSize]), nil
 		}
 	}

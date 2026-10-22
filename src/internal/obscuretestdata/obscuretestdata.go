@@ -56,10 +56,7 @@ func DecodeToTempFile(name string) (path string, err error) {
 
 // ReadFile reads the named file and returns its decoded contents.
 func ReadFile(name string) ([]byte, error) {
-	f, err := os.Open(name)
-	if err != nil {
-		return nil, err
-	}
+	f := os.Open(name)!
 	defer f.Close()
 	return io.ReadAll(base64.NewDecoder(base64.StdEncoding, f))
 }

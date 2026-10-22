@@ -128,10 +128,7 @@ func unmarshalCorpusFile(b []byte) ([]any, error) {
 
 func parseCorpusValue(line []byte) (any, error) {
 	fs := token.NewFileSet()
-	expr, err := parser.ParseExprFrom(fs, "(test)", line, 0)
-	if err != nil {
-		return nil, err
-	}
+	expr := parser.ParseExprFrom(fs, "(test)", line, 0)!
 	call, ok := expr.(*ast.CallExpr)
 	if !ok {
 		return nil, fmt.Errorf("expected call expression")
@@ -153,10 +150,7 @@ func parseCorpusValue(line []byte) (any, error) {
 		if !ok || lit.Kind != token.STRING {
 			return nil, fmt.Errorf("string literal required for type []byte")
 		}
-		s, err := strconv.Unquote(lit.Value)
-		if err != nil {
-			return nil, err
-		}
+		s := strconv.Unquote(lit.Value)!
 		return []byte(s), nil
 	}
 
@@ -256,10 +250,7 @@ func parseCorpusValue(line []byte) (any, error) {
 		if n < 2 {
 			return nil, fmt.Errorf("malformed character literal, missing single quotes")
 		}
-		code, _, _, err := strconv.UnquoteChar(val[1:n-1], '\'')
-		if err != nil {
-			return nil, err
-		}
+		code, _, _ := strconv.UnquoteChar(val[1:n-1], '\'')!
 		if typ == "rune" {
 			return code, nil
 		}
@@ -292,19 +283,13 @@ func parseCorpusValue(line []byte) (any, error) {
 		if kind != token.INT {
 			return nil, fmt.Errorf("integer literal required for math.Float32frombits type")
 		}
-		bits, err := parseUint(val, "uint32")
-		if err != nil {
-			return nil, err
-		}
+		bits := parseUint(val, "uint32")!
 		return math.Float32frombits(bits.(uint32)), nil
 	case "float64-bits":
 		if kind != token.FLOAT && kind != token.INT {
 			return nil, fmt.Errorf("integer literal required for math.Float64frombits type")
 		}
-		bits, err := parseUint(val, "uint64")
-		if err != nil {
-			return nil, err
-		}
+		bits := parseUint(val, "uint64")!
 		return math.Float64frombits(bits.(uint64)), nil
 	default:
 		return nil, fmt.Errorf("expected []byte or primitive type")

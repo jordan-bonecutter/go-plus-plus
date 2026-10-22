@@ -180,9 +180,7 @@ func (fm *Formatter) EmitTextual(pkgs []string, w io.Writer) error {
 			pkgs = append(pkgs, importpath)
 		}
 	}
-	if _, err := fmt.Fprintf(w, "mode: %s\n", fm.cm.String()); err != nil {
-		return err
-	}
+	fmt.Fprintf(w, "mode: %s\n", fm.cm.String())!
 	sort.Strings(pkgs)
 	for _, importpath := range pkgs {
 		p := fm.pm[importpath]
@@ -197,11 +195,9 @@ func (fm *Formatter) EmitTextual(pkgs []string, w io.Writer) error {
 		for _, u := range units {
 			count := p.unitTable[u]
 			file := p.funcs[u.fnfid].file
-			if _, err := fmt.Fprintf(w, "%s:%d.%d,%d.%d %d %d\n",
+			fmt.Fprintf(w, "%s:%d.%d,%d.%d %d %d\n",
 				file, u.StLine, u.StCol,
-				u.EnLine, u.EnCol, u.NxStmts, count); err != nil {
-				return err
-			}
+				u.EnLine, u.EnCol, u.NxStmts, count)!
 		}
 	}
 	return nil
@@ -220,14 +216,10 @@ func (fm *Formatter) EmitPercent(w io.Writer, pkgs []string, inpkgs string, note
 
 	rep := func(cov, tot uint64) error {
 		if tot != 0 {
-			if _, err := fmt.Fprintf(w, "coverage: %.1f%% of statements%s\n",
-				100.0*float64(cov)/float64(tot), inpkgs); err != nil {
-				return err
-			}
+			fmt.Fprintf(w, "coverage: %.1f%% of statements%s\n",
+				100.0*float64(cov)/float64(tot), inpkgs)!
 		} else if noteEmpty {
-			if _, err := fmt.Fprintf(w, "coverage: [no statements]\n"); err != nil {
-				return err
-			}
+			fmt.Fprintf(w, "coverage: [no statements]\n")!
 		}
 		return nil
 	}
@@ -250,18 +242,12 @@ func (fm *Formatter) EmitPercent(w io.Writer, pkgs []string, inpkgs string, note
 			}
 		}
 		if !aggregate {
-			if _, err := fmt.Fprintf(w, "\t%s\t\t", importpath); err != nil {
-				return err
-			}
-			if err := rep(coveredStmts, totalStmts); err != nil {
-				return err
-			}
+			fmt.Fprintf(w, "\t%s\t\t", importpath)!
+			rep(coveredStmts, totalStmts)!
 		}
 	}
 	if aggregate {
-		if err := rep(coveredStmts, totalStmts); err != nil {
-			return err
-		}
+		rep(coveredStmts, totalStmts)!
 	}
 
 	return nil
@@ -320,10 +306,8 @@ func (fm *Formatter) EmitFuncs(w io.Writer) error {
 			// Don't emit entries for function literals (see discussion
 			// in function header comment above).
 			if !flit {
-				if _, err := fmt.Fprintf(tabber, "%s:%d:\t%s\t%.1f%%\n",
-					ffile, fline, fname, perc(cstmts, tstmts)); err != nil {
-					return err
-				}
+				fmt.Fprintf(tabber, "%s:%d:\t%s\t%.1f%%\n",
+					ffile, fline, fname, perc(cstmts, tstmts))!
 			}
 			captureFuncStart(u)
 			allStmts += tstmts
@@ -338,9 +322,7 @@ func (fm *Formatter) EmitFuncs(w io.Writer) error {
 			} else {
 				if fname != p.funcs[u.fnfid].fname {
 					// New function; emit entry for previous one.
-					if err := emitFunc(u); err != nil {
-						return err
-					}
+					emitFunc(u)!
 				}
 			}
 			tstmts += uint64(u.NxStmts)
@@ -349,13 +331,9 @@ func (fm *Formatter) EmitFuncs(w io.Writer) error {
 				cstmts += uint64(u.NxStmts)
 			}
 		}
-		if err := emitFunc(extcu{}); err != nil {
-			return err
-		}
+		emitFunc(extcu{})!
 	}
-	if _, err := fmt.Fprintf(tabber, "%s\t%s\t%.1f%%\n",
-		"total", "(statements)", perc(covStmts, allStmts)); err != nil {
-		return err
-	}
+	fmt.Fprintf(tabber, "%s\t%s\t%.1f%%\n",
+		"total", "(statements)", perc(covStmts, allStmts))!
 	return nil
 }

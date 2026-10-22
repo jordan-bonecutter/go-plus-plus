@@ -205,10 +205,7 @@ func (g *TOKEN_GROUPS) AllGroups() []SID_AND_ATTRIBUTES {
 }
 
 func GetTokenGroups(t syscall.Token) (*TOKEN_GROUPS, error) {
-	i, e := getTokenInfo(t, syscall.TokenGroups, 50)
-	if e != nil {
-		return nil, e
-	}
+	i := getTokenInfo(t, syscall.TokenGroups, 50)!
 	return (*TOKEN_GROUPS)(i), nil
 }
 

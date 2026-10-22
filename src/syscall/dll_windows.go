@@ -152,10 +152,7 @@ type DLL struct {
 // Use [LazyDLL] in golang.org/x/sys/windows for a secure way to
 // load system DLLs.
 func LoadDLL(name string) (*DLL, error) {
-	namep, err := UTF16PtrFromString(name)
-	if err != nil {
-		return nil, err
-	}
+	namep := UTF16PtrFromString(name)!
 	var h uintptr
 	var e Errno
 	if sysdll.IsSystemDLL[name] {
@@ -281,10 +278,7 @@ func (d *LazyDLL) Load() error {
 		d.mu.Lock()
 		defer d.mu.Unlock()
 		if d.dll == nil {
-			dll, e := LoadDLL(d.Name)
-			if e != nil {
-				return e
-			}
+			dll := LoadDLL(d.Name)!
 			// Non-racy version of:
 			// d.dll = dll
 			atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&d.dll)), unsafe.Pointer(dll))
@@ -336,14 +330,8 @@ func (p *LazyProc) Find() error {
 		p.mu.Lock()
 		defer p.mu.Unlock()
 		if p.proc == nil {
-			e := p.l.Load()
-			if e != nil {
-				return e
-			}
-			proc, e := p.l.dll.FindProc(p.Name)
-			if e != nil {
-				return e
-			}
+			p.l.Load()!
+			proc := p.l.dll.FindProc(p.Name)!
 			// Non-racy version of:
 			// p.proc = proc
 			atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&p.proc)), unsafe.Pointer(proc))

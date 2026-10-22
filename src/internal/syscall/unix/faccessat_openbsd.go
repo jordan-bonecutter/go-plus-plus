@@ -18,10 +18,7 @@ func libc_faccessat_trampoline()
 //go:cgo_import_dynamic libc_faccessat faccessat "libc.so"
 
 func faccessat(dirfd int, path string, mode uint32, flags int) error {
-	p, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return err
-	}
+	p := syscall.BytePtrFromString(path)!
 	_, _, errno := syscall_syscall6(abi.FuncPCABI0(libc_faccessat_trampoline), uintptr(dirfd), uintptr(unsafe.Pointer(p)), uintptr(mode), uintptr(flags), 0, 0)
 	if errno != 0 {
 		return errno

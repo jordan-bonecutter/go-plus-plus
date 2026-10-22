@@ -19,10 +19,7 @@ type TextWriter struct {
 
 // NewTextWriter creates a new write for the trace text format.
 func NewTextWriter(w io.Writer, v version.Version) (*TextWriter, error) {
-	_, err := fmt.Fprintf(w, "Trace Go1.%d\n", v)
-	if err != nil {
-		return nil, err
-	}
+	fmt.Fprintf(w, "Trace Go1.%d\n", v)!
 	return &TextWriter{w: w, v: v}, nil
 }
 

@@ -27,10 +27,7 @@ type goobjFile struct {
 }
 
 func openGoFile(f *os.File) (*File, error) {
-	a, err := archive.Parse(f, false)
-	if err != nil {
-		return nil, err
-	}
+	a := archive.Parse(f, false)!
 	entries := make([]*Entry, 0, len(a.Entries))
 L:
 	for _, e := range a.Entries {
@@ -40,10 +37,7 @@ L:
 		case archive.EntryGoObj:
 			o := e.Obj
 			b := make([]byte, o.Size)
-			_, err := f.ReadAt(b, o.Offset)
-			if err != nil {
-				return nil, err
-			}
+			f.ReadAt(b, o.Offset)!
 			r := goobj.NewReaderFromBytes(b, false)
 			var arch *sys.Arch
 			for _, a := range sys.Archs {

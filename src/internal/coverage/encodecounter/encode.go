@@ -64,9 +64,7 @@ type CounterVisitorFn func(pkid uint32, funcid uint32, counters []uint32) error
 // previously supplied to NewCoverageDataWriter. Returns an error
 // if something went wrong somewhere with the write.
 func (cfw *CoverageDataWriter) Write(metaFileHash [16]byte, args map[string]string, visitor CounterVisitor) error {
-	if err := cfw.writeHeader(metaFileHash); err != nil {
-		return err
-	}
+	cfw.writeHeader(metaFileHash)!
 	return cfw.AppendSegment(args, visitor)
 }
 
@@ -98,9 +96,7 @@ func (cfw *CoverageDataWriter) patchSegmentHeader(ws *slicewriter.WriteSeeker) e
 	if cfw.debug {
 		fmt.Fprintf(os.Stderr, "=-= writing counter segment header: %+v", cfw.csh)
 	}
-	if err := binary.Write(ws, binary.LittleEndian, cfw.csh); err != nil {
-		return err
-	}
+	binary.Write(ws, binary.LittleEndian, cfw.csh)!
 	// ... and finally return to the original offset.
 	if _, err := ws.Seek(off, io.SeekStart); err != nil {
 		return fmt.Errorf("error seeking in patchSegmentHeader: %v", err)
@@ -109,18 +105,14 @@ func (cfw *CoverageDataWriter) patchSegmentHeader(ws *slicewriter.WriteSeeker) e
 }
 
 func (cfw *CoverageDataWriter) writeSegmentPreamble(args map[string]string, ws *slicewriter.WriteSeeker) error {
-	if err := binary.Write(ws, binary.LittleEndian, cfw.csh); err != nil {
-		return err
-	}
+	binary.Write(ws, binary.LittleEndian, cfw.csh)!
 	hdrsz := uint32(len(ws.BytesWritten()))
 
 	// Write string table and args to a byte slice (since we need
 	// to capture offsets at various points), then emit the slice
 	// once we are done.
 	cfw.stab.Freeze()
-	if err := cfw.stab.Write(ws); err != nil {
-		return err
-	}
+	cfw.stab.Write(ws)!
 	cfw.csh.StrTabLen = uint32(len(ws.BytesWritten())) - hdrsz
 
 	akeys := slices.Sorted(maps.Keys(args))
@@ -128,31 +120,21 @@ func (cfw *CoverageDataWriter) writeSegmentPreamble(args map[string]string, ws *
 	wrULEB128 := func(v uint) error {
 		cfw.tmp = cfw.tmp[:0]
 		cfw.tmp = uleb128.AppendUleb128(cfw.tmp, v)
-		if _, err := ws.Write(cfw.tmp); err != nil {
-			return err
-		}
+		ws.Write(cfw.tmp)!
 		return nil
 	}
 
 	// Count of arg pairs.
-	if err := wrULEB128(uint(len(args))); err != nil {
-		return err
-	}
+	wrULEB128(uint(len(args)))!
 	// Arg pairs themselves.
 	for _, k := range akeys {
 		ki := uint(cfw.stab.Lookup(k))
-		if err := wrULEB128(ki); err != nil {
-			return err
-		}
+		wrULEB128(ki)!
 		v := args[k]
 		vi := uint(cfw.stab.Lookup(v))
-		if err := wrULEB128(vi); err != nil {
-			return err
-		}
+		wrULEB128(vi)!
 	}
-	if err := padToFourByteBoundary(ws); err != nil {
-		return err
-	}
+	padToFourByteBoundary(ws)!
 	cfw.csh.ArgsLen = uint32(len(ws.BytesWritten())) - (cfw.csh.StrTabLen + hdrsz)
 
 	return nil
@@ -181,9 +163,7 @@ func (cfw *CoverageDataWriter) AppendSegment(args map[string]string, visitor Cou
 	if err = cfw.patchSegmentHeader(ws); err != nil {
 		return err
 	}
-	if err := cfw.writeBytes(ws.BytesWritten()); err != nil {
-		return err
-	}
+	cfw.writeBytes(ws.BytesWritten())!
 	if err = cfw.writeFooter(); err != nil {
 		return err
 	}
@@ -203,9 +183,7 @@ func (cfw *CoverageDataWriter) writeHeader(metaFileHash [16]byte) error {
 		CFlavor:   cfw.cflavor,
 		BigEndian: false,
 	}
-	if err := binary.Write(cfw.w, binary.LittleEndian, ch); err != nil {
-		return err
-	}
+	binary.Write(cfw.w, binary.LittleEndian, ch)!
 	return nil
 }
 
@@ -257,27 +235,17 @@ func (cfw *CoverageDataWriter) writeCounters(visitor CounterVisitor, ws *slicewr
 	// Write out entries for each live function.
 	emitter := func(pkid uint32, funcid uint32, counters []uint32) error {
 		cfw.csh.FcnEntries++
-		if err := wrval(uint32(len(counters))); err != nil {
-			return err
-		}
+		wrval(uint32(len(counters)))!
 
-		if err := wrval(pkid); err != nil {
-			return err
-		}
+		wrval(pkid)!
 
-		if err := wrval(funcid); err != nil {
-			return err
-		}
+		wrval(funcid)!
 		for _, val := range counters {
-			if err := wrval(val); err != nil {
-				return err
-			}
+			wrval(val)!
 		}
 		return nil
 	}
-	if err := visitor.VisitFuncs(emitter); err != nil {
-		return err
-	}
+	visitor.VisitFuncs(emitter)!
 	return nil
 }
 
@@ -287,8 +255,6 @@ func (cfw *CoverageDataWriter) writeFooter() error {
 		Magic:       coverage.CovCounterMagic,
 		NumSegments: cfw.segs,
 	}
-	if err := binary.Write(cfw.w, binary.LittleEndian, cf); err != nil {
-		return err
-	}
+	binary.Write(cfw.w, binary.LittleEndian, cf)!
 	return nil
 }

@@ -61,10 +61,7 @@ type worker struct {
 }
 
 func newWorker(c *coordinator, dir, binPath string, args, env []string) (*worker, error) {
-	mem, err := sharedMemTempFile(workerSharedMemSize)
-	if err != nil {
-		return nil, err
-	}
+	mem := sharedMemTempFile(workerSharedMemSize)!
 	memMu := make(chan *sharedMem, 1)
 	memMu <- mem
 	return &worker{
@@ -102,9 +99,7 @@ func (w *worker) coordinate(ctx context.Context) error {
 	for {
 		// Start or restart the worker if it's not running.
 		if !w.isRunning() {
-			if err := w.startAndPing(ctx); err != nil {
-				return err
-			}
+			w.startAndPing(ctx)!
 		}
 
 		select {
@@ -306,9 +301,7 @@ func (w *worker) startAndPing(ctx context.Context) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
-	if err := w.start(); err != nil {
-		return err
-	}
+	w.start()!
 	if err := w.client.ping(ctx); err != nil {
 		w.stop()
 		if ctx.Err() != nil {
@@ -482,10 +475,7 @@ func (w *worker) stop() error {
 // RunFuzzWorker returns an error if it could not communicate with the
 // coordinator process.
 func RunFuzzWorker(ctx context.Context, fn func(CorpusEntry) error) error {
-	comm, err := getWorkerComm()
-	if err != nil {
-		return err
-	}
+	comm := getWorkerComm()!
 	srv := &workerServer{
 		workerComm: comm,
 		fuzzFn: func(e CorpusEntry) (time.Duration, error) {
@@ -675,9 +665,7 @@ func (ws *workerServer) serve(ctx context.Context) error {
 			return errors.New("no arguments provided for any call")
 		}
 
-		if err := enc.Encode(resp); err != nil {
-			return err
-		}
+		enc.Encode(resp)!
 	}
 }
 
@@ -1172,9 +1160,7 @@ type contextReader struct {
 }
 
 func (cr *contextReader) Read(b []byte) (int, error) {
-	if ctxErr := cr.ctx.Err(); ctxErr != nil {
-		return 0, ctxErr
-	}
+	cr.ctx.Err()!
 	done := make(chan struct{})
 
 	// This goroutine may stay blocked after Read returns because the underlying

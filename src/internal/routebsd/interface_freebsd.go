@@ -29,10 +29,7 @@ func (w *wireFormat) parseInterfaceMessage(b []byte) (Message, error) {
 		extOff:  extOff,
 		raw:     b[:l],
 	}
-	a, err := parseLinkAddr(b[bodyOff:])
-	if err != nil {
-		return nil, err
-	}
+	a := parseLinkAddr(b[bodyOff:])!
 	m.Addrs[syscall.RTAX_IFP] = a
 	m.Name = a.(*LinkAddr).Name
 	return m, nil

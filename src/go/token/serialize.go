@@ -23,9 +23,7 @@ type serializedFileSet struct {
 // Read calls decode to deserialize a file set into s; s must not be nil.
 func (s *FileSet) Read(decode func(any) error) error {
 	var ss serializedFileSet
-	if err := decode(&ss); err != nil {
-		return err
-	}
+	decode(&ss)!
 
 	s.mutex.Lock()
 	s.base = ss.Base

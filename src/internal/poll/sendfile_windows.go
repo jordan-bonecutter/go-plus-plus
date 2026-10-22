@@ -70,10 +70,7 @@ func SendFile(fd *FD, src uintptr, size int64) (written int64, err error, handle
 
 		n, err := fd.execIO('w', func(o *operation) (uint32, error) {
 			o.setOffset(startpos + written)
-			err := syscall.TransmitFile(fd.Sysfd, hsrc, uint32(chunkSize), 0, &o.o, nil, syscall.TF_WRITE_BEHIND)
-			if err != nil {
-				return 0, err
-			}
+			syscall.TransmitFile(fd.Sysfd, hsrc, uint32(chunkSize), 0, &o.o, nil, syscall.TF_WRITE_BEHIND)!
 			return uint32(chunkSize), nil
 		})
 		if err != nil {

@@ -43,9 +43,7 @@ func NewCounterDataReader(fn string, rs io.ReadSeeker) (*CounterDataReader, erro
 		u8b:  make([]byte, 1),
 	}
 	// Read header
-	if err := binary.Read(rs, binary.LittleEndian, &cdr.hdr); err != nil {
-		return nil, err
-	}
+	binary.Read(rs, binary.LittleEndian, &cdr.hdr)!
 	if cdr.debug {
 		fmt.Fprintf(os.Stderr, "=-= counter file header: %+v\n", cdr.hdr)
 	}
@@ -57,18 +55,12 @@ func NewCounterDataReader(fn string, rs io.ReadSeeker) (*CounterDataReader, erro
 	}
 
 	// Read footer.
-	if err := cdr.readFooter(); err != nil {
-		return nil, err
-	}
+	cdr.readFooter()!
 	// Seek back to just past the file header.
 	hsz := int64(unsafe.Sizeof(cdr.hdr))
-	if _, err := cdr.mr.Seek(hsz, io.SeekStart); err != nil {
-		return nil, err
-	}
+	cdr.mr.Seek(hsz, io.SeekStart)!
 	// Read preamble for first segment.
-	if err := cdr.readSegmentPreamble(); err != nil {
-		return nil, err
-	}
+	cdr.readSegmentPreamble()!
 	return cdr, nil
 }
 
@@ -79,12 +71,8 @@ func checkMagic(v [4]byte) bool {
 
 func (cdr *CounterDataReader) readFooter() error {
 	ftrSize := int64(unsafe.Sizeof(cdr.ftr))
-	if _, err := cdr.mr.Seek(-ftrSize, io.SeekEnd); err != nil {
-		return err
-	}
-	if err := binary.Read(cdr.mr, binary.LittleEndian, &cdr.ftr); err != nil {
-		return err
-	}
+	cdr.mr.Seek(-ftrSize, io.SeekEnd)!
+	binary.Read(cdr.mr, binary.LittleEndian, &cdr.ftr)!
 	if !checkMagic(cdr.ftr.Magic) {
 		return fmt.Errorf("invalid magic string (not a counter data file)")
 	}
@@ -98,9 +86,7 @@ func (cdr *CounterDataReader) readFooter() error {
 // table, and segment args table.
 func (cdr *CounterDataReader) readSegmentPreamble() error {
 	// Read segment header.
-	if err := binary.Read(cdr.mr, binary.LittleEndian, &cdr.shdr); err != nil {
-		return err
-	}
+	binary.Read(cdr.mr, binary.LittleEndian, &cdr.shdr)!
 	if cdr.debug {
 		fmt.Fprintf(os.Stderr, "=-= read counter segment header: %+v", cdr.shdr)
 		fmt.Fprintf(os.Stderr, " FcnEntries=0x%x StrTabLen=0x%x ArgsLen=0x%x\n",
@@ -108,12 +94,8 @@ func (cdr *CounterDataReader) readSegmentPreamble() error {
 	}
 
 	// Read string table and args.
-	if err := cdr.readStringTable(); err != nil {
-		return err
-	}
-	if err := cdr.readArgs(); err != nil {
-		return err
-	}
+	cdr.readStringTable()!
+	cdr.readArgs()!
 	// Seek past any padding to bring us up to a 4-byte boundary.
 	if of, err := cdr.mr.Seek(0, io.SeekCurrent); err != nil {
 		return err
@@ -121,9 +103,7 @@ func (cdr *CounterDataReader) readSegmentPreamble() error {
 		rem := of % 4
 		if rem != 0 {
 			pad := 4 - rem
-			if _, err := cdr.mr.Seek(pad, io.SeekCurrent); err != nil {
-				return err
-			}
+			cdr.mr.Seek(pad, io.SeekCurrent)!
 		}
 	}
 	return nil
@@ -131,10 +111,7 @@ func (cdr *CounterDataReader) readSegmentPreamble() error {
 
 func (cdr *CounterDataReader) readStringTable() error {
 	b := make([]byte, cdr.shdr.StrTabLen)
-	nr, err := cdr.mr.Read(b)
-	if err != nil {
-		return err
-	}
+	nr := cdr.mr.Read(b)!
 	if nr != int(cdr.shdr.StrTabLen) {
 		return fmt.Errorf("error: short read on string table")
 	}
@@ -146,10 +123,7 @@ func (cdr *CounterDataReader) readStringTable() error {
 
 func (cdr *CounterDataReader) readArgs() error {
 	b := make([]byte, cdr.shdr.ArgsLen)
-	nr, err := cdr.mr.Read(b)
-	if err != nil {
-		return err
-	}
+	nr := cdr.mr.Read(b)!
 	if nr != int(cdr.shdr.ArgsLen) {
 		return fmt.Errorf("error: short read on args table")
 	}
@@ -164,14 +138,8 @@ func (cdr *CounterDataReader) readArgs() error {
 	nents := slr.ReadULEB128()
 	cdr.args = make(map[string]string, int(nents))
 	for i := uint64(0); i < nents; i++ {
-		k, errk := sget()
-		if errk != nil {
-			return errk
-		}
-		v, errv := sget()
-		if errv != nil {
-			return errv
-		}
+		k := sget()!
+		v := sget()!
 		if _, ok := cdr.args[k]; ok {
 			return fmt.Errorf("malformed args table")
 		}
@@ -248,13 +216,9 @@ func (cdr *CounterDataReader) BeginNextSegment() (bool, error) {
 	cdr.fcnCount = 0
 	// Seek past footer from last segment.
 	ftrSize := int64(unsafe.Sizeof(cdr.ftr))
-	if _, err := cdr.mr.Seek(ftrSize, io.SeekCurrent); err != nil {
-		return false, err
-	}
+	cdr.mr.Seek(ftrSize, io.SeekCurrent)!
 	// Read preamble for this segment.
-	if err := cdr.readSegmentPreamble(); err != nil {
-		return false, err
-	}
+	cdr.readSegmentPreamble()!
 	return true, nil
 }
 
@@ -282,10 +246,7 @@ func (cdr *CounterDataReader) NextFunc(p *FuncPayload) (bool, error) {
 			var shift uint
 			var value uint64
 			for {
-				_, err := cdr.mr.Read(cdr.u8b)
-				if err != nil {
-					return 0, err
-				}
+				cdr.mr.Read(cdr.u8b)!
 				b := cdr.u8b[0]
 				value |= (uint64(b&0x7F) << shift)
 				if b&0x80 == 0 {
@@ -298,10 +259,7 @@ func (cdr *CounterDataReader) NextFunc(p *FuncPayload) (bool, error) {
 	} else if cdr.hdr.CFlavor == coverage.CtrRaw {
 		if cdr.hdr.BigEndian {
 			rdu32 = func() (uint32, error) {
-				n, err := cdr.mr.Read(cdr.u32b)
-				if err != nil {
-					return 0, err
-				}
+				n := cdr.mr.Read(cdr.u32b)!
 				if n != 4 {
 					return 0, io.EOF
 				}
@@ -309,10 +267,7 @@ func (cdr *CounterDataReader) NextFunc(p *FuncPayload) (bool, error) {
 			}
 		} else {
 			rdu32 = func() (uint32, error) {
-				n, err := cdr.mr.Read(cdr.u32b)
-				if err != nil {
-					return 0, err
-				}
+				n := cdr.mr.Read(cdr.u32b)!
 				if n != 4 {
 					return 0, io.EOF
 				}
@@ -363,10 +318,7 @@ func (cdr *CounterDataReader) NextFunc(p *FuncPayload) (bool, error) {
 	}
 	p.Counters = p.Counters[:0]
 	for i := uint32(0); i < nc; i++ {
-		v, err := rdu32()
-		if err != nil {
-			return false, err
-		}
+		v := rdu32()!
 		p.Counters = append(p.Counters, v)
 	}
 	return true, nil

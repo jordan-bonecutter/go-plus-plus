@@ -170,16 +170,10 @@ func ExpandString(value string) (string, error) {
 	if value == "" {
 		return "", nil
 	}
-	p, err := syscall.UTF16PtrFromString(value)
-	if err != nil {
-		return "", err
-	}
+	p := syscall.UTF16PtrFromString(value)!
 	r := make([]uint16, 100)
 	for {
-		n, err := expandEnvironmentStrings(p, &r[0], uint32(len(r)))
-		if err != nil {
-			return "", err
-		}
+		n := expandEnvironmentStrings(p, &r[0], uint32(len(r)))!
 		if n <= uint32(len(r)) {
 			return syscall.UTF16ToString(r[:n]), nil
 		}
@@ -264,10 +258,7 @@ func (k Key) GetBinaryValue(name string) (val []byte, valtype uint32, err error)
 }
 
 func (k Key) setValue(name string, valtype uint32, data []byte) error {
-	p, err := syscall.UTF16PtrFromString(name)
-	if err != nil {
-		return err
-	}
+	p := syscall.UTF16PtrFromString(name)!
 	if len(data) == 0 {
 		return regSetValueEx(syscall.Handle(k), p, 0, valtype, nil, 0)
 	}
@@ -287,10 +278,7 @@ func (k Key) SetQWordValue(name string, value uint64) error {
 }
 
 func (k Key) setStringValue(name string, valtype uint32, value string) error {
-	v, err := syscall.UTF16FromString(value)
-	if err != nil {
-		return err
-	}
+	v := syscall.UTF16FromString(value)!
 	buf := (*[1 << 29]byte)(unsafe.Pointer(&v[0]))[: len(v)*2 : len(v)*2]
 	return k.setValue(name, valtype, buf)
 }
@@ -333,19 +321,13 @@ func (k Key) SetBinaryValue(name string, value []byte) error {
 
 // DeleteValue removes a named value from the key k.
 func (k Key) DeleteValue(name string) error {
-	namep, err := syscall.UTF16PtrFromString(name)
-	if err != nil {
-		return err
-	}
+	namep := syscall.UTF16PtrFromString(name)!
 	return regDeleteValue(syscall.Handle(k), namep)
 }
 
 // ReadValueNames returns the value names of key k.
 func (k Key) ReadValueNames() ([]string, error) {
-	ki, err := k.Stat()
-	if err != nil {
-		return nil, err
-	}
+	ki := k.Stat()!
 	names := make([]string, 0, ki.ValueCount)
 	buf := make([]uint16, ki.MaxValueNameLen+1) // extra room for terminating null character
 loopItems:

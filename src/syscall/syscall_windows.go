@@ -111,10 +111,7 @@ func StringToUTF16Ptr(s string) *uint16 { return &StringToUTF16(s)[0] }
 // contains a NUL byte at any location, it returns (nil, EINVAL).
 // Unpaired surrogates are encoded using WTF-8.
 func UTF16PtrFromString(s string) (*uint16, error) {
-	a, err := UTF16FromString(s)
-	if err != nil {
-		return nil, err
-	}
+	a := UTF16FromString(s)!
 	return &a[0], nil
 }
 
@@ -1271,24 +1268,16 @@ func FindNextFile(handle Handle, data *Win32finddata) (err error) {
 }
 
 func getProcessEntry(pid int) (*ProcessEntry32, error) {
-	snapshot, err := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)
-	if err != nil {
-		return nil, err
-	}
+	snapshot := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)!
 	defer CloseHandle(snapshot)
 	var procEntry ProcessEntry32
 	procEntry.Size = uint32(unsafe.Sizeof(procEntry))
-	if err = Process32First(snapshot, &procEntry); err != nil {
-		return nil, err
-	}
+	Process32First(snapshot, &procEntry)!
 	for {
 		if procEntry.ProcessID == uint32(pid) {
 			return &procEntry, nil
 		}
-		err = Process32Next(snapshot, &procEntry)
-		if err != nil {
-			return nil, err
-		}
+		Process32Next(snapshot, &procEntry)!
 	}
 }
 

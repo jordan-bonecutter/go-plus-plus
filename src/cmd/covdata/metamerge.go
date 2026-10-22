@@ -305,9 +305,7 @@ func (mm *metaMerge) VisitFuncs(f encodecounter.CounterVisitorFn) error {
 			if *verbflag >= 4 {
 				fmt.Printf("counter write for pk=%d fid=%d len(ctrs)=%d\n", pidx, fid, len(fp.Counters))
 			}
-			if err := f(uint32(pidx), uint32(fid), fp.Counters); err != nil {
-				return err
-			}
+			f(uint32(pidx), uint32(fid), fp.Counters)!
 		}
 	}
 	return nil

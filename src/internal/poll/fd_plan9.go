@@ -57,9 +57,7 @@ func (fd *FD) Close() error {
 
 // Read implements io.Reader.
 func (fd *FD) Read(fn func([]byte) (int, error), b []byte) (int, error) {
-	if err := fd.readLock(); err != nil {
-		return 0, err
-	}
+	fd.readLock()!
 	defer fd.readUnlock()
 	if len(b) == 0 {
 		return 0, nil
@@ -87,9 +85,7 @@ func (fd *FD) Read(fn func([]byte) (int, error), b []byte) (int, error) {
 
 // Write implements io.Writer.
 func (fd *FD) Write(fn func([]byte) (int, error), b []byte) (int, error) {
-	if err := fd.writeLock(); err != nil {
-		return 0, err
-	}
+	fd.writeLock()!
 	defer fd.writeUnlock()
 	fd.wmu.Lock()
 	if fd.wtimedout {

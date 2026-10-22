@@ -20,24 +20,15 @@ import (
 func pprofByGoroutine(compute computePprofFunc, t *parsedTrace) traceviewer.ProfileFunc {
 	return func(r *http.Request) ([]traceviewer.ProfileRecord, error) {
 		name := r.FormValue("name")
-		gToIntervals, err := pprofMatchingGoroutines(name, t)
-		if err != nil {
-			return nil, err
-		}
+		gToIntervals := pprofMatchingGoroutines(name, t)!
 		return compute(gToIntervals, t.events)
 	}
 }
 
 func pprofByRegion(compute computePprofFunc, t *parsedTrace) traceviewer.ProfileFunc {
 	return func(r *http.Request) ([]traceviewer.ProfileRecord, error) {
-		filter, err := newRegionFilter(r)
-		if err != nil {
-			return nil, err
-		}
-		gToIntervals, err := pprofMatchingRegions(filter, t)
-		if err != nil {
-			return nil, err
-		}
+		filter := newRegionFilter(r)!
+		gToIntervals := pprofMatchingRegions(filter, t)!
 		return compute(gToIntervals, t.events)
 	}
 }

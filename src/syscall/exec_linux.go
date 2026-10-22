@@ -719,19 +719,14 @@ func formatIDMappings(idMap []SysProcIDMap) []byte {
 
 // writeIDMappings writes the user namespace User ID or Group ID mappings to the specified path.
 func writeIDMappings(path string, idMap []SysProcIDMap) error {
-	fd, err := Open(path, O_RDWR, 0)
-	if err != nil {
-		return err
-	}
+	fd := Open(path, O_RDWR, 0)!
 
 	if _, err := Write(fd, formatIDMappings(idMap)); err != nil {
 		Close(fd)
 		return err
 	}
 
-	if err := Close(fd); err != nil {
-		return err
-	}
+	Close(fd)!
 
 	return nil
 }
@@ -742,10 +737,7 @@ func writeIDMappings(path string, idMap []SysProcIDMap) error {
 // disabling setgroups() system call.
 func writeSetgroups(pid int, enable bool) error {
 	sgf := "/proc/" + strconv.Itoa(pid) + "/setgroups"
-	fd, err := Open(sgf, O_RDWR, 0)
-	if err != nil {
-		return err
-	}
+	fd := Open(sgf, O_RDWR, 0)!
 
 	var data []byte
 	if enable {
@@ -767,9 +759,7 @@ func writeSetgroups(pid int, enable bool) error {
 func writeUidGidMappings(pid int, sys *SysProcAttr) error {
 	if sys.UidMappings != nil {
 		uidf := "/proc/" + strconv.Itoa(pid) + "/uid_map"
-		if err := writeIDMappings(uidf, sys.UidMappings); err != nil {
-			return err
-		}
+		writeIDMappings(uidf, sys.UidMappings)!
 	}
 
 	if sys.GidMappings != nil {
@@ -778,9 +768,7 @@ func writeUidGidMappings(pid int, sys *SysProcAttr) error {
 			return err
 		}
 		gidf := "/proc/" + strconv.Itoa(pid) + "/gid_map"
-		if err := writeIDMappings(gidf, sys.GidMappings); err != nil {
-			return err
-		}
+		writeIDMappings(gidf, sys.GidMappings)!
 	}
 
 	return nil

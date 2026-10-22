@@ -387,10 +387,7 @@ func (b *profileBuilder) build() error {
 	// TODO: Anything for tagProfile_KeepFrames?
 
 	b.pb.strings(tagProfile_StringTable, b.strings)
-	_, err := b.zw.Write(b.pb.data)
-	if err != nil {
-		return err
-	}
+	b.zw.Write(b.pb.data)!
 	return b.zw.Close()
 }
 

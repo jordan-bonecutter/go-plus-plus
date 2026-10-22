@@ -75,9 +75,7 @@ func readGeneration(r *bufio.Reader, ver version.Version) (*generation, error) {
 		if g.minTs == 0 || b.time < g.minTs {
 			g.minTs = b.time
 		}
-		if err := processBatch(g, b, ver); err != nil {
-			return nil, err
-		}
+		processBatch(g, b, ver)!
 	}
 
 	// Check some invariants.
@@ -99,9 +97,7 @@ func readGeneration(r *bufio.Reader, ver version.Version) (*generation, error) {
 	g.strings.compactify()
 
 	// Validate stacks.
-	if err := validateStackStrings(&g.stacks, &g.strings, g.pcs); err != nil {
-		return nil, err
-	}
+	validateStackStrings(&g.stacks, &g.strings, g.pcs)!
 
 	// Now that we have the frequency, fix up CPU samples.
 	fixUpCPUSamples(g.cpuSamples, g.freq)
@@ -140,9 +136,7 @@ func readGenerationWithSpill(r *bufio.Reader, spill *spilledBatch, ver version.V
 		// Process the spilled batch, which contains real data.
 		g.gen = spill.gen
 		g.minTs = spill.batch.time
-		if err := processBatch(g, *spill.batch, ver); err != nil {
-			return nil, nil, err
-		}
+		processBatch(g, *spill.batch, ver)!
 		spill = nil
 	}
 	// Read batches one at a time until we either hit the next generation.
@@ -188,9 +182,7 @@ func readGenerationWithSpill(r *bufio.Reader, spill *spilledBatch, ver version.V
 		if g.minTs == 0 || b.time < g.minTs {
 			g.minTs = b.time
 		}
-		if err := processBatch(g, b, ver); err != nil {
-			return nil, nil, err
-		}
+		processBatch(g, b, ver)!
 	}
 
 	// Check some invariants.
@@ -212,9 +204,7 @@ func readGenerationWithSpill(r *bufio.Reader, spill *spilledBatch, ver version.V
 	g.strings.compactify()
 
 	// Validate stacks.
-	if err := validateStackStrings(&g.stacks, &g.strings, g.pcs); err != nil {
-		return nil, nil, err
-	}
+	validateStackStrings(&g.stacks, &g.strings, g.pcs)!
 
 	// Now that we have the frequency, fix up CPU samples.
 	fixUpCPUSamples(g.cpuSamples, g.freq)
@@ -225,30 +215,19 @@ func readGenerationWithSpill(r *bufio.Reader, spill *spilledBatch, ver version.V
 func processBatch(g *generation, b batch, ver version.Version) error {
 	switch {
 	case b.isStringsBatch():
-		if err := addStrings(&g.strings, b); err != nil {
-			return err
-		}
+		addStrings(&g.strings, b)!
 	case b.isStacksBatch():
-		if err := addStacks(&g.stacks, g.pcs, b); err != nil {
-			return err
-		}
+		addStacks(&g.stacks, g.pcs, b)!
 	case b.isCPUSamplesBatch():
-		samples, err := addCPUSamples(g.cpuSamples, b)
-		if err != nil {
-			return err
-		}
+		samples := addCPUSamples(g.cpuSamples, b)!
 		g.cpuSamples = samples
 	case b.isSyncBatch(ver):
-		if err := setSyncBatch(&g.sync, b, ver); err != nil {
-			return err
-		}
+		setSyncBatch(&g.sync, b, ver)!
 	case b.exp != tracev2.NoExperiment:
 		if g.expBatches == nil {
 			g.expBatches = make(map[tracev2.Experiment][]ExperimentalBatch)
 		}
-		if err := addExperimentalBatch(g.expBatches, b); err != nil {
-			return err
-		}
+		addExperimentalBatch(g.expBatches, b)!
 	case b.isEndOfGeneration():
 		return errors.New("internal error: unexpectedly processing EndOfGeneration; broken trace?")
 	default:
@@ -342,9 +321,7 @@ func addStrings(stringTable *dataTable[stringID, string], b batch) error {
 		// Add the string to the map.
 		s := sb.String()
 		sb.Reset()
-		if err := stringTable.insert(stringID(id), s); err != nil {
-			return err
-		}
+		stringTable.insert(stringID(id), s)!
 	}
 	return nil
 }
@@ -364,25 +341,16 @@ func addStacks(stackTable *dataTable[stackID, stack], pcs map[uint64]frame, b ba
 
 	for r.Len() != 0 {
 		// Read the header.
-		ev, err := r.ReadByte()
-		if err != nil {
-			return err
-		}
+		ev := r.ReadByte()!
 		if tracev2.EventType(ev) != tracev2.EvStack {
 			return fmt.Errorf("expected stack event, got %d", ev)
 		}
 
 		// Read the stack's ID.
-		id, err := binary.ReadUvarint(r)
-		if err != nil {
-			return err
-		}
+		id := binary.ReadUvarint(r)!
 
 		// Read how many frames are in each stack.
-		nFrames, err := binary.ReadUvarint(r)
-		if err != nil {
-			return err
-		}
+		nFrames := binary.ReadUvarint(r)!
 		if nFrames > tracev2.MaxFramesPerStack {
 			return fmt.Errorf("invalid stack size %d, maximum is %d", nFrames, tracev2.MaxFramesPerStack)
 		}
@@ -420,9 +388,7 @@ func addStacks(stackTable *dataTable[stackID, stack], pcs map[uint64]frame, b ba
 		}
 
 		// Add the stack to the map.
-		if err := stackTable.insert(stackID(id), stack{pcs: frames}); err != nil {
-			return err
-		}
+		stackTable.insert(stackID(id), stack{pcs: frames})!
 	}
 	return nil
 }
@@ -442,49 +408,31 @@ func addCPUSamples(samples []cpuSample, b batch) ([]cpuSample, error) {
 
 	for r.Len() != 0 {
 		// Read the header.
-		ev, err := r.ReadByte()
-		if err != nil {
-			return nil, err
-		}
+		ev := r.ReadByte()!
 		if tracev2.EventType(ev) != tracev2.EvCPUSample {
 			return nil, fmt.Errorf("expected CPU sample event, got %d", ev)
 		}
 
 		// Read the sample's timestamp.
-		ts, err := binary.ReadUvarint(r)
-		if err != nil {
-			return nil, err
-		}
+		ts := binary.ReadUvarint(r)!
 
 		// Read the sample's M.
-		m, err := binary.ReadUvarint(r)
-		if err != nil {
-			return nil, err
-		}
+		m := binary.ReadUvarint(r)!
 		mid := ThreadID(m)
 
 		// Read the sample's P.
-		p, err := binary.ReadUvarint(r)
-		if err != nil {
-			return nil, err
-		}
+		p := binary.ReadUvarint(r)!
 		pid := ProcID(p)
 
 		// Read the sample's G.
-		g, err := binary.ReadUvarint(r)
-		if err != nil {
-			return nil, err
-		}
+		g := binary.ReadUvarint(r)!
 		goid := GoID(g)
 		if g == 0 {
 			goid = NoGoroutine
 		}
 
 		// Read the sample's stack.
-		s, err := binary.ReadUvarint(r)
-		if err != nil {
-			return nil, err
-		}
+		s := binary.ReadUvarint(r)!
 
 		// Add the sample to the slice.
 		samples = append(samples, cpuSample{
@@ -524,10 +472,7 @@ func setSyncBatch(s *sync, b batch, ver version.Version) error {
 	lastTs := b.time
 	for r.Len() != 0 {
 		// Read the header
-		ev, err := r.ReadByte()
-		if err != nil {
-			return err
-		}
+		ev := r.ReadByte()!
 		et := tracev2.EventType(ev)
 		switch {
 		case et == tracev2.EvFrequency:
@@ -535,10 +480,7 @@ func setSyncBatch(s *sync, b batch, ver version.Version) error {
 				return fmt.Errorf("found multiple frequency events")
 			}
 			// Read the frequency. It'll come out as timestamp units per second.
-			f, err := binary.ReadUvarint(r)
-			if err != nil {
-				return err
-			}
+			f := binary.ReadUvarint(r)!
 			// Convert to nanoseconds per timestamp unit.
 			s.freq = frequency(1.0 / (float64(f) / 1e9))
 		case et == tracev2.EvClockSnapshot && ver >= version.Go125:
@@ -547,25 +489,13 @@ func setSyncBatch(s *sync, b batch, ver version.Version) error {
 			}
 			s.hasClockSnapshot = true
 			// Read the EvClockSnapshot arguments.
-			tdiff, err := binary.ReadUvarint(r)
-			if err != nil {
-				return err
-			}
+			tdiff := binary.ReadUvarint(r)!
 			lastTs += timestamp(tdiff)
 			s.snapTime = lastTs
-			mono, err := binary.ReadUvarint(r)
-			if err != nil {
-				return err
-			}
+			mono := binary.ReadUvarint(r)!
 			s.snapMono = mono
-			sec, err := binary.ReadUvarint(r)
-			if err != nil {
-				return err
-			}
-			nsec, err := binary.ReadUvarint(r)
-			if err != nil {
-				return err
-			}
+			sec := binary.ReadUvarint(r)!
+			nsec := binary.ReadUvarint(r)!
 			// TODO(felixge): In theory we could inject s.snapMono into the time
 			// value below to make it comparable. But there is no API for this
 			// in the time package right now.

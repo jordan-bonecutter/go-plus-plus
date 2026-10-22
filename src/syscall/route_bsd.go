@@ -47,10 +47,7 @@ func parseSockaddrLink(b []byte) (*SockaddrDatalink, error) {
 	if len(b) < 8 {
 		return nil, EINVAL
 	}
-	sa, _, err := parseLinkLayerAddr(b[4:])
-	if err != nil {
-		return nil, err
-	}
+	sa, _ := parseLinkLayerAddr(b[4:])!
 	rsa := (*RawSockaddrDatalink)(unsafe.Pointer(&b[0]))
 	sa.Len = rsa.Len
 	sa.Family = rsa.Family
@@ -182,16 +179,12 @@ func RouteRIB(facility, param int) ([]byte, error) {
 	mib := []_C_int{CTL_NET, AF_ROUTE, 0, 0, _C_int(facility), _C_int(param)}
 	// Find size.
 	n := uintptr(0)
-	if err := sysctl(mib, nil, &n, nil, 0); err != nil {
-		return nil, err
-	}
+	sysctl(mib, nil, &n, nil, 0)!
 	if n == 0 {
 		return nil, nil
 	}
 	tab := make([]byte, n)
-	if err := sysctl(mib, &tab[0], &n, nil, 0); err != nil {
-		return nil, err
-	}
+	sysctl(mib, &tab[0], &n, nil, 0)!
 	return tab[:n], nil
 }
 
@@ -230,25 +223,16 @@ func (m *RouteMessage) sockaddr() ([]Sockaddr, error) {
 		rsa := (*RawSockaddr)(unsafe.Pointer(&b[0]))
 		switch rsa.Family {
 		case AF_LINK:
-			sa, err := parseSockaddrLink(b)
-			if err != nil {
-				return nil, err
-			}
+			sa := parseSockaddrLink(b)!
 			sas[i] = sa
 			b = b[rsaAlignOf(int(rsa.Len)):]
 		case AF_INET, AF_INET6:
-			sa, err := parseSockaddrInet(b, rsa.Family)
-			if err != nil {
-				return nil, err
-			}
+			sa := parseSockaddrInet(b, rsa.Family)!
 			sas[i] = sa
 			b = b[rsaAlignOf(int(rsa.Len)):]
 			family = rsa.Family
 		default:
-			sa, err := parseNetworkLayerAddr(b, family)
-			if err != nil {
-				return nil, err
-			}
+			sa := parseNetworkLayerAddr(b, family)!
 			sas[i] = sa
 			b = b[rsaAlignOf(int(b[0])):]
 		}
@@ -270,10 +254,7 @@ func (m *InterfaceMessage) sockaddr() ([]Sockaddr, error) {
 	if m.Header.Addrs&RTA_IFP == 0 {
 		return nil, nil
 	}
-	sa, err := parseSockaddrLink(m.Data[:])
-	if err != nil {
-		return nil, err
-	}
+	sa := parseSockaddrLink(m.Data[:])!
 	sas[RTAX_IFP] = sa
 	return sas[:], nil
 }
@@ -298,25 +279,16 @@ func (m *InterfaceAddrMessage) sockaddr() ([]Sockaddr, error) {
 		rsa := (*RawSockaddr)(unsafe.Pointer(&b[0]))
 		switch rsa.Family {
 		case AF_LINK:
-			sa, err := parseSockaddrLink(b)
-			if err != nil {
-				return nil, err
-			}
+			sa := parseSockaddrLink(b)!
 			sas[i] = sa
 			b = b[rsaAlignOf(int(rsa.Len)):]
 		case AF_INET, AF_INET6:
-			sa, err := parseSockaddrInet(b, rsa.Family)
-			if err != nil {
-				return nil, err
-			}
+			sa := parseSockaddrInet(b, rsa.Family)!
 			sas[i] = sa
 			b = b[rsaAlignOf(int(rsa.Len)):]
 			family = rsa.Family
 		default:
-			sa, err := parseNetworkLayerAddr(b, family)
-			if err != nil {
-				return nil, err
-			}
+			sa := parseNetworkLayerAddr(b, family)!
 			sas[i] = sa
 			b = b[rsaAlignOf(int(b[0])):]
 		}
@@ -356,9 +328,6 @@ func ParseRoutingMessage(b []byte) (msgs []RoutingMessage, err error) {
 //
 // Deprecated: Use golang.org/x/net/route instead.
 func ParseRoutingSockaddr(msg RoutingMessage) ([]Sockaddr, error) {
-	sas, err := msg.sockaddr()
-	if err != nil {
-		return nil, err
-	}
+	sas := msg.sockaddr()!
 	return sas, nil
 }

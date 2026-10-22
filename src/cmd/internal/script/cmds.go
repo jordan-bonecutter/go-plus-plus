@@ -178,10 +178,7 @@ func Chmod() Cmd {
 			}
 
 			for _, arg := range args[1:] {
-				err := os.Chmod(s.Path(arg), fs.FileMode(perm))
-				if err != nil {
-					return nil, err
-				}
+				os.Chmod(s.Path(arg), fs.FileMode(perm))!
 			}
 			return nil, nil
 		})
@@ -242,17 +239,11 @@ func doCompare(s *State, env bool, args ...string) error {
 	case "stderr":
 		text1 = s.Stderr()
 	default:
-		data, err := os.ReadFile(s.Path(name1))
-		if err != nil {
-			return err
-		}
+		data := os.ReadFile(s.Path(name1))!
 		text1 = string(data)
 	}
 
-	data, err := os.ReadFile(s.Path(name2))
-	if err != nil {
-		return err
-	}
+	data := os.ReadFile(s.Path(name2))!
 	text2 = string(data)
 
 	if env {
@@ -323,10 +314,7 @@ func Cp() Cmd {
 				if dstDir {
 					targ = filepath.Join(dst, filepath.Base(src))
 				}
-				err := os.WriteFile(targ, data, mode)
-				if err != nil {
-					return nil, err
-				}
+				os.WriteFile(targ, data, mode)!
 			}
 
 			return nil, nil
@@ -393,9 +381,7 @@ func Env() Cmd {
 						fmt.Fprintf(out, "%s=%s\n", env, s.envMap[env])
 						continue
 					}
-					if err := s.Setenv(env[:i], env[i+1:]); err != nil {
-						return nil, err
-					}
+					s.Setenv(env[:i], env[i+1:])!
 				}
 			}
 			var wait WaitFunc
@@ -606,10 +592,7 @@ func Exists() Cmd {
 
 			for _, file := range args {
 				file = s.Path(file)
-				info, err := os.Stat(file)
-				if err != nil {
-					return nil, err
-				}
+				info := os.Stat(file)!
 				if readonly && info.Mode()&0222 != 0 {
 					return nil, fmt.Errorf("%s exists but is writable", file)
 				}
@@ -676,17 +659,11 @@ func match(s *State, args []string, text, name string) error {
 	}
 
 	pattern := `(?m)` + args[0]
-	re, err := regexp.Compile(pattern)
-	if err != nil {
-		return err
-	}
+	re := regexp.Compile(pattern)!
 
 	if isGrep {
 		name = args[1] // for error messages
-		data, err := os.ReadFile(s.Path(args[1]))
-		if err != nil {
-			return err
-		}
+		data := os.ReadFile(s.Path(args[1]))!
 		text = string(data)
 	}
 
@@ -788,9 +765,7 @@ func Mkdir() Cmd {
 				return nil, ErrUsage
 			}
 			for _, arg := range args {
-				if err := os.MkdirAll(s.Path(arg), 0777); err != nil {
-					return nil, err
-				}
+				os.MkdirAll(s.Path(arg), 0777)!
 			}
 			return nil, nil
 		})
@@ -867,20 +842,14 @@ func Replace() Cmd {
 
 			oldNew := make([]string, 0, len(args)-1)
 			for _, arg := range args[:len(args)-1] {
-				s, err := strconv.Unquote(`"` + arg + `"`)
-				if err != nil {
-					return nil, err
-				}
+				s := strconv.Unquote(`"` + arg + `"`)!
 				oldNew = append(oldNew, s)
 			}
 
 			r := strings.NewReplacer(oldNew...)
 			file := s.Path(args[len(args)-1])
 
-			data, err := os.ReadFile(file)
-			if err != nil {
-				return nil, err
-			}
+			data := os.ReadFile(file)!
 			replaced := r.Replace(string(data))
 
 			return nil, os.WriteFile(file, []byte(replaced), 0666)
@@ -905,9 +874,7 @@ func Rm() Cmd {
 				return nil, ErrUsage
 			}
 			for _, arg := range args {
-				if err := removeAll(s.Path(arg)); err != nil {
-					return nil, err
-				}
+				removeAll(s.Path(arg))!
 			}
 			return nil, nil
 		})
@@ -948,10 +915,7 @@ func Sleep() Cmd {
 				return nil, ErrUsage
 			}
 
-			d, err := time.ParseDuration(args[0])
-			if err != nil {
-				return nil, err
-			}
+			d := time.ParseDuration(args[0])!
 
 			timer := time.NewTimer(d)
 			wait := func(s *State) (stdout, stderr string, err error) {

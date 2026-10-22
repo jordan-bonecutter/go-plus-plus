@@ -35,10 +35,7 @@ func (w *wireFormat) parseInterfaceMessage(b []byte) (Message, error) {
 	// It turns out that on darwin messages about the
 	// utun interface may not include a name. Issue #71064.
 	if attrs&syscall.RTA_IFP != 0 {
-		a, err := parseLinkAddr(b[w.bodyOff:])
-		if err != nil {
-			return nil, err
-		}
+		a := parseLinkAddr(b[w.bodyOff:])!
 		m.Addrs[syscall.RTAX_IFP] = a
 		m.Name = a.(*LinkAddr).Name
 	} else {

@@ -122,9 +122,7 @@ func (r *TextReader) ReadEvent() (Event, error) {
 func (r *TextReader) nextLine() (string, error) {
 	for {
 		if !r.s.Scan() {
-			if err := r.s.Err(); err != nil {
-				return "", err
-			}
+			r.s.Err()!
 			return "", io.EOF
 		}
 		txt := r.s.Text()
@@ -141,10 +139,7 @@ var frameFields = []string{"pc", "func", "file", "line"}
 func readArgs(s string, names []string) ([]uint64, error) {
 	var args []uint64
 	for _, name := range names {
-		arg, value, rest, err := readArg(s)
-		if err != nil {
-			return nil, err
-		}
+		arg, value, rest := readArg(s)!
 		if arg != name {
 			return nil, fmt.Errorf("expected argument %q, but got %q", name, arg)
 		}

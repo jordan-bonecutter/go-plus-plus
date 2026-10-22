@@ -36,10 +36,7 @@ var (
 )
 
 func Unlinkat(dirfd int, path string, flags int) error {
-	p, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return err
-	}
+	p := syscall.BytePtrFromString(path)!
 
 	_, _, errno := syscall6(uintptr(unsafe.Pointer(&procUnlinkat)), 3,
 		uintptr(dirfd),
@@ -54,10 +51,7 @@ func Unlinkat(dirfd int, path string, flags int) error {
 }
 
 func Openat(dirfd int, path string, flags int, perm uint32) (int, error) {
-	p, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return 0, err
-	}
+	p := syscall.BytePtrFromString(path)!
 
 	fd, _, errno := syscall6(uintptr(unsafe.Pointer(&procOpenat)), 4,
 		uintptr(dirfd),
@@ -73,10 +67,7 @@ func Openat(dirfd int, path string, flags int, perm uint32) (int, error) {
 }
 
 func Fstatat(dirfd int, path string, stat *syscall.Stat_t, flags int) error {
-	p, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return err
-	}
+	p := syscall.BytePtrFromString(path)!
 
 	_, _, errno := syscall6(uintptr(unsafe.Pointer(&procFstatat)), 4,
 		uintptr(dirfd),
@@ -92,10 +83,7 @@ func Fstatat(dirfd int, path string, stat *syscall.Stat_t, flags int) error {
 }
 
 func Readlinkat(dirfd int, path string, buf []byte) (int, error) {
-	p0, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return 0, err
-	}
+	p0 := syscall.BytePtrFromString(path)!
 	var p1 unsafe.Pointer
 	if len(buf) > 0 {
 		p1 = unsafe.Pointer(&buf[0])
@@ -116,10 +104,7 @@ func Readlinkat(dirfd int, path string, buf []byte) (int, error) {
 }
 
 func Mkdirat(dirfd int, path string, mode uint32) error {
-	p, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return err
-	}
+	p := syscall.BytePtrFromString(path)!
 
 	_, _, errno := syscall6(uintptr(unsafe.Pointer(&procMkdirat)), 3,
 		uintptr(dirfd),
@@ -133,10 +118,7 @@ func Mkdirat(dirfd int, path string, mode uint32) error {
 }
 
 func Fchmodat(dirfd int, path string, mode uint32, flags int) error {
-	p, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return err
-	}
+	p := syscall.BytePtrFromString(path)!
 	_, _, errno := syscall6(uintptr(unsafe.Pointer(&procFchmodat)), 4,
 		uintptr(dirfd),
 		uintptr(unsafe.Pointer(p)),
@@ -150,10 +132,7 @@ func Fchmodat(dirfd int, path string, mode uint32, flags int) error {
 }
 
 func Fchownat(dirfd int, path string, uid, gid int, flags int) error {
-	p, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return err
-	}
+	p := syscall.BytePtrFromString(path)!
 	_, _, errno := syscall6(uintptr(unsafe.Pointer(&procFchownat)), 5,
 		uintptr(dirfd),
 		uintptr(unsafe.Pointer(p)),
@@ -168,14 +147,8 @@ func Fchownat(dirfd int, path string, uid, gid int, flags int) error {
 }
 
 func Renameat(olddirfd int, oldpath string, newdirfd int, newpath string) error {
-	oldp, err := syscall.BytePtrFromString(oldpath)
-	if err != nil {
-		return err
-	}
-	newp, err := syscall.BytePtrFromString(newpath)
-	if err != nil {
-		return err
-	}
+	oldp := syscall.BytePtrFromString(oldpath)!
+	newp := syscall.BytePtrFromString(newpath)!
 	_, _, errno := syscall6(uintptr(unsafe.Pointer(&procRenameat)), 4,
 		uintptr(olddirfd),
 		uintptr(unsafe.Pointer(oldp)),
@@ -190,14 +163,8 @@ func Renameat(olddirfd int, oldpath string, newdirfd int, newpath string) error 
 }
 
 func Linkat(olddirfd int, oldpath string, newdirfd int, newpath string, flag int) error {
-	oldp, err := syscall.BytePtrFromString(oldpath)
-	if err != nil {
-		return err
-	}
-	newp, err := syscall.BytePtrFromString(newpath)
-	if err != nil {
-		return err
-	}
+	oldp := syscall.BytePtrFromString(oldpath)!
+	newp := syscall.BytePtrFromString(newpath)!
 	_, _, errno := syscall6(uintptr(unsafe.Pointer(&procLinkat)), 5,
 		uintptr(olddirfd),
 		uintptr(unsafe.Pointer(oldp)),
@@ -212,14 +179,8 @@ func Linkat(olddirfd int, oldpath string, newdirfd int, newpath string, flag int
 }
 
 func Symlinkat(oldpath string, newdirfd int, newpath string) error {
-	oldp, err := syscall.BytePtrFromString(oldpath)
-	if err != nil {
-		return err
-	}
-	newp, err := syscall.BytePtrFromString(newpath)
-	if err != nil {
-		return err
-	}
+	oldp := syscall.BytePtrFromString(oldpath)!
+	newp := syscall.BytePtrFromString(newpath)!
 	_, _, errno := syscall6(uintptr(unsafe.Pointer(&procSymlinkat)), 3,
 		uintptr(unsafe.Pointer(oldp)),
 		uintptr(newdirfd),

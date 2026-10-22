@@ -66,10 +66,7 @@ func Format(a *Archive) []byte {
 
 // ParseFile parses the named file as an archive.
 func ParseFile(file string) (*Archive, error) {
-	data, err := os.ReadFile(file)
-	if err != nil {
-		return nil, err
-	}
+	data := os.ReadFile(file)!
 	return Parse(data), nil
 }
 

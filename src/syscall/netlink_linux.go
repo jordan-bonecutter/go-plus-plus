@@ -58,23 +58,13 @@ var pageBufPool = &sync.Pool{New: func() any {
 // NetlinkRIB returns routing information base, as known as RIB, which
 // consists of network facility information, states and parameters.
 func NetlinkRIB(proto, family int) ([]byte, error) {
-	s, err := Socket(AF_NETLINK, SOCK_RAW|SOCK_CLOEXEC, NETLINK_ROUTE)
-	if err != nil {
-		return nil, err
-	}
+	s := Socket(AF_NETLINK, SOCK_RAW|SOCK_CLOEXEC, NETLINK_ROUTE)!
 	defer Close(s)
 	sa := &SockaddrNetlink{Family: AF_NETLINK}
-	if err := Bind(s, sa); err != nil {
-		return nil, err
-	}
+	Bind(s, sa)!
 	wb := newNetlinkRouteRequest(proto, 1, family)
-	if err := Sendto(s, wb, 0, sa); err != nil {
-		return nil, err
-	}
-	lsa, err := Getsockname(s)
-	if err != nil {
-		return nil, err
-	}
+	Sendto(s, wb, 0, sa)!
+	lsa := Getsockname(s)!
 	lsanl, ok := lsa.(*SockaddrNetlink)
 	if !ok {
 		return nil, EINVAL
@@ -86,19 +76,13 @@ func NetlinkRIB(proto, family int) ([]byte, error) {
 done:
 	for {
 		rb := *rbNew
-		nr, _, err := Recvfrom(s, rb, 0)
-		if err != nil {
-			return nil, err
-		}
+		nr, _ := Recvfrom(s, rb, 0)!
 		if nr < NLMSG_HDRLEN {
 			return nil, EINVAL
 		}
 		rb = rb[:nr]
 		tab = append(tab, rb...)
-		msgs, err := ParseNetlinkMessage(rb)
-		if err != nil {
-			return nil, err
-		}
+		msgs := ParseNetlinkMessage(rb)!
 		for _, m := range msgs {
 			if m.Header.Seq != 1 || m.Header.Pid != lsanl.Pid {
 				return nil, EINVAL
@@ -125,10 +109,7 @@ type NetlinkMessage struct {
 func ParseNetlinkMessage(b []byte) ([]NetlinkMessage, error) {
 	var msgs []NetlinkMessage
 	for len(b) >= NLMSG_HDRLEN {
-		h, dbuf, dlen, err := netlinkMessageHeaderAndData(b)
-		if err != nil {
-			return nil, err
-		}
+		h, dbuf, dlen := netlinkMessageHeaderAndData(b)!
 		m := NetlinkMessage{Header: *h, Data: dbuf[:int(h.Len)-NLMSG_HDRLEN]}
 		msgs = append(msgs, m)
 		b = b[dlen:]
@@ -168,10 +149,7 @@ func ParseNetlinkRouteAttr(m *NetlinkMessage) ([]NetlinkRouteAttr, error) {
 	}
 	var attrs []NetlinkRouteAttr
 	for len(b) >= SizeofRtAttr {
-		a, vbuf, alen, err := netlinkRouteAttrAndValue(b)
-		if err != nil {
-			return nil, err
-		}
+		a, vbuf, alen := netlinkRouteAttrAndValue(b)!
 		ra := NetlinkRouteAttr{Attr: *a, Value: vbuf[:int(a.Len)-SizeofRtAttr]}
 		attrs = append(attrs, ra)
 		b = b[alen:]

@@ -12,9 +12,7 @@ import (
 )
 
 func (fd *FD) Fstatat(name string, s *syscall.Stat_t, flags int) error {
-	if err := fd.incref(); err != nil {
-		return err
-	}
+	fd.incref()!
 	defer fd.decref()
 	return ignoringEINTR(func() error {
 		return unix.Fstatat(fd.Sysfd, name, s, flags)

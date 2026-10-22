@@ -15,10 +15,7 @@ import (
 func libc_readlinkat_trampoline()
 
 func Readlinkat(dirfd int, path string, buf []byte) (int, error) {
-	p0, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return 0, err
-	}
+	p0 := syscall.BytePtrFromString(path)!
 	var p1 unsafe.Pointer
 	if len(buf) > 0 {
 		p1 = unsafe.Pointer(&buf[0])
@@ -37,10 +34,7 @@ func Readlinkat(dirfd int, path string, buf []byte) (int, error) {
 func libc_mkdirat_trampoline()
 
 func Mkdirat(dirfd int, path string, mode uint32) error {
-	p, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return err
-	}
+	p := syscall.BytePtrFromString(path)!
 	_, _, errno := syscall_syscall6(abi.FuncPCABI0(libc_mkdirat_trampoline), uintptr(dirfd), uintptr(unsafe.Pointer(p)), uintptr(mode), 0, 0, 0)
 	if errno != 0 {
 		return errno
@@ -53,10 +47,7 @@ func Mkdirat(dirfd int, path string, mode uint32) error {
 func libc_fchmodat_trampoline()
 
 func Fchmodat(dirfd int, path string, mode uint32, flags int) error {
-	p, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return err
-	}
+	p := syscall.BytePtrFromString(path)!
 	_, _, errno := syscall_syscall6(abi.FuncPCABI0(libc_fchmodat_trampoline),
 		uintptr(dirfd),
 		uintptr(unsafe.Pointer(p)),
@@ -75,10 +66,7 @@ func Fchmodat(dirfd int, path string, mode uint32, flags int) error {
 func libc_fchownat_trampoline()
 
 func Fchownat(dirfd int, path string, uid, gid int, flags int) error {
-	p, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return err
-	}
+	p := syscall.BytePtrFromString(path)!
 	_, _, errno := syscall_syscall6(abi.FuncPCABI0(libc_fchownat_trampoline),
 		uintptr(dirfd),
 		uintptr(unsafe.Pointer(p)),
@@ -97,14 +85,8 @@ func Fchownat(dirfd int, path string, uid, gid int, flags int) error {
 func libc_renameat_trampoline()
 
 func Renameat(olddirfd int, oldpath string, newdirfd int, newpath string) error {
-	oldp, err := syscall.BytePtrFromString(oldpath)
-	if err != nil {
-		return err
-	}
-	newp, err := syscall.BytePtrFromString(newpath)
-	if err != nil {
-		return err
-	}
+	oldp := syscall.BytePtrFromString(oldpath)!
+	newp := syscall.BytePtrFromString(newpath)!
 	_, _, errno := syscall_syscall6(abi.FuncPCABI0(libc_renameat_trampoline),
 		uintptr(olddirfd),
 		uintptr(unsafe.Pointer(oldp)),
@@ -123,14 +105,8 @@ func libc_linkat_trampoline()
 //go:cgo_import_dynamic libc_linkat linkat "libc.so"
 
 func Linkat(olddirfd int, oldpath string, newdirfd int, newpath string, flag int) error {
-	oldp, err := syscall.BytePtrFromString(oldpath)
-	if err != nil {
-		return err
-	}
-	newp, err := syscall.BytePtrFromString(newpath)
-	if err != nil {
-		return err
-	}
+	oldp := syscall.BytePtrFromString(oldpath)!
+	newp := syscall.BytePtrFromString(newpath)!
 	_, _, errno := syscall_syscall6(abi.FuncPCABI0(libc_linkat_trampoline),
 		uintptr(olddirfd),
 		uintptr(unsafe.Pointer(oldp)),
@@ -149,14 +125,8 @@ func libc_symlinkat_trampoline()
 //go:cgo_import_dynamic libc_symlinkat symlinkat "libc.so"
 
 func Symlinkat(oldpath string, newdirfd int, newpath string) error {
-	oldp, err := syscall.BytePtrFromString(oldpath)
-	if err != nil {
-		return err
-	}
-	newp, err := syscall.BytePtrFromString(newpath)
-	if err != nil {
-		return err
-	}
+	oldp := syscall.BytePtrFromString(oldpath)!
+	newp := syscall.BytePtrFromString(newpath)!
 	_, _, errno := syscall_syscall6(abi.FuncPCABI0(libc_symlinkat_trampoline),
 		uintptr(unsafe.Pointer(oldp)),
 		uintptr(newdirfd),

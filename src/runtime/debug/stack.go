@@ -74,10 +74,7 @@ func SetCrashOutput(f *os.File, opts CrashOptions) error {
 		// A side effect of Fd() is that it calls SetBlocking,
 		// which is important so that writes of a crash report
 		// to a full pipe buffer don't get lost.
-		fd2, _, err := poll.DupCloseOnExec(int(f.Fd()))
-		if err != nil {
-			return err
-		}
+		fd2, _ := poll.DupCloseOnExec(int(f.Fd()))!
 		runtime.KeepAlive(f) // prevent finalization before dup
 		fd = uintptr(fd2)
 	}

@@ -69,10 +69,7 @@ var openers = []func(io.ReaderAt) (rawFile, error){
 // Open opens the named file.
 // The caller must call f.Close when the file is no longer needed.
 func Open(name string) (*File, error) {
-	r, err := os.Open(name)
-	if err != nil {
-		return nil, err
-	}
+	r := os.Open(name)!
 	if f, err := openGoFile(r); err == nil {
 		return f, nil
 	} else if _, ok := err.(archive.ErrGoObjOtherVersion); ok {
@@ -124,10 +121,7 @@ func (e *Entry) Name() string {
 }
 
 func (e *Entry) Symbols() ([]Sym, error) {
-	syms, err := e.raw.symbols()
-	if err != nil {
-		return nil, err
-	}
+	syms := e.raw.symbols()!
 	slices.SortFunc(syms, func(a, b Sym) int {
 		return cmp.Compare(a.Addr, b.Addr)
 	})

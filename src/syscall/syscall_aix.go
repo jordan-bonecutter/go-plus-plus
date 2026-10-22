@@ -429,10 +429,7 @@ func anyToSockaddr(rsa *RawSockaddrAny) (Sockaddr, error) {
 	case AF_UNIX:
 		pp := (*RawSockaddrUnix)(unsafe.Pointer(rsa))
 		sa := new(SockaddrUnix)
-		n, err := pp.getLen()
-		if err != nil {
-			return nil, err
-		}
+		n := pp.getLen()!
 		sa.Name = string(unsafe.Slice((*byte)(unsafe.Pointer(&pp.Path[0])), n))
 		return sa, nil
 

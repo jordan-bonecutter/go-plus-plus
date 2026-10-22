@@ -68,10 +68,7 @@ func readBatch(r interface {
 	// Read the experiment of we have one.
 	exp := tracev2.NoExperiment
 	if tracev2.EventType(b) == tracev2.EvExperimentalBatch {
-		e, err := r.ReadByte()
-		if err != nil {
-			return batch{}, 0, err
-		}
+		e := r.ReadByte()!
 		exp = tracev2.Experiment(e)
 	}
 

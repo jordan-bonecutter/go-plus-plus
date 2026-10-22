@@ -49,9 +49,7 @@ func NewCoverageMetaFileReader(f *os.File, fileView []byte) (*CoverageMetaFileRe
 		tmp:      make([]byte, 256),
 	}
 
-	if err := r.readFileHeader(); err != nil {
-		return nil, err
-	}
+	r.readFileHeader()!
 	return r, nil
 }
 
@@ -61,9 +59,7 @@ func (r *CoverageMetaFileReader) readFileHeader() error {
 	r.fileRdr = bufio.NewReader(r.f)
 
 	// Read file header.
-	if err := binary.Read(r.fileRdr, binary.LittleEndian, &r.hdr); err != nil {
-		return err
-	}
+	binary.Read(r.fileRdr, binary.LittleEndian, &r.hdr)!
 
 	// Verify magic string
 	m := r.hdr.Magic
@@ -123,10 +119,7 @@ func (r *CoverageMetaFileReader) readFileHeader() error {
 func (r *CoverageMetaFileReader) rdUint64() (uint64, error) {
 	r.tmp = r.tmp[:0]
 	r.tmp = append(r.tmp, make([]byte, 8)...)
-	n, err := r.fileRdr.Read(r.tmp)
-	if err != nil {
-		return 0, err
-	}
+	n := r.fileRdr.Read(r.tmp)!
 	if n != 8 {
 		return 0, fmt.Errorf("premature end of file on read")
 	}
@@ -215,11 +208,7 @@ func (r *CoverageMetaFileReader) GetPackagePayload(pkIdx uint32, payloadbuf []by
 		payload = make([]byte, 0, len)
 	}
 	payload = append(payload, make([]byte, len)...)
-	if _, err := r.f.Seek(int64(off), io.SeekStart); err != nil {
-		return nil, err
-	}
-	if _, err := io.ReadFull(r.f, payload); err != nil {
-		return nil, err
-	}
+	r.f.Seek(int64(off), io.SeekStart)!
+	io.ReadFull(r.f, payload)!
 	return payload, nil
 }

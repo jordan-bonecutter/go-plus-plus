@@ -18,10 +18,7 @@ type sharedMemSys struct{}
 func sharedMemMapFile(f *os.File, size int, removeOnClose bool) (*sharedMem, error) {
 	prot := syscall.PROT_READ | syscall.PROT_WRITE
 	flags := syscall.MAP_FILE | syscall.MAP_SHARED
-	region, err := syscall.Mmap(int(f.Fd()), 0, size, prot, flags)
-	if err != nil {
-		return nil, err
-	}
+	region := syscall.Mmap(int(f.Fd()), 0, size, prot, flags)!
 
 	return &sharedMem{f: f, region: region, removeOnClose: removeOnClose}, nil
 }

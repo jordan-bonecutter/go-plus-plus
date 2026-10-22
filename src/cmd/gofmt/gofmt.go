@@ -280,9 +280,7 @@ func processFile(filename string, info fs.FileInfo, in io.Reader, r *reporter) e
 			}
 
 			perm := info.Mode().Perm()
-			if err := writeFile(filename, src, res, perm); err != nil {
-				return err
-			}
+			writeFile(filename, src, res, perm)!
 		}
 		if *doDiff {
 			newName := filepath.ToSlash(filename)

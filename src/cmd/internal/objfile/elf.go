@@ -19,18 +19,12 @@ type elfFile struct {
 }
 
 func openElf(r io.ReaderAt) (rawFile, error) {
-	f, err := elf.NewFile(r)
-	if err != nil {
-		return nil, err
-	}
+	f := elf.NewFile(r)!
 	return &elfFile{f}, nil
 }
 
 func (f *elfFile) symbols() ([]Sym, error) {
-	elfSyms, err := f.elf.Symbols()
-	if err != nil {
-		return nil, err
-	}
+	elfSyms := f.elf.Symbols()!
 
 	var syms []Sym
 	for _, s := range elfSyms {

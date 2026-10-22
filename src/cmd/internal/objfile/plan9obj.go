@@ -30,18 +30,12 @@ type plan9File struct {
 }
 
 func openPlan9(r io.ReaderAt) (rawFile, error) {
-	f, err := plan9obj.NewFile(r)
-	if err != nil {
-		return nil, err
-	}
+	f := plan9obj.NewFile(r)!
 	return &plan9File{f}, nil
 }
 
 func (f *plan9File) symbols() ([]Sym, error) {
-	plan9Syms, err := f.plan9.Symbols()
-	if err != nil {
-		return nil, err
-	}
+	plan9Syms := f.plan9.Symbols()!
 
 	// Build sorted list of addresses of all symbols.
 	// We infer the size of a symbol by looking at where the next symbol begins.
@@ -95,10 +89,7 @@ func (f *plan9File) text() (textStart uint64, text []byte, err error) {
 }
 
 func findPlan9Symbol(f *plan9obj.File, name string) (*plan9obj.Sym, error) {
-	syms, err := f.Symbols()
-	if err != nil {
-		return nil, err
-	}
+	syms := f.Symbols()!
 	for _, s := range syms {
 		if s.Name != name {
 			continue

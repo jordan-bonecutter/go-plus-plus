@@ -97,14 +97,9 @@ func Chdir(path string) error {
 
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
-	if err := chdir(path); err != nil {
-		return err
-	}
+	chdir(path)!
 
-	wd, err := getwd()
-	if err != nil {
-		return err
-	}
+	wd := getwd()!
 	wdSet = true
 	wdStr = wd
 	return nil

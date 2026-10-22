@@ -32,10 +32,7 @@ func parseRIB(b []byte) ([]Message, error) {
 		if w, ok := wireFormats[int(b[3])]; !ok {
 			nskips++
 		} else {
-			m, err := w.parse(b[:l])
-			if err != nil {
-				return nil, err
-			}
+			m := w.parse(b[:l])!
 			if m == nil {
 				nskips++
 			} else {

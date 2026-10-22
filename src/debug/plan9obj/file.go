@@ -142,18 +142,11 @@ func NewFile(r io.ReaderAt) (*File, error) {
 	sr := io.NewSectionReader(r, 0, 1<<63-1)
 	// Read and decode Plan 9 magic
 	var magic [4]byte
-	if _, err := r.ReadAt(magic[:], 0); err != nil {
-		return nil, err
-	}
-	_, err := parseMagic(magic[:])
-	if err != nil {
-		return nil, err
-	}
+	r.ReadAt(magic[:], 0)!
+	parseMagic(magic[:])!
 
 	ph := new(prog)
-	if err := binary.Read(sr, binary.BigEndian, ph); err != nil {
-		return nil, err
-	}
+	binary.Read(sr, binary.BigEndian, ph)!
 
 	f := &File{FileHeader: FileHeader{
 		Magic:       ph.Magic,
@@ -165,9 +158,7 @@ func NewFile(r io.ReaderAt) (*File, error) {
 	}}
 
 	if ph.Magic&Magic64 != 0 {
-		if err := binary.Read(sr, binary.BigEndian, &f.Entry); err != nil {
-			return nil, err
-		}
+		binary.Read(sr, binary.BigEndian, &f.Entry)!
 		f.PtrSize = 8
 		f.LoadAddress = 0x200000
 		f.HdrSize += 8

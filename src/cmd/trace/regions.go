@@ -464,9 +464,7 @@ func (f *regionFilter) match(t *parsedTrace, s *trace.UserRegionSummary) bool {
 
 // newRegionFilter creates a new region filter from URL query variables.
 func newRegionFilter(r *http.Request) (*regionFilter, error) {
-	if err := r.ParseForm(); err != nil {
-		return nil, err
-	}
+	r.ParseForm()!
 
 	var name []string
 	var conditions []func(*parsedTrace, *trace.UserRegionSummary) bool

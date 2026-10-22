@@ -98,10 +98,7 @@ func Parse(dag string) (*Graph, error) {
 	g := newGraph()
 	disallowed := []rule{}
 
-	rules, err := parseRules(dag)
-	if err != nil {
-		return nil, err
-	}
+	rules := parseRules(dag)!
 
 	// TODO: Add line numbers to errors.
 	var errors []string

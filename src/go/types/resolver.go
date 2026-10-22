@@ -84,10 +84,7 @@ func (check *Checker) arityMatch(s, init *ast.ValueSpec) {
 }
 
 func validatedImportPath(path string) (string, error) {
-	s, err := strconv.Unquote(path)
-	if err != nil {
-		return "", err
-	}
+	s := strconv.Unquote(path)!
 	if s == "" {
 		return "", fmt.Errorf("empty string")
 	}

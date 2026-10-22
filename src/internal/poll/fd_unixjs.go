@@ -39,9 +39,7 @@ func dupCloseOnExecOld(fd int) (int, string, error) {
 
 // Fchdir wraps syscall.Fchdir.
 func (fd *FD) Fchdir() error {
-	if err := fd.incref(); err != nil {
-		return err
-	}
+	fd.incref()!
 	defer fd.decref()
 	return syscall.Fchdir(fd.Sysfd)
 }
@@ -50,9 +48,7 @@ func (fd *FD) Fchdir() error {
 // We treat this like an ordinary system call rather than a call
 // that tries to fill the buffer.
 func (fd *FD) ReadDirent(buf []byte) (int, error) {
-	if err := fd.incref(); err != nil {
-		return 0, err
-	}
+	fd.incref()!
 	defer fd.decref()
 	for {
 		n, err := ignoringEINTRIO(syscall.ReadDirent, fd.Sysfd, buf)
@@ -71,9 +67,7 @@ func (fd *FD) ReadDirent(buf []byte) (int, error) {
 
 // Seek wraps syscall.Seek.
 func (fd *FD) Seek(offset int64, whence int) (int64, error) {
-	if err := fd.incref(); err != nil {
-		return 0, err
-	}
+	fd.incref()!
 	defer fd.decref()
 	return syscall.Seek(fd.Sysfd, offset, whence)
 }

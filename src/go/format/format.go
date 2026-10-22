@@ -100,10 +100,7 @@ func Node(dst io.Writer, fset *token.FileSet, node any) error {
 // line of src containing code. Imports are not sorted for partial source files.
 func Source(src []byte) ([]byte, error) {
 	fset := token.NewFileSet()
-	file, sourceAdj, indentAdj, err := parse(fset, "", src, true)
-	if err != nil {
-		return nil, err
-	}
+	file, sourceAdj, indentAdj := parse(fset, "", src, true)!
 
 	if sourceAdj == nil {
 		// Complete source file.

@@ -78,13 +78,9 @@ func (stw *Writer) Write(w io.Writer) error {
 		}
 		return nil
 	}
-	if err := wr128(uint(len(stw.strs))); err != nil {
-		return err
-	}
+	wr128(uint(len(stw.strs)))!
 	for _, s := range stw.strs {
-		if err := wr128(uint(len(s))); err != nil {
-			return err
-		}
+		wr128(uint(len(s)))!
 		if nw, err := w.Write([]byte(s)); err != nil {
 			return fmt.Errorf("writing string table: %v", err)
 		} else if nw != len([]byte(s)) {

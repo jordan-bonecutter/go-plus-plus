@@ -112,10 +112,7 @@ func futimesat(dirfd int, path string, tv *[2]Timeval) (err error) {
 
 func Time(t *Time_t) (Time_t, error) {
 	var tv Timeval
-	err := Gettimeofday(&tv)
-	if err != nil {
-		return 0, err
-	}
+	Gettimeofday(&tv)!
 	if t != nil {
 		*t = Time_t(tv.Sec)
 	}

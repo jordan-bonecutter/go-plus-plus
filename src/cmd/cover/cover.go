@@ -186,9 +186,7 @@ func parseFlags() error {
 				if numOutputs != numInputs {
 					return fmt.Errorf("number of output files (%d) not equal to number of input files (%d)", numOutputs, numInputs)
 				}
-				if err := readPackageConfig(*pkgcfg); err != nil {
-					return err
-				}
+				readPackageConfig(*pkgcfg)!
 				return nil
 			} else {
 				if *outfilelist != "" {
