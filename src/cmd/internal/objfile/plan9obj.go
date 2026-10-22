@@ -100,23 +100,17 @@ func findPlan9Symbol(f *plan9obj.File, name string) (*plan9obj.Sym, error) {
 }
 
 func loadPlan9Table(f *plan9obj.File, sname, ename string) ([]byte, error) {
-	ssym, err := findPlan9Symbol(f, sname)
-	if err != nil {
-		return nil, err
-	}
-	esym, err := findPlan9Symbol(f, ename)
-	if err != nil {
-		return nil, err
-	}
+	ssym := findPlan9Symbol(f, sname)!
+	esym := findPlan9Symbol(f, ename)!
 	sect := f.Section("text")
 	if sect == nil {
-		return nil, err
+		return nil, fmt.Errorf("text section not found")
 	}
-	data, err := sect.Data()
-	if err != nil {
-		return nil, err
-	}
+	data := sect.Data()!
 	textStart := f.LoadAddress + f.HdrSize
+	if ssym.Value < textStart || esym.Value < ssym.Value || esym.Value-textStart > uint64(len(data)) {
+		return nil, fmt.Errorf("invalid %s/%s table bounds", sname, ename)
+	}
 	return data[ssym.Value-textStart : esym.Value-textStart], nil
 }
 
