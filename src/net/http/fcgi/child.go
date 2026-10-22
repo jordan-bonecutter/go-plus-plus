@@ -336,11 +336,8 @@ func (c *child) cleanUp() {
 // If handler is nil, [http.DefaultServeMux] is used.
 func Serve(l net.Listener, handler http.Handler) error {
 	if l == nil {
-		var err error
-		l, err = net.FileListener(os.Stdin)
-		if err != nil {
-			return err
-		}
+
+		l = net.FileListener(os.Stdin)!
 		defer l.Close()
 	}
 	if handler == nil {

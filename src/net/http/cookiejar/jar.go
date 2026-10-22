@@ -334,19 +334,13 @@ func (j *Jar) setCookies(u *url.URL, cookies []*http.Cookie, now time.Time) {
 // canonicalHost strips port from host if present and returns the canonicalized
 // host name.
 func canonicalHost(host string) (string, error) {
-	var err error
+
 	if hasPort(host) {
-		host, _, err = net.SplitHostPort(host)
-		if err != nil {
-			return "", err
-		}
+		host, _ = net.SplitHostPort(host)!
 	}
 	// Strip trailing dot from fully qualified domain names.
 	host = strings.TrimSuffix(host, ".")
-	encoded, err := toASCII(host)
-	if err != nil {
-		return "", err
-	}
+	encoded := toASCII(host)!
 	// We know this is ascii, no need to check.
 	lower, _ := ascii.ToLower(encoded)
 	return lower, nil

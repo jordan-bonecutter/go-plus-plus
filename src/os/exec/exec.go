@@ -686,11 +686,8 @@ func (c *Cmd) Start() error {
 			// c.Path as is: missing a bit of logging information seems less harmful
 			// than triggering a surprising data race, and if the user really cares
 			// about that bit of logging they can always use LookPath to resolve it.
-			var err error
-			lp, err = lookExtensions(c.Path, c.Dir)
-			if err != nil {
-				return err
-			}
+
+			lp = lookExtensions(c.Path, c.Dir)!
 		}
 	}
 	if c.Cancel != nil && c.ctx == nil {

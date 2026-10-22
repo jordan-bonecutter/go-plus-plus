@@ -97,10 +97,7 @@ func (s *SHAKE) MarshalBinary() ([]byte, error) {
 }
 
 func (s *SHAKE) AppendBinary(b []byte) ([]byte, error) {
-	b, err := s.d.AppendBinary(b)
-	if err != nil {
-		return nil, err
-	}
+	b = s.d.AppendBinary(b)!
 	b = append(b, s.initBlock...)
 	return b, nil
 }

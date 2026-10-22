@@ -150,11 +150,8 @@ func (t *Transport) NewClientConn(ctx context.Context, scheme, address string) (
 			Body:       NoBody,
 			Host:       host,
 		}
-		var err error
-		proxyURL, err = t.Proxy(req)
-		if err != nil {
-			return nil, err
-		}
+
+		proxyURL = t.Proxy(req)!
 	}
 
 	cm := connectMethod{

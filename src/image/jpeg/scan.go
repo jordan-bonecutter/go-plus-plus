@@ -298,9 +298,8 @@ func (d *decoder) processSOS(n int) error {
 				// For well-formed input, the RST[0-7] restart marker follows
 				// immediately. For corrupt input, call findRST to try to
 				// resynchronize.
-				if err := d.readFull(d.tmp[:2]); err != nil {
-					return err
-				} else if d.tmp[0] != 0xff || d.tmp[1] != expectedRST {
+				d.readFull(d.tmp[:2])!
+				if d.tmp[0] != 0xff || d.tmp[1] != expectedRST {
 					d.findRST(expectedRST)!
 				}
 				expectedRST++
@@ -341,10 +340,7 @@ func (d *decoder) refine(b *block, h *huffman, zigStart, zigEnd, delta int32) er
 	loop:
 		for ; zig <= zigEnd; zig++ {
 			z := int32(0)
-			value, err := d.decodeHuffman(h)
-			if err != nil {
-				return err
-			}
+			value := d.decodeHuffman(h)!
 			val0 := value >> 4
 			val1 := value & 0x0f
 
@@ -368,10 +364,7 @@ func (d *decoder) refine(b *block, h *huffman, zigStart, zigEnd, delta int32) er
 				return FormatError("unexpected Huffman code")
 			}
 
-			zig, err = d.refineNonZeroes(b, zig, zigEnd, int32(val0), delta)
-			if err != nil {
-				return err
-			}
+			zig = d.refineNonZeroes(b, zig, zigEnd, int32(val0), delta)!
 			if zig > zigEnd {
 				return FormatError("too many coefficients")
 			}

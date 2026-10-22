@@ -389,11 +389,8 @@ func (m *clientHelloMsg) marshalWithoutBinders() ([]byte, error) {
 	if m.original != nil {
 		fullMessage = m.original
 	} else {
-		var err error
-		fullMessage, err = m.marshal()
-		if err != nil {
-			return nil, err
-		}
+
+		fullMessage = m.marshal()!
 	}
 	return fullMessage[:len(fullMessage)-bindersLen], nil
 }

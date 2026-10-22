@@ -147,26 +147,17 @@ func (cfw *CoverageDataWriter) AppendSegment(args map[string]string, visitor Cou
 	cfw.stab.InitWriter()
 	cfw.stab.Lookup("")
 
-	var err error
 	for k, v := range args {
 		cfw.stab.Lookup(k)
 		cfw.stab.Lookup(v)
 	}
 
 	ws := &slicewriter.WriteSeeker{}
-	if err = cfw.writeSegmentPreamble(args, ws); err != nil {
-		return err
-	}
-	if err = cfw.writeCounters(visitor, ws); err != nil {
-		return err
-	}
-	if err = cfw.patchSegmentHeader(ws); err != nil {
-		return err
-	}
+	cfw.writeSegmentPreamble(args, ws)!
+	cfw.writeCounters(visitor, ws)!
+	cfw.patchSegmentHeader(ws)!
 	cfw.writeBytes(ws.BytesWritten())!
-	if err = cfw.writeFooter(); err != nil {
-		return err
-	}
+	cfw.writeFooter()!
 	if err := cfw.w.Flush(); err != nil {
 		return fmt.Errorf("write error: %v", err)
 	}

@@ -396,11 +396,8 @@ func (tw *Writer) AddFS(fsys fs.FS) error {
 		}
 		linkTarget := ""
 		if typ := d.Type(); typ == fs.ModeSymlink {
-			var err error
-			linkTarget, err = fs.ReadLink(fsys, name)
-			if err != nil {
-				return err
-			}
+
+			linkTarget = fs.ReadLink(fsys, name)!
 		} else if !typ.IsRegular() && typ != fs.ModeDir {
 			return errors.New("tar: cannot add non-regular file")
 		}

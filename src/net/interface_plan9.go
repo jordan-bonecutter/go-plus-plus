@@ -132,11 +132,8 @@ func interfaceCount() (int, error) {
 func interfaceAddrTable(ifi *Interface) ([]Addr, error) {
 	var ifcs []Interface
 	if ifi == nil {
-		var err error
-		ifcs, err = interfaceTable(0)
-		if err != nil {
-			return nil, err
-		}
+
+		ifcs = interfaceTable(0)!
 	} else {
 		ifcs = []Interface{*ifi}
 	}

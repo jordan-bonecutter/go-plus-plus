@@ -56,10 +56,7 @@ func rootCleanPath(s string, prefix, suffix []string) (string, error) {
 	}
 	s = string(buf)
 
-	s, err := syscall.FullPath(s)
-	if err != nil {
-		return "", err
-	}
+	s = syscall.FullPath(s)!
 
 	s, ok := stringslite.CutPrefix(s, fixedPrefix)
 	if !ok {

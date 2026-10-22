@@ -301,11 +301,8 @@ func (hs *serverHandshakeStateTLS13) checkForResumption() error {
 
 		var sessionState *SessionState
 		if c.config.UnwrapSession != nil {
-			var err error
-			sessionState, err = c.config.UnwrapSession(identity.label, c.connectionStateLocked())
-			if err != nil {
-				return err
-			}
+
+			sessionState = c.config.UnwrapSession(identity.label, c.connectionStateLocked())!
 			if sessionState == nil {
 				continue
 			}
@@ -974,10 +971,7 @@ func (hs *serverHandshakeStateTLS13) readClientCertificate() error {
 	// If we requested a client certificate, then the client must send a
 	// certificate message. If it's empty, no CertificateVerify is sent.
 
-	msg, err := c.readHandshake(hs.transcript)
-	if err != nil {
-		return err
-	}
+	msg := c.readHandshake(hs.transcript)!
 
 	certMsg, ok := msg.(*certificateMsgTLS13)
 	if !ok {
@@ -998,10 +992,7 @@ func (hs *serverHandshakeStateTLS13) readClientCertificate() error {
 		// certificateVerifyMsg is included in the transcript, but not until
 		// after we verify the handshake signature, since the state before
 		// this message was sent is used.
-		msg, err = c.readHandshake(nil)
-		if err != nil {
-			return err
-		}
+		msg = c.readHandshake(nil)!
 
 		certVerify, ok := msg.(*certificateVerifyMsg)
 		if !ok {

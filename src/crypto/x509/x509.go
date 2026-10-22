@@ -2332,10 +2332,8 @@ func CreateCertificateRequest(rand io.Reader, template *CertificateRequest, priv
 func ParseCertificateRequest(asn1Data []byte) (*CertificateRequest, error) {
 	var csr certificateRequest
 
-	rest, err := asn1.Unmarshal(asn1Data, &csr)
-	if err != nil {
-		return nil, err
-	} else if len(rest) != 0 {
+	rest := asn1.Unmarshal(asn1Data, &csr)!
+	if len(rest) != 0 {
 		return nil, asn1.SyntaxError{Msg: "trailing data"}
 	}
 

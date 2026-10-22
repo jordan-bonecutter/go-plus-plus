@@ -537,18 +537,12 @@ Loop:
 		if saveXML.IsValid() {
 			savedOffset = d.savedOffset()
 		}
-		tok, err := d.Token()
-		if err != nil {
-			return err
-		}
+		tok := d.Token()!
 		switch t := tok.(type) {
 		case StartElement:
 			consumed := false
 			if sv.IsValid() {
-				consumed, err = d.unmarshalPath(tinfo, sv, nil, &t)
-				if err != nil {
-					return err
-				}
+				consumed = d.unmarshalPath(tinfo, sv, nil, &t)!
 				if !consumed && saveAny.IsValid() {
 					consumed = true
 					d.unmarshal(saveAny, &t)!

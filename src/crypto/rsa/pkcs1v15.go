@@ -71,26 +71,17 @@ func EncryptPKCS1v15(random io.Reader, pub *PublicKey, msg []byte) ([]byte, erro
 	em := make([]byte, k)
 	em[1] = 2
 	ps, mm := em[2:len(em)-len(msg)-1], em[len(em)-len(msg):]
-	err := nonZeroRandomBytes(ps, random)
-	if err != nil {
-		return nil, err
-	}
+	nonZeroRandomBytes(ps, random)!
 	em[len(em)-len(msg)-1] = 0
 	copy(mm, msg)
 
 	if boring.Enabled {
 		var bkey *boring.PublicKeyRSA
-		bkey, err = boringPublicKey(pub)
-		if err != nil {
-			return nil, err
-		}
+		bkey = boringPublicKey(pub)!
 		return boring.EncryptRSANoPadding(bkey, em)
 	}
 
-	fk, err := fipsPublicKey(pub)
-	if err != nil {
-		return nil, err
-	}
+	fk := fipsPublicKey(pub)!
 	return rsa.Encrypt(fk, em)
 }
 

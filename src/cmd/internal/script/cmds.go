@@ -300,15 +300,9 @@ func Cp() Cmd {
 					mode = 0666
 				default:
 					src = s.Path(arg)
-					info, err := os.Stat(src)
-					if err != nil {
-						return nil, err
-					}
+					info := os.Stat(src)!
 					mode = info.Mode() & 0777
-					data, err = os.ReadFile(src)
-					if err != nil {
-						return nil, err
-					}
+					data = os.ReadFile(src)!
 				}
 				targ := dst
 				if dstDir {
@@ -420,11 +414,8 @@ func Exec(cancel func(*exec.Cmd) error, waitDelay time.Duration) Cmd {
 			name := filepath.FromSlash(args[0])
 			path := name
 			if !strings.Contains(name, string(filepath.Separator)) {
-				var err error
-				path, err = lookPath(s, name)
-				if err != nil {
-					return nil, err
-				}
+
+				path = lookPath(s, name)!
 			}
 
 			return startCommand(s, name, path, args[1:], cancel, waitDelay)

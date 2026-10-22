@@ -237,10 +237,7 @@ func prepareForMetaEmit() ([]rtcov.CovMetaBlob, error) {
 // emitMetaDataToDirectory emits the meta-data output file to the specified
 // directory, returning an error if something went wrong.
 func emitMetaDataToDirectory(outdir string, ml []rtcov.CovMetaBlob) error {
-	ml, err := prepareForMetaEmit()
-	if err != nil {
-		return err
-	}
+	ml = prepareForMetaEmit()!
 	if len(ml) == 0 {
 		return nil
 	}

@@ -84,10 +84,7 @@ func (tr *Reader) next() (*Header, error) {
 		tryReadFull(tr.r, tr.blk[:tr.pad])!
 		tr.pad = 0
 
-		hdr, rawHdr, err := tr.readHeader()
-		if err != nil {
-			return nil, err
-		}
+		hdr, rawHdr := tr.readHeader()!
 		tr.handleRegularFile(hdr)!
 		format.mayOnlyBe(hdr.Format)
 
@@ -95,10 +92,7 @@ func (tr *Reader) next() (*Header, error) {
 		switch hdr.Typeflag {
 		case TypeXHeader, TypeXGlobalHeader:
 			format.mayOnlyBe(FormatPAX)
-			paxHdrs, err = parsePAX(tr)
-			if err != nil {
-				return nil, err
-			}
+			paxHdrs = parsePAX(tr)!
 			if hdr.Typeflag == TypeXGlobalHeader {
 				mergePAX(hdr, paxHdrs)
 				return &Header{
@@ -494,11 +488,8 @@ func (tr *Reader) readOldGNUSparseMap(hdr *Header, blk *block) (sparseDatas, err
 			if p.err != nil {
 				return nil, p.err
 			}
-			var err error
-			spd, err = appendSparseEntry(spd, sparseEntry{Offset: offset, Length: length})
-			if err != nil {
-				return nil, err
-			}
+
+			spd = appendSparseEntry(spd, sparseEntry{Offset: offset, Length: length})!
 		}
 
 		if s.isExtended()[0] > 0 {

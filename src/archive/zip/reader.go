@@ -950,10 +950,8 @@ func (d *openDir) ReadDir(count int) ([]fs.DirEntry, error) {
 	}
 	list := make([]fs.DirEntry, n)
 	for i := range list {
-		s, err := d.files[d.offset+i].stat()
-		if err != nil {
-			return nil, err
-		} else if s.Name() == "." || !fs.ValidPath(s.Name()) {
+		s := d.files[d.offset+i].stat()!
+		if s.Name() == "." || !fs.ValidPath(s.Name()) {
 			return nil, &fs.PathError{
 				Op:   "readdir",
 				Path: d.e.name,

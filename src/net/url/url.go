@@ -588,11 +588,8 @@ func parseHost(scheme, host string) (string, error) {
 			zonePart := unescape(hostname[zoneIdx:], encodeZone)!
 			unescapedHostname = hostPart + zonePart
 		} else {
-			var err error
-			unescapedHostname, err = unescape(hostname, encodeHost)
-			if err != nil {
-				return "", err
-			}
+
+			unescapedHostname = unescape(hostname, encodeHost)!
 		}
 
 		// Per RFC 3986, only a host identified by a valid

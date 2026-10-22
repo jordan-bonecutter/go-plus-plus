@@ -633,11 +633,8 @@ func (t *Transport) roundTrip(req *Request) (_ *Response, err error) {
 		if resp, err := altRT.RoundTrip(req); err != ErrSkipAltProtocol {
 			return resp, err
 		}
-		var err error
-		req, err = rewindBody(req)
-		if err != nil {
-			return nil, err
-		}
+
+		req = rewindBody(req)!
 	}
 	if !isHTTP {
 		req.closeBody()

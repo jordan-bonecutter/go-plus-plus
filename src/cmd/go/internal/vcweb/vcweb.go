@@ -93,23 +93,14 @@ func NewServer(scriptDir, workDir string, logger *log.Logger) (*Server, error) {
 	if scriptDir == "" {
 		panic("vcweb.NewServer: scriptDir is required")
 	}
-	var err error
-	scriptDir, err = filepath.Abs(scriptDir)
-	if err != nil {
-		return nil, err
-	}
+
+	scriptDir = filepath.Abs(scriptDir)!
 
 	if workDir == "" {
-		workDir, err = os.MkdirTemp("", "vcweb-*")
-		if err != nil {
-			return nil, err
-		}
+		workDir = os.MkdirTemp("", "vcweb-*")!
 		logger.Printf("vcweb work directory: %s", workDir)
 	} else {
-		workDir, err = filepath.Abs(workDir)
-		if err != nil {
-			return nil, err
-		}
+		workDir = filepath.Abs(workDir)!
 	}
 
 	homeDir := filepath.Join(workDir, "home")

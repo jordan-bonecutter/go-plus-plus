@@ -137,11 +137,8 @@ func newParser(r io.Reader, ver version.Version) (*parser, error) {
 		buf = make([]byte, end-cur)
 		io.ReadFull(r, buf)!
 	} else {
-		var err error
-		buf, err = io.ReadAll(r)
-		if err != nil {
-			return nil, err
-		}
+
+		buf = io.ReadAll(r)!
 	}
 	return &parser{data: buf, ver: ver, timerGoids: make(map[uint64]bool)}, nil
 }

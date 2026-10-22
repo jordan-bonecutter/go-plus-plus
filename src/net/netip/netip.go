@@ -1243,10 +1243,7 @@ func (p *AddrPort) UnmarshalText(text []byte) error {
 // It returns [Addr.AppendBinary] with an additional two bytes appended
 // containing the port in little-endian.
 func (p AddrPort) AppendBinary(b []byte) ([]byte, error) {
-	b, err := p.Addr().AppendBinary(b)
-	if err != nil {
-		return nil, err
-	}
+	b = p.Addr().AppendBinary(b)!
 	return byteorder.LEAppendUint16(b, p.Port()), nil
 }
 
@@ -1545,10 +1542,7 @@ func (p *Prefix) UnmarshalText(text []byte) error {
 // It returns [Addr.AppendBinary] with an additional byte appended
 // containing the prefix bits.
 func (p Prefix) AppendBinary(b []byte) ([]byte, error) {
-	b, err := p.Addr().withoutZone().AppendBinary(b)
-	if err != nil {
-		return nil, err
-	}
+	b = p.Addr().withoutZone().AppendBinary(b)!
 	return append(b, uint8(p.Bits())), nil
 }
 

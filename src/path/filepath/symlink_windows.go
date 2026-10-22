@@ -97,13 +97,7 @@ func toNorm(path string, normBase func(string) (string, error)) (string, error) 
 }
 
 func evalSymlinks(path string) (string, error) {
-	newpath, err := walkSymlinks(path)
-	if err != nil {
-		return "", err
-	}
-	newpath, err = toNorm(newpath, normBase)
-	if err != nil {
-		return "", err
-	}
+	newpath := walkSymlinks(path)!
+	newpath = toNorm(newpath, normBase)!
 	return newpath, nil
 }
