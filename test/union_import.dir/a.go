@@ -32,3 +32,6 @@ type Private union {
 }
 
 func Hidden() Private { return Private.hidden(7) }
+
+func Assert[T any](x Result[T]) T           { return x.(Value) }
+func AssertOK[T any](x Result[T]) (T, bool) { y, ok := x.(Value); return y, ok }

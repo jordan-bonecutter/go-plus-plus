@@ -123,3 +123,10 @@ checkout's parser and checker changes.
 
 A declaration such as type Option[T] union now reports a missing constraint for
 T and suggests [T any], rather than reporting an unexpected opening brace.
+
+Assert a variant with x.(Some), using an unqualified variant name. The result
+has that variant's payload type. In y, ok := x.(Some), a matching variant
+returns its payload and true; a mismatch returns the payload's zero value
+and false. The single-result form panics on a mismatch. The union expression
+is evaluated once, and variants are distinguished even when payload types
+are identical.

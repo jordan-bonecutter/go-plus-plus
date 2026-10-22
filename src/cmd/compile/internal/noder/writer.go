@@ -2061,6 +2061,14 @@ func (w *writer) expr(expr syntax.Expr) {
 		}
 
 	case *syntax.AssertExpr:
+		if expr.Lowered != nil {
+			lowered := expr.Lowered
+			if _, ok := w.p.typeOf(expr).(*types2.Tuple); ok {
+				lowered = expr.LoweredOK
+			}
+			w.expr(lowered)
+			break
+		}
 		iface := w.p.typeOf(expr.X)
 
 		w.Code(exprAssert)

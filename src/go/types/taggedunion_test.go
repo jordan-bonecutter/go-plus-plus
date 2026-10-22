@@ -23,6 +23,17 @@ func TestTaggedUnion(t *testing.T) {
   switch r.(variant) { case Ok: return true; case Err: return false }
  }
  var _ interface { HasValue() bool } = Result[int].Ok(42)
+ type Truth bool
+ func assert(r Result[int]) int {
+  var truth Truth
+  var value int
+  value, truth = r.(Ok)
+  _, _ = value, truth
+  y, ok := r.(Ok)
+  var _ bool = ok
+  var _ int = y
+  return r.(Ok)
+ }
  var large Result[[64]byte]
  var makeFoo func(int) Foo = Foo.Bar
  var _ = map[Foo]int{Foo.Bar(0): 1}
@@ -51,12 +62,19 @@ func TestTaggedUnion(t *testing.T) {
 	}
 	sizes := types.SizesFor("gc", "amd64")
 	config := types.Config{Sizes: sizes}
-	info := &types.Info{Types: make(map[ast.Expr]types.TypeAndValue)}
+	info := &types.Info{Types: make(map[ast.Expr]types.TypeAndValue), Uses: make(map[*ast.Ident]types.Object)}
 	pkg, err := config.Check("p", fset, []*ast.File{file}, info)
 	if err != nil {
 		t.Fatal(err)
 	}
 	ast.Inspect(file, func(n ast.Node) bool {
+		if assertion, ok := n.(*ast.TypeAssertExpr); ok {
+			if name, ok := assertion.Type.(*ast.Ident); ok && name.Name == "Ok" {
+				if info.TypeOf(name) != types.Typ[types.Int] || info.Uses[name] == nil {
+					t.Errorf("missing assertion variant type or use for %s", name.Name)
+				}
+			}
+		}
 		if clause, ok := n.(*ast.CaseClause); ok {
 			for _, variant := range clause.List {
 				if info.TypeOf(variant) == nil {

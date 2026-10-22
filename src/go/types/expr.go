@@ -1148,6 +1148,27 @@ func (check *Checker) exprInternal(T *target, x *operand, e ast.Expr) exprKind {
 			check.error(e, BadTypeKeyword, "use of .(type) outside type switch")
 			goto Error
 		}
+		if taggedUnion(x.typ()) != nil {
+			name, ok := e.Type.(*ast.Ident)
+			if !ok {
+				check.error(e.Type, InvalidAssert, "variant assertion must name a variant")
+				goto Error
+			}
+			field := taggedVariant(x.typ(), name.Name)
+			if field == nil {
+				check.errorf(name, InvalidAssert, "unknown variant %s in %s", name.Name, x.typ())
+				goto Error
+			}
+			if field.pkg != check.pkg && !isExported(name.Name) {
+				check.errorf(name, UnexportedName, "variant %s is not exported", name.Name)
+				goto Error
+			}
+			check.recordTypeAndValue(name, typexpr, field.typ.(*Array).elem, nil)
+			check.recordUse(name, check.taggedConstructor(x.typ(), field))
+			x.mode_ = commaok
+			x.typ_ = field.typ.(*Array).elem
+			break
+		}
 		if isTypeParam(x.typ()) {
 			check.errorf(x, InvalidAssert, invalidOp+"cannot use type assertion on type parameter value %s", x)
 			goto Error

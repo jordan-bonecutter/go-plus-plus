@@ -25,6 +25,16 @@ func forward[T any](v T) a.Result[T] { return a.Result[T].Value(v) }
 type PrivateCopy a.Private
 
 func main() {
+	if a.Make().(Value) != 42 || Copy.Value(8).(Value) != 8 || a.Assert(a.Make()) != 42 {
+		panic("imported assertion")
+	}
+	if y, ok := a.AssertOK(a.Result[int].Error("no")); ok || y != 0 {
+		panic("imported generic mismatch")
+	}
+	if y, ok := a.Make().(Error); ok || y != "" {
+		panic("imported mismatch")
+	}
+
 	for _, typ := range []reflect.Type{reflect.TypeFor[a.Private](), reflect.TypeFor[PrivateCopy]()} {
 		variant := typ.Variant(0)
 		if variant.Name != "hidden" || variant.IsExported() || variant.PkgPath != reflect.TypeFor[a.Private]().PkgPath() {

@@ -235,8 +235,10 @@ type (
 
 	// X.(Type)
 	AssertExpr struct {
-		X    Expr
-		Type Expr
+		Lowered   Expr
+		LoweredOK Expr
+		X         Expr
+		Type      Expr
 		expr
 	}
 

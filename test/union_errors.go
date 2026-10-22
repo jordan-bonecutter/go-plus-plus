@@ -112,7 +112,13 @@ type Generic[T any] union {
 }
 
 var _ map[Generic[[]int]]int // ERROR "invalid map key type"
-type Recursive union { // ERROR "invalid recursive type"
+type Recursive union {       // ERROR "invalid recursive type"
 	Value Recursive
 	Empty struct{}
+}
+
+func assertions(x Foo) {
+	_ = x.(Nope)           // ERROR "unknown variant Nope"
+	_ = x.(Foo.Bar)        // ERROR "variant assertion must name a variant"
+	var _ string = x.(Bar) // ERROR "cannot use .* as string"
 }

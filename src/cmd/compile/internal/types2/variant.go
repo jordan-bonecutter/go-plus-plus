@@ -35,11 +35,15 @@ func unionVariant(t Type, name string) int {
 // unionFunction builds operations using checked type expressions rather than
 // user-spellable type names. This also supports local, imported, and derived
 // union types without adding methods or changing unified IR.
-func unionFunction(pos syntax.Pos, typ Type, variant int, operation string) *syntax.FuncLit {
+func unionFunction(pos syntax.Pos, typ Type, variant int, operation string, boolTypes ...Type) *syntax.FuncLit {
 	var body string
 	switch operation {
 	case "construct":
 		body = fmt.Sprintf(`func f(V T) U { var R U; R.D = %d; R.C = H(A(&V)); *(*T)(P(&R.B)) = V; return R }`, variant)
+	case "assert":
+		body = fmt.Sprintf(`func f(V U) T { if V.D != %d { panic("union variant assertion failed") }; R := *(*T)(P(&V.B)); K(V.C); return R }`, variant)
+	case "assertok":
+		body = fmt.Sprintf(`func f(V U) (T, bool) { if V.D != %d { var R T; return R, false }; R := *(*T)(P(&V.B)); K(V.C); return R, true }`, variant)
 	case "extract":
 		body = `func f(V U) T { R := *(*T)(P(&V.B)); K(V.C); return R }`
 	case "index":
@@ -51,11 +55,14 @@ func unionFunction(pos syntax.Pos, typ Type, variant int, operation string) *syn
 	}
 	decl := file.DeclList[0].(*syntax.FuncDecl)
 	lit := &syntax.FuncLit{Type: decl.Type, Body: decl.Body}
-	types := map[string]Type{"U": typ, "P": Typ[UnsafePointer], "W": Typ[Uintptr], "H": typ.Underlying().(*Struct).fields[1].typ}
+	types := map[string]Type{"U": typ, "P": Typ[UnsafePointer], "W": Typ[Uintptr], "bool": Typ[Bool], "H": typ.Underlying().(*Struct).fields[1].typ}
+	if len(boolTypes) != 0 {
+		types["bool"] = boolTypes[0]
+	}
 	if operation != "index" {
 		types["T"] = unionStruct(typ).fields[variant].typ.(*Array).elem
 	}
-	names := map[string]string{"V": "union·value", "R": "union·result", "D": syntax.UnionTagField, "C": syntax.UnionAnchor, "B": syntax.UnionDataField, "A": syntax.UnionAnchor, "K": syntax.UnionKeepAlive, "N": "union·nil"}
+	names := map[string]string{"panic": "union·panic", "true": "union·true", "false": "union·false", "V": "union·value", "R": "union·result", "D": syntax.UnionTagField, "C": syntax.UnionAnchor, "B": syntax.UnionDataField, "A": syntax.UnionAnchor, "K": syntax.UnionKeepAlive, "N": "union·nil"}
 	syntax.Inspect(lit, func(n syntax.Node) bool {
 		if n != nil {
 			n.SetPos(pos)
@@ -78,10 +85,23 @@ func unionFunction(pos syntax.Pos, typ Type, variant int, operation string) *syn
 	return lit
 }
 
-func variantCall(pos syntax.Pos, x syntax.Expr, typ Type, variant int, operation string) *syntax.CallExpr {
-	c := &syntax.CallExpr{Fun: unionFunction(pos, typ, variant, operation), ArgList: []syntax.Expr{x}}
+func variantCall(pos syntax.Pos, x syntax.Expr, typ Type, variant int, operation string, boolTypes ...Type) *syntax.CallExpr {
+	c := &syntax.CallExpr{Fun: unionFunction(pos, typ, variant, operation, boolTypes...), ArgList: []syntax.Expr{x}}
 	c.SetPos(pos)
 	return c
+}
+
+// Check only the helper, since the source operand was already checked and
+// may contain function bodies whose variant switches have been lowered.
+func (check *Checker) checkVariantCall(call *syntax.CallExpr) {
+	var fun operand
+	check.expr(nil, &fun, call.Fun)
+	results := fun.typ().(*Signature).results
+	var result Type = results
+	if results.Len() == 1 {
+		result = results.At(0).typ
+	}
+	check.recordTypeAndValue(call, value, result, nil)
 }
 
 func variantInt(pos syntax.Pos, n int) *syntax.BasicLit {
@@ -213,7 +233,7 @@ func init() {
 
 func unionBuiltin(name string) string {
 	switch name {
-	case "union·byte", "union·uintptr", "union·uint8", "union·uint16", "union·uint32", "union·uint64", "union·nil":
+	case "union·panic", "union·true", "union·false", "union·byte", "union·uintptr", "union·uint8", "union·uint16", "union·uint32", "union·uint64", "union·nil":
 		return strings.TrimPrefix(name, "union·")
 	}
 	return ""
@@ -222,4 +242,19 @@ func unionBuiltin(name string) string {
 func unionData(t *Struct) bool {
 	n := len(t.fields)
 	return n >= 3 && t.fields[n-1].name == "union·raw" && strings.HasPrefix(t.fields[0].name, "union·variant·")
+}
+
+func (check *Checker) recordVariantCommaOkTypes(x syntax.Expr, t1 Type) {
+	if assertion, ok := syntax.Unparen(x).(*syntax.AssertExpr); ok && assertion.LoweredOK != nil && t1 != Typ[Bool] {
+		// Unlike an ordinary function result, comma-ok's boolean is untyped
+		// and can be assigned directly to a defined boolean type.
+		previous := assertion.LoweredOK.(*syntax.CallExpr)
+		// unionFunction embeds the checked union type in its parameter,
+		// including when neither Info.Types nor syntax recording is enabled.
+		typ := previous.Fun.(*syntax.FuncLit).Type.ParamList[0].Type.GetTypeInfo().Type
+		i := unionVariant(typ, assertion.Type.(*syntax.Name).Value)
+		call := variantCall(assertion.Pos(), assertion.X, typ, i, "assertok", t1)
+		check.checkVariantCall(call)
+		assertion.LoweredOK = call
+	}
 }
