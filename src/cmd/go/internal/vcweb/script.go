@@ -92,7 +92,7 @@ func (s *Server) loadScript(ctx context.Context, logger *log.Logger, scriptPath 
 		return nil, err
 	}
 	if closeErr != nil {
-		return nil, err
+		return nil, closeErr
 	}
 
 	sc, err := getScriptCtx(st)
@@ -112,8 +112,7 @@ func (s *Server) newState(ctx context.Context, workDir string) (*script.State, e
 		server:  s,
 	}
 
-	st := script.NewState(ctx, workDir, s.env)!
-	return st, nil
+	return script.NewState(ctx, workDir, s.env)!, nil
 }
 
 // scriptEnviron returns a new environment that attempts to provide predictable
