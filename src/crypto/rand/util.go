@@ -37,9 +37,7 @@ func Prime(r io.Reader, bits int) (*big.Int, error) {
 	p := new(big.Int)
 
 	for {
-		if _, err := io.ReadFull(r, bytes); err != nil {
-			return nil, err
-		}
+		io.ReadFull(r, bytes)!
 
 		// Clear bits in the first byte to make sure the candidate has a size <= bits.
 		bytes[0] &= uint8(int(1<<b) - 1)

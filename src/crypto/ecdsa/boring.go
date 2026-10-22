@@ -47,10 +47,7 @@ func boringPublicKey(pub *PublicKey) (*boring.PublicKeyECDSA, error) {
 
 	b = new(boringPub)
 	b.orig = copyPublicKey(pub)
-	key, err := boring.NewPublicKeyECDSA(b.orig.Curve.Params().Name, bbig.Enc(b.orig.X), bbig.Enc(b.orig.Y))
-	if err != nil {
-		return nil, err
-	}
+	key := boring.NewPublicKeyECDSA(b.orig.Curve.Params().Name, bbig.Enc(b.orig.X), bbig.Enc(b.orig.Y))!
 	b.key = key
 	pubCache.Put(pub, b)
 	return key, nil
@@ -69,10 +66,7 @@ func boringPrivateKey(priv *PrivateKey) (*boring.PrivateKeyECDSA, error) {
 
 	b = new(boringPriv)
 	b.orig = copyPrivateKey(priv)
-	key, err := boring.NewPrivateKeyECDSA(b.orig.Curve.Params().Name, bbig.Enc(b.orig.X), bbig.Enc(b.orig.Y), bbig.Enc(b.orig.D))
-	if err != nil {
-		return nil, err
-	}
+	key := boring.NewPrivateKeyECDSA(b.orig.Curve.Params().Name, bbig.Enc(b.orig.X), bbig.Enc(b.orig.Y), bbig.Enc(b.orig.D))!
 	b.key = key
 	privCache.Put(priv, b)
 	return key, nil

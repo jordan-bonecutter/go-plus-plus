@@ -24,10 +24,7 @@ func generateLegacy(c elliptic.Curve, rand io.Reader) (*PrivateKey, error) {
 		return nil, errors.New("crypto/ecdsa: use of custom curves is not allowed in FIPS 140-only mode")
 	}
 
-	k, err := randFieldElement(c, rand)
-	if err != nil {
-		return nil, err
-	}
+	k := randFieldElement(c, rand)!
 
 	priv := new(PrivateKey)
 	priv.PublicKey.Curve = c

@@ -50,38 +50,20 @@ func (priv *PrivateKey) PublicKey() *PublicKey {
 // All values are in big-endian byte slice format, and may have leading zeros
 // or be shorter if leading zeroes were trimmed.
 func NewPrivateKey(N []byte, e int, d, P, Q []byte) (*PrivateKey, error) {
-	n, err := bigmod.NewModulus(N)
-	if err != nil {
-		return nil, err
-	}
-	p, err := bigmod.NewModulus(P)
-	if err != nil {
-		return nil, err
-	}
-	q, err := bigmod.NewModulus(Q)
-	if err != nil {
-		return nil, err
-	}
-	dN, err := bigmod.NewNat().SetBytes(d, n)
-	if err != nil {
-		return nil, err
-	}
+	n := bigmod.NewModulus(N)!
+	p := bigmod.NewModulus(P)!
+	q := bigmod.NewModulus(Q)!
+	dN := bigmod.NewNat().SetBytes(d, n)!
 	return newPrivateKey(n, e, dN, p, q)
 }
 
 func newPrivateKey(n *bigmod.Modulus, e int, d *bigmod.Nat, p, q *bigmod.Modulus) (*PrivateKey, error) {
 	pMinusOne := p.Nat().SubOne(p)
-	pMinusOneMod, err := bigmod.NewModulus(pMinusOne.Bytes(p))
-	if err != nil {
-		return nil, err
-	}
+	pMinusOneMod := bigmod.NewModulus(pMinusOne.Bytes(p))!
 	dP := bigmod.NewNat().Mod(d, pMinusOneMod).Bytes(pMinusOneMod)
 
 	qMinusOne := q.Nat().SubOne(q)
-	qMinusOneMod, err := bigmod.NewModulus(qMinusOne.Bytes(q))
-	if err != nil {
-		return nil, err
-	}
+	qMinusOneMod := bigmod.NewModulus(qMinusOne.Bytes(q))!
 	dQ := bigmod.NewNat().Mod(d, qMinusOneMod).Bytes(qMinusOneMod)
 
 	// Constant-time modular inversion with prime modulus by Fermat's Little
@@ -101,35 +83,18 @@ func newPrivateKey(n *bigmod.Modulus, e int, d *bigmod.Nat, p, q *bigmod.Modulus
 		d: d, p: p, q: q,
 		dP: dP, dQ: dQ, qInv: qInv,
 	}
-	if err := checkPrivateKey(pk); err != nil {
-		return nil, err
-	}
+	checkPrivateKey(pk)!
 	return pk, nil
 }
 
 // NewPrivateKeyWithPrecomputation creates a new RSA private key from the given
 // parameters, which include precomputed CRT values.
 func NewPrivateKeyWithPrecomputation(N []byte, e int, d, P, Q, dP, dQ, qInv []byte) (*PrivateKey, error) {
-	n, err := bigmod.NewModulus(N)
-	if err != nil {
-		return nil, err
-	}
-	p, err := bigmod.NewModulus(P)
-	if err != nil {
-		return nil, err
-	}
-	q, err := bigmod.NewModulus(Q)
-	if err != nil {
-		return nil, err
-	}
-	dN, err := bigmod.NewNat().SetBytes(d, n)
-	if err != nil {
-		return nil, err
-	}
-	qInvNat, err := bigmod.NewNat().SetBytes(qInv, p)
-	if err != nil {
-		return nil, err
-	}
+	n := bigmod.NewModulus(N)!
+	p := bigmod.NewModulus(P)!
+	q := bigmod.NewModulus(Q)!
+	dN := bigmod.NewNat().SetBytes(d, n)!
+	qInvNat := bigmod.NewNat().SetBytes(qInv, p)!
 
 	pk := &PrivateKey{
 		pub: PublicKey{
@@ -138,9 +103,7 @@ func NewPrivateKeyWithPrecomputation(N []byte, e int, d, P, Q, dP, dQ, qInv []by
 		d: dN, p: p, q: q,
 		dP: dP, dQ: dQ, qInv: qInvNat,
 	}
-	if err := checkPrivateKey(pk); err != nil {
-		return nil, err
-	}
+	checkPrivateKey(pk)!
 	return pk, nil
 }
 
@@ -148,23 +111,15 @@ func NewPrivateKeyWithPrecomputation(N []byte, e int, d, P, Q, dP, dQ, qInv []by
 //
 // This is meant for deprecated multi-prime keys, and is not FIPS 140 compliant.
 func NewPrivateKeyWithoutCRT(N []byte, e int, d []byte) (*PrivateKey, error) {
-	n, err := bigmod.NewModulus(N)
-	if err != nil {
-		return nil, err
-	}
-	dN, err := bigmod.NewNat().SetBytes(d, n)
-	if err != nil {
-		return nil, err
-	}
+	n := bigmod.NewModulus(N)!
+	dN := bigmod.NewNat().SetBytes(d, n)!
 	pk := &PrivateKey{
 		pub: PublicKey{
 			N: n, E: e,
 		},
 		d: dN,
 	}
-	if err := checkPrivateKey(pk); err != nil {
-		return nil, err
-	}
+	checkPrivateKey(pk)!
 	return pk, nil
 }
 
@@ -366,17 +321,12 @@ func checkPublicKey(pub *PublicKey) (fipsApproved bool, err error) {
 // Encrypt performs the RSA public key operation.
 func Encrypt(pub *PublicKey, plaintext []byte) ([]byte, error) {
 	fips140.RecordNonApproved()
-	if _, err := checkPublicKey(pub); err != nil {
-		return nil, err
-	}
+	checkPublicKey(pub)!
 	return encrypt(pub, plaintext)
 }
 
 func encrypt(pub *PublicKey, plaintext []byte) ([]byte, error) {
-	m, err := bigmod.NewNat().SetBytes(plaintext, pub.N)
-	if err != nil {
-		return nil, err
-	}
+	m := bigmod.NewNat().SetBytes(plaintext, pub.N)!
 	return bigmod.NewNat().ExpShortVarTime(m, uint(pub.E), pub.N).Bytes(pub.N), nil
 }
 

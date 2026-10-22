@@ -89,10 +89,7 @@ type Reader struct {
 // readLSB returns the next code for "Least Significant Bits first" data.
 func (r *Reader) readLSB() (uint16, error) {
 	for r.nBits < r.width {
-		x, err := r.r.ReadByte()
-		if err != nil {
-			return 0, err
-		}
+		x := r.r.ReadByte()!
 		r.bits |= uint32(x) << r.nBits
 		r.nBits += 8
 	}
@@ -105,10 +102,7 @@ func (r *Reader) readLSB() (uint16, error) {
 // readMSB returns the next code for "Most Significant Bits first" data.
 func (r *Reader) readMSB() (uint16, error) {
 	for r.nBits < r.width {
-		x, err := r.r.ReadByte()
-		if err != nil {
-			return 0, err
-		}
+		x := r.r.ReadByte()!
 		r.bits |= uint32(x) << (24 - r.nBits)
 		r.nBits += 8
 	}

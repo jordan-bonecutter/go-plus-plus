@@ -32,10 +32,7 @@ var typeFiles = []string{
 }
 
 func loadMimeGlobsFile(filename string) error {
-	f, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
+	f := os.Open(filename)!
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)

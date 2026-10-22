@@ -45,10 +45,7 @@ type DecapsulationKey768 struct {
 // GenerateKey768 generates a new decapsulation key, drawing random bytes from
 // a secure source. The decapsulation key must be kept secret.
 func GenerateKey768() (*DecapsulationKey768, error) {
-	key, err := mlkem.GenerateKey768()
-	if err != nil {
-		return nil, err
-	}
+	key := mlkem.GenerateKey768()!
 
 	return &DecapsulationKey768{key}, nil
 }
@@ -56,10 +53,7 @@ func GenerateKey768() (*DecapsulationKey768, error) {
 // NewDecapsulationKey768 expands a decapsulation key from a 64-byte seed in the
 // "d || z" form. The seed must be uniformly random.
 func NewDecapsulationKey768(seed []byte) (*DecapsulationKey768, error) {
-	key, err := mlkem.NewDecapsulationKey768(seed)
-	if err != nil {
-		return nil, err
-	}
+	key := mlkem.NewDecapsulationKey768(seed)!
 
 	return &DecapsulationKey768{key}, nil
 }
@@ -107,10 +101,7 @@ type EncapsulationKey768 struct {
 // NewEncapsulationKey768 parses an encapsulation key from its encoded form. If
 // the encapsulation key is not valid, NewEncapsulationKey768 returns an error.
 func NewEncapsulationKey768(encapsulationKey []byte) (*EncapsulationKey768, error) {
-	key, err := mlkem.NewEncapsulationKey768(encapsulationKey)
-	if err != nil {
-		return nil, err
-	}
+	key := mlkem.NewEncapsulationKey768(encapsulationKey)!
 
 	return &EncapsulationKey768{key}, nil
 }
@@ -140,10 +131,7 @@ type DecapsulationKey1024 struct {
 // GenerateKey1024 generates a new decapsulation key, drawing random bytes from
 // a secure source. The decapsulation key must be kept secret.
 func GenerateKey1024() (*DecapsulationKey1024, error) {
-	key, err := mlkem.GenerateKey1024()
-	if err != nil {
-		return nil, err
-	}
+	key := mlkem.GenerateKey1024()!
 
 	return &DecapsulationKey1024{key}, nil
 }
@@ -151,10 +139,7 @@ func GenerateKey1024() (*DecapsulationKey1024, error) {
 // NewDecapsulationKey1024 expands a decapsulation key from a 64-byte seed in the
 // "d || z" form. The seed must be uniformly random.
 func NewDecapsulationKey1024(seed []byte) (*DecapsulationKey1024, error) {
-	key, err := mlkem.NewDecapsulationKey1024(seed)
-	if err != nil {
-		return nil, err
-	}
+	key := mlkem.NewDecapsulationKey1024(seed)!
 
 	return &DecapsulationKey1024{key}, nil
 }
@@ -202,10 +187,7 @@ type EncapsulationKey1024 struct {
 // NewEncapsulationKey1024 parses an encapsulation key from its encoded form. If
 // the encapsulation key is not valid, NewEncapsulationKey1024 returns an error.
 func NewEncapsulationKey1024(encapsulationKey []byte) (*EncapsulationKey1024, error) {
-	key, err := mlkem.NewEncapsulationKey1024(encapsulationKey)
-	if err != nil {
-		return nil, err
-	}
+	key := mlkem.NewEncapsulationKey1024(encapsulationKey)!
 
 	return &EncapsulationKey1024{key}, nil
 }

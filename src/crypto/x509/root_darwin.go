@@ -132,9 +132,6 @@ func (c *Certificate) systemVerify(opts *VerifyOptions) (chains [][]*Certificate
 
 // exportCertificate returns a *Certificate for a SecCertificateRef.
 func exportCertificate(cert macos.CFRef) (*Certificate, error) {
-	data, err := macos.SecCertificateCopyData(cert)
-	if err != nil {
-		return nil, err
-	}
+	data := macos.SecCertificateCopyData(cert)!
 	return ParseCertificate(data)
 }

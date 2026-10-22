@@ -30,10 +30,7 @@ func init() {
 			0xcb, 0x9d, 0x93, 0x94, 0xda, 0xf1, 0x94, 0x09,
 			0x6a, 0x27, 0x5e, 0x85, 0x22, 0x5e, 0x7a, 0xee,
 		}
-		b, err := aes.New(key)
-		if err != nil {
-			return err
-		}
+		b := aes.New(key)!
 		got := NewCounterKDF(b).DeriveKey(0xFF, context)
 		if got != want {
 			return errors.New("unexpected result")

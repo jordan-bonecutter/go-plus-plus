@@ -49,10 +49,7 @@ func TestingOnlyNewPrivateKeyFromSemiExpanded(sk []byte) (*PrivateKey, error) {
 	}
 	k, l := p.k, p.l
 
-	ρ, K, tr, s1, s2, t0, err := skDecode(sk, p)
-	if err != nil {
-		return nil, err
-	}
+	ρ, K, tr, s1, s2, t0 := skDecode(sk, p)!
 
 	priv := &PrivateKey{pub: PublicKey{p: p}}
 	priv.k = K

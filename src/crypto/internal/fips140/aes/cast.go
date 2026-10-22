@@ -29,10 +29,7 @@ func init() {
 			0xdf, 0x76, 0x26, 0x4b, 0xd3, 0xb2, 0xc4, 0x8d,
 			0x40, 0xa2, 0x6e, 0x7a, 0xc4, 0xff, 0xbd, 0x35,
 		}
-		b, err := New(key)
-		if err != nil {
-			return err
-		}
+		b := New(key)!
 		buf := make([]byte, 16)
 		NewCBCEncrypter(b, iv).CryptBlocks(buf, plaintext)
 		if !bytes.Equal(buf, ciphertext) {

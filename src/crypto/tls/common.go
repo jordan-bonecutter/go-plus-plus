@@ -1465,10 +1465,7 @@ func (chi *ClientHelloInfo) SupportsCertificate(c *Certificate) error {
 	}
 
 	// The only signed key exchange we support is ECDHE.
-	ecdheSupported, err := supportsECDHE(config, vers, chi.SupportedCurves, chi.SupportedPoints)
-	if err != nil {
-		return err
-	}
+	ecdheSupported := supportsECDHE(config, vers, chi.SupportedCurves, chi.SupportedPoints)!
 	if !ecdheSupported {
 		return supportsRSAFallback(errors.New("client doesn't support ECDHE, can only use legacy RSA key exchange"))
 	}
@@ -1547,9 +1544,7 @@ func (chi *ClientHelloInfo) SupportsCertificate(c *Certificate) error {
 // the server that sent the CertificateRequest. Otherwise, it returns an error
 // describing the reason for the incompatibility.
 func (cri *CertificateRequestInfo) SupportsCertificate(c *Certificate) error {
-	if _, err := selectSignatureScheme(cri.Version, c, cri.SignatureSchemes); err != nil {
-		return err
-	}
+	selectSignatureScheme(cri.Version, c, cri.SignatureSchemes)!
 
 	if len(cri.AcceptableCAs) == 0 {
 		return nil

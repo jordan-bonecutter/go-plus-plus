@@ -16,10 +16,7 @@ import (
 func fipsPCT(priv *PrivateKey) {
 	fips140.PCT("ML-DSA sign and verify PCT", func() error {
 		μ := make([]byte, 64)
-		sig, err := SignExternalMuDeterministic(priv, μ)
-		if err != nil {
-			return err
-		}
+		sig := SignExternalMuDeterministic(priv, μ)!
 		return VerifyExternalMu(priv.PublicKey(), μ, sig)
 	})
 }

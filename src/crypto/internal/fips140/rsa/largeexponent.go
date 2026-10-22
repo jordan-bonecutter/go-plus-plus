@@ -62,10 +62,7 @@ func checkLargeExponentPublicKey(pub *TestingOnlyLargeExponentPublicKey) error {
 }
 
 func encryptLargeExponent(pub *TestingOnlyLargeExponentPublicKey, plaintext []byte) ([]byte, error) {
-	m, err := bigmod.NewNat().SetBytes(plaintext, pub.N)
-	if err != nil {
-		return nil, err
-	}
+	m := bigmod.NewNat().SetBytes(plaintext, pub.N)!
 	return bigmod.NewNat().Exp(m, pub.E, pub.N).Bytes(pub.N), nil
 }
 
@@ -73,9 +70,7 @@ func TestingOnlyLargeExponentVerifyPKCS1v15(pub *TestingOnlyLargeExponentPublicK
 	fipsSelfTest()
 	fips140.RecordApproved()
 	checkApprovedHashName(hash)
-	if err := checkLargeExponentPublicKey(pub); err != nil {
-		return err
-	}
+	checkLargeExponentPublicKey(pub)!
 	if pub.Size() != len(sig) {
 		return ErrVerification
 	}
@@ -97,9 +92,7 @@ func TestingOnlyLargeExponentVerifyPSS(pub *TestingOnlyLargeExponentPublicKey, h
 	fipsSelfTest()
 	fips140.RecordApproved()
 	checkApprovedHash(hash)
-	if err := checkLargeExponentPublicKey(pub); err != nil {
-		return err
-	}
+	checkLargeExponentPublicKey(pub)!
 	if len(sig) != pub.Size() {
 		return ErrVerification
 	}
@@ -138,43 +131,24 @@ func (priv *TestingOnlyLargeExponentPrivateKey) Size() int {
 // TestingOnlyNewLargeExponentPrivateKeyWithPrecomputation creates a new RSA private key
 // with a large public exponent from the given parameters. It is only meant for ACVP testing.
 func TestingOnlyNewLargeExponentPrivateKeyWithPrecomputation(N []byte, e []byte, d, P, Q, dP, dQ, qInv []byte) (*TestingOnlyLargeExponentPrivateKey, error) {
-	n, err := bigmod.NewModulus(N)
-	if err != nil {
-		return nil, err
-	}
-	p, err := bigmod.NewModulus(P)
-	if err != nil {
-		return nil, err
-	}
-	q, err := bigmod.NewModulus(Q)
-	if err != nil {
-		return nil, err
-	}
-	dN, err := bigmod.NewNat().SetBytes(d, n)
-	if err != nil {
-		return nil, err
-	}
-	qInvNat, err := bigmod.NewNat().SetBytes(qInv, p)
-	if err != nil {
-		return nil, err
-	}
+	n := bigmod.NewModulus(N)!
+	p := bigmod.NewModulus(P)!
+	q := bigmod.NewModulus(Q)!
+	dN := bigmod.NewNat().SetBytes(d, n)!
+	qInvNat := bigmod.NewNat().SetBytes(qInv, p)!
 
 	priv := &TestingOnlyLargeExponentPrivateKey{
 		n: n, e: e, d: dN, p: p, q: q,
 		dP: dP, dQ: dQ, qInv: qInvNat,
 	}
-	if err := checkLargeExponentPrivateKey(priv); err != nil {
-		return nil, err
-	}
+	checkLargeExponentPrivateKey(priv)!
 	return priv, nil
 }
 
 func checkLargeExponentPrivateKey(priv *TestingOnlyLargeExponentPrivateKey) error {
 	// Check public key portion.
 	pub := &TestingOnlyLargeExponentPublicKey{N: priv.n, E: priv.e}
-	if err := checkLargeExponentPublicKey(pub); err != nil {
-		return err
-	}
+	checkLargeExponentPublicKey(pub)!
 
 	N := priv.n
 	p := priv.p
@@ -288,10 +262,7 @@ func TestingOnlyLargeExponentDecryptOAEP(hash, mgfHash hash.Hash, priv *TestingO
 		return nil, ErrDecryption
 	}
 
-	em, err := decryptLargeExponent(priv, ciphertext)
-	if err != nil {
-		return nil, err
-	}
+	em := decryptLargeExponent(priv, ciphertext)!
 
 	hash.Reset()
 	hash.Write(label)
@@ -334,9 +305,7 @@ func TestingOnlyLargeExponentEncryptOAEP(hash, mgfHash hash.Hash, random io.Read
 	fipsSelfTest()
 	fips140.RecordApproved()
 	checkApprovedHash(hash)
-	if err := checkLargeExponentPublicKey(pub); err != nil {
-		return nil, err
-	}
+	checkLargeExponentPublicKey(pub)!
 	k := pub.Size()
 	if len(msg) > k-2*hash.Size()-2 {
 		return nil, ErrMessageTooLong
@@ -354,9 +323,7 @@ func TestingOnlyLargeExponentEncryptOAEP(hash, mgfHash hash.Hash, random io.Read
 	db[len(db)-len(msg)-1] = 1
 	copy(db[len(db)-len(msg):], msg)
 
-	if err := drbg.ReadWithReader(random, seed); err != nil {
-		return nil, err
-	}
+	drbg.ReadWithReader(random, seed)!
 
 	mgf1XOR(db, mgfHash, seed)
 	mgf1XOR(seed, mgfHash, db)

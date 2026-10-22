@@ -55,10 +55,7 @@ func SignPKCS1v15(priv *PrivateKey, hash string, hashed []byte) ([]byte, error) 
 }
 
 func signPKCS1v15(priv *PrivateKey, hash string, hashed []byte) ([]byte, error) {
-	em, err := pkcs1v15ConstructEM(&priv.pub, hash, hashed)
-	if err != nil {
-		return nil, err
-	}
+	em := pkcs1v15ConstructEM(&priv.pub, hash, hashed)!
 
 	return decrypt(priv, em, withCheck)
 }

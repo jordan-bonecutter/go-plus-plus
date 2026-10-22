@@ -339,10 +339,7 @@ func Sign(priv *PrivateKey, msg []byte, context string) ([]byte, error) {
 	fips140.RecordApproved()
 	var random [32]byte
 	drbg.Read(random[:])
-	μ, err := computeMessageHash(priv.pub.tr[:], msg, context)
-	if err != nil {
-		return nil, err
-	}
+	μ := computeMessageHash(priv.pub.tr[:], msg, context)!
 	return signInternal(priv, &μ, &random), nil
 }
 
@@ -350,20 +347,14 @@ func SignDeterministic(priv *PrivateKey, msg []byte, context string) ([]byte, er
 	fipsSelfTest()
 	fips140.RecordApproved()
 	var random [32]byte
-	μ, err := computeMessageHash(priv.pub.tr[:], msg, context)
-	if err != nil {
-		return nil, err
-	}
+	μ := computeMessageHash(priv.pub.tr[:], msg, context)!
 	return signInternal(priv, &μ, &random), nil
 }
 
 func TestingOnlySignWithRandom(priv *PrivateKey, msg []byte, context string, random []byte) ([]byte, error) {
 	fipsSelfTest()
 	fips140.RecordApproved()
-	μ, err := computeMessageHash(priv.pub.tr[:], msg, context)
-	if err != nil {
-		return nil, err
-	}
+	μ := computeMessageHash(priv.pub.tr[:], msg, context)!
 	if len(random) != 32 {
 		return nil, errRandomLength
 	}
@@ -633,10 +624,7 @@ var (
 func Verify(pub *PublicKey, msg, sig []byte, context string) error {
 	fipsSelfTest()
 	fips140.RecordApproved()
-	μ, err := computeMessageHash(pub.tr[:], msg, context)
-	if err != nil {
-		return err
-	}
+	μ := computeMessageHash(pub.tr[:], msg, context)!
 	return verifyInternal(pub, &μ, sig)
 }
 
@@ -657,10 +645,7 @@ func verifyInternal(pub *PublicKey, μ *[64]byte, sig []byte) error {
 	γ1β := γ1 - uint32(β)
 
 	t1 := make([][n]uint16, k, maxK)
-	ρ, err := pkDecode(pub.raw[:pubKeySize(pub.p)], t1, p)
-	if err != nil {
-		return err
-	}
+	ρ := pkDecode(pub.raw[:pubKeySize(pub.p)], t1, p)!
 	A := make([]nttElement, k*l, maxK*maxL)
 	computeMatrixA(A, ρ, p)
 	t1Hat := make([]nttElement, k, maxK)
@@ -668,10 +653,7 @@ func verifyInternal(pub *PublicKey, μ *[64]byte, sig []byte) error {
 
 	z := make([]ringElement, l, maxL)
 	h := make([][n]byte, k, maxK)
-	ch, err := sigDecode(sig, z, h, p)
-	if err != nil {
-		return err
-	}
+	ch := sigDecode(sig, z, h, p)!
 
 	c := ntt(sampleInBall(ch, p))
 

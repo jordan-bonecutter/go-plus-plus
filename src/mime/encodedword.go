@@ -213,15 +213,10 @@ func (d *WordDecoder) Decode(word string) (string, error) {
 		return "", errInvalidWord
 	}
 
-	content, err := decode(encoding[0], text)
-	if err != nil {
-		return "", err
-	}
+	content := decode(encoding[0], text)!
 
 	var buf strings.Builder
-	if err := d.convert(&buf, charset, content); err != nil {
-		return "", err
-	}
+	d.convert(&buf, charset, content)!
 	return buf.String(), nil
 }
 
@@ -286,9 +281,7 @@ func (d *WordDecoder) DecodeHeader(header string) (string, error) {
 			buf.WriteString(header[:start])
 		}
 
-		if err := d.convert(&buf, charset, content); err != nil {
-			return "", err
-		}
+		d.convert(&buf, charset, content)!
 
 		header = header[end:]
 		betweenWords = true
@@ -332,13 +325,8 @@ func (d *WordDecoder) convert(buf *strings.Builder, charset string, content []by
 		if d.CharsetReader == nil {
 			return fmt.Errorf("mime: unhandled charset %q", charset)
 		}
-		r, err := d.CharsetReader(strings.ToLower(charset), bytes.NewReader(content))
-		if err != nil {
-			return err
-		}
-		if _, err = io.Copy(buf, r); err != nil {
-			return err
-		}
+		r := d.CharsetReader(strings.ToLower(charset), bytes.NewReader(content))!
+		io.Copy(buf, r)!
 	}
 	return nil
 }
@@ -370,10 +358,7 @@ func qDecode(s string) ([]byte, error) {
 			if i+2 >= len(s) {
 				return nil, errInvalidWord
 			}
-			b, err := readHexByte(s[i+1], s[i+2])
-			if err != nil {
-				return nil, err
-			}
+			b := readHexByte(s[i+1], s[i+2])!
 			dec[n] = b
 			i += 2
 		case (c <= '~' && c >= ' ') || c == '\n' || c == '\r' || c == '\t':

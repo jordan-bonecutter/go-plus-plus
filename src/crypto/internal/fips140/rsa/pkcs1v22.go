@@ -286,15 +286,10 @@ func SignPSS(rand io.Reader, priv *PrivateKey, hash hash.Hash, hashed []byte, sa
 		fips140.RecordNonApproved()
 	}
 	salt := make([]byte, saltLength)
-	if err := drbg.ReadWithReader(rand, salt); err != nil {
-		return nil, err
-	}
+	drbg.ReadWithReader(rand, salt)!
 
 	emBits := priv.pub.N.BitLen() - 1
-	em, err := emsaPSSEncode(hashed, emBits, salt, hash)
-	if err != nil {
-		return nil, err
-	}
+	em := emsaPSSEncode(hashed, emBits, salt, hash)!
 
 	// RFC 8017: "Note that the octet length of EM will be one less than k if
 	// modBits - 1 is divisible by 8 and equal to k otherwise, where k is the
@@ -402,9 +397,7 @@ func EncryptOAEP(hash, mgfHash hash.Hash, random io.Reader, pub *PublicKey, msg 
 	db[len(db)-len(msg)-1] = 1
 	copy(db[len(db)-len(msg):], msg)
 
-	if err := drbg.ReadWithReader(random, seed); err != nil {
-		return nil, err
-	}
+	drbg.ReadWithReader(random, seed)!
 
 	mgf1XOR(db, mgfHash, seed)
 	mgf1XOR(seed, mgfHash, db)
@@ -424,10 +417,7 @@ func DecryptOAEP(hash, mgfHash hash.Hash, priv *PrivateKey, ciphertext []byte, l
 		return nil, ErrDecryption
 	}
 
-	em, err := decrypt(priv, ciphertext, noCheck)
-	if err != nil {
-		return nil, err
-	}
+	em := decrypt(priv, ciphertext, noCheck)!
 
 	hash.Reset()
 	hash.Write(label)

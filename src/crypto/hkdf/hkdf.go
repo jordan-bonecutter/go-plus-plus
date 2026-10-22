@@ -26,9 +26,7 @@ import (
 // including the generation of multiple keys, should use [Key] instead.
 func Extract[H hash.Hash](h func() H, secret, salt []byte) ([]byte, error) {
 	fh := fips140hash.UnwrapNew(h)
-	if err := checkFIPS140Only(fh, secret); err != nil {
-		return nil, err
-	}
+	checkFIPS140Only(fh, secret)!
 	return hkdf.Extract(fh, secret, salt), nil
 }
 
@@ -41,9 +39,7 @@ func Extract[H hash.Hash](h func() H, secret, salt []byte) ([]byte, error) {
 // 3.3. Most common scenarios will want to use [Key] instead.
 func Expand[H hash.Hash](h func() H, pseudorandomKey []byte, info string, keyLength int) ([]byte, error) {
 	fh := fips140hash.UnwrapNew(h)
-	if err := checkFIPS140Only(fh, pseudorandomKey); err != nil {
-		return nil, err
-	}
+	checkFIPS140Only(fh, pseudorandomKey)!
 
 	limit := fh().Size() * 255
 	if keyLength > limit {
@@ -58,9 +54,7 @@ func Expand[H hash.Hash](h func() H, pseudorandomKey []byte, info string, keyLen
 // Salt and info can be nil.
 func Key[Hash hash.Hash](h func() Hash, secret, salt []byte, info string, keyLength int) ([]byte, error) {
 	fh := fips140hash.UnwrapNew(h)
-	if err := checkFIPS140Only(fh, secret); err != nil {
-		return nil, err
-	}
+	checkFIPS140Only(fh, secret)!
 
 	limit := fh().Size() * 255
 	if keyLength > limit {

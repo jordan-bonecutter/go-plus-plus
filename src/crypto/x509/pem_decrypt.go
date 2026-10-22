@@ -136,10 +136,7 @@ func DecryptPEMBlock(b *pem.Block, password []byte) ([]byte, error) {
 	if ciph == nil {
 		return nil, errors.New("x509: unknown encryption mode")
 	}
-	iv, err := hex.DecodeString(hexIV)
-	if err != nil {
-		return nil, err
-	}
+	iv := hex.DecodeString(hexIV)!
 	if len(iv) != ciph.blockSize {
 		return nil, errors.New("x509: incorrect IV size")
 	}
@@ -147,10 +144,7 @@ func DecryptPEMBlock(b *pem.Block, password []byte) ([]byte, error) {
 	// Based on the OpenSSL implementation. The salt is the first 8 bytes
 	// of the initialization vector.
 	key := ciph.deriveKey(password, iv[:8])
-	block, err := ciph.cipherFunc(key)
-	if err != nil {
-		return nil, err
-	}
+	block := ciph.cipherFunc(key)!
 
 	if len(b.Bytes)%block.BlockSize() != 0 {
 		return nil, errors.New("x509: encrypted PEM data is not a multiple of the block size")
@@ -204,10 +198,7 @@ func EncryptPEMBlock(rand io.Reader, blockType string, data, password []byte, al
 	// The salt is the first 8 bytes of the initialization vector,
 	// matching the key derivation in DecryptPEMBlock.
 	key := ciph.deriveKey(password, iv[:8])
-	block, err := ciph.cipherFunc(key)
-	if err != nil {
-		return nil, err
-	}
+	block := ciph.cipherFunc(key)!
 	enc := cipher.NewCBCEncrypter(block, iv)
 	pad := ciph.blockSize - len(data)%ciph.blockSize
 	encrypted := make([]byte, len(data), len(data)+pad)

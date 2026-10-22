@@ -41,9 +41,7 @@ func (c *x25519Curve) GenerateKey(r io.Reader) (*PrivateKey, error) {
 	}
 	r = rand.CustomReader(r)
 	key := make([]byte, x25519PrivateKeySize)
-	if _, err := io.ReadFull(r, key); err != nil {
-		return nil, err
-	}
+	io.ReadFull(r, key)!
 	return c.NewPrivateKey(key)
 }
 

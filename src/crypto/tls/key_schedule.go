@@ -117,27 +117,18 @@ func keyExchangeForCurveID(id CurveID) (keyExchange, error) {
 type mlkem1024KeyExchange struct{}
 
 func (ke *mlkem1024KeyExchange) keyShares(_ io.Reader) (*keySharePrivateKeys, []keyShare, error) {
-	priv, err := mlkem.GenerateKey1024()
-	if err != nil {
-		return nil, nil, err
-	}
+	priv := mlkem.GenerateKey1024()!
 	return &keySharePrivateKeys{mlkem: priv}, []keyShare{{MLKEM1024, priv.EncapsulationKey().Bytes()}}, nil
 }
 
 func (ke *mlkem1024KeyExchange) serverSharedSecret(_ io.Reader, clientKeyShare []byte) ([]byte, keyShare, error) {
-	peerKey, err := mlkem.NewEncapsulationKey1024(clientKeyShare)
-	if err != nil {
-		return nil, keyShare{}, err
-	}
+	peerKey := mlkem.NewEncapsulationKey1024(clientKeyShare)!
 	sharedKey, keyShareData := peerKey.Encapsulate()
 	return sharedKey, keyShare{MLKEM1024, keyShareData}, nil
 }
 
 func (ke *mlkem1024KeyExchange) clientSharedSecret(priv *keySharePrivateKeys, serverKeyShare []byte) ([]byte, error) {
-	sharedKey, err := priv.mlkem.Decapsulate(serverKeyShare)
-	if err != nil {
-		return nil, err
-	}
+	sharedKey := priv.mlkem.Decapsulate(serverKeyShare)!
 	return sharedKey, nil
 }
 
@@ -147,38 +138,20 @@ type ecdhKeyExchange struct {
 }
 
 func (ke *ecdhKeyExchange) keyShares(rand io.Reader) (*keySharePrivateKeys, []keyShare, error) {
-	priv, err := ke.curve.GenerateKey(rand)
-	if err != nil {
-		return nil, nil, err
-	}
+	priv := ke.curve.GenerateKey(rand)!
 	return &keySharePrivateKeys{ecdhe: priv}, []keyShare{{ke.id, priv.PublicKey().Bytes()}}, nil
 }
 
 func (ke *ecdhKeyExchange) serverSharedSecret(rand io.Reader, clientKeyShare []byte) ([]byte, keyShare, error) {
-	key, err := ke.curve.GenerateKey(rand)
-	if err != nil {
-		return nil, keyShare{}, err
-	}
-	peerKey, err := ke.curve.NewPublicKey(clientKeyShare)
-	if err != nil {
-		return nil, keyShare{}, err
-	}
-	sharedKey, err := key.ECDH(peerKey)
-	if err != nil {
-		return nil, keyShare{}, err
-	}
+	key := ke.curve.GenerateKey(rand)!
+	peerKey := ke.curve.NewPublicKey(clientKeyShare)!
+	sharedKey := key.ECDH(peerKey)!
 	return sharedKey, keyShare{ke.id, key.PublicKey().Bytes()}, nil
 }
 
 func (ke *ecdhKeyExchange) clientSharedSecret(priv *keySharePrivateKeys, serverKeyShare []byte) ([]byte, error) {
-	peerKey, err := ke.curve.NewPublicKey(serverKeyShare)
-	if err != nil {
-		return nil, err
-	}
-	sharedKey, err := priv.ecdhe.ECDH(peerKey)
-	if err != nil {
-		return nil, err
-	}
+	peerKey := ke.curve.NewPublicKey(serverKeyShare)!
+	sharedKey := priv.ecdhe.ECDH(peerKey)!
 	return sharedKey, nil
 }
 

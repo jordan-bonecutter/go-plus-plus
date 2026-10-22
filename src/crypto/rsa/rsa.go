@@ -316,16 +316,11 @@ func checkPublicKeySize(k *PublicKey) error {
 //
 // [Minimum key size]: https://pkg.go.dev/crypto/rsa#hdr-Minimum_key_size
 func GenerateKey(random io.Reader, bits int) (*PrivateKey, error) {
-	if err := checkKeySize(bits); err != nil {
-		return nil, err
-	}
+	checkKeySize(bits)!
 
 	if boring.Enabled && rand.IsDefaultReader(random) &&
 		(bits == 2048 || bits == 3072 || bits == 4096) {
-		bN, bE, bD, bP, bQ, bDp, bDq, bQinv, err := boring.GenerateKeyRSA(bits)
-		if err != nil {
-			return nil, err
-		}
+		bN, bE, bD, bP, bQ, bDp, bDq, bQinv := boring.GenerateKeyRSA(bits)!
 		N := bbig.Dec(bN)
 		E := bbig.Dec(bE)
 		D := bbig.Dec(bD)
@@ -528,9 +523,7 @@ NextSetOfPrimes:
 	}
 
 	priv.Precompute()
-	if err := priv.Validate(); err != nil {
-		return nil, err
-	}
+	priv.Validate()!
 
 	return priv, nil
 }
@@ -682,10 +675,7 @@ func (priv *PrivateKey) precomputeLegacy() (PrecomputedValues, error) {
 }
 
 func fipsPublicKey(pub *PublicKey) (*rsa.PublicKey, error) {
-	N, err := bigmod.NewModulus(pub.N.Bytes())
-	if err != nil {
-		return nil, err
-	}
+	N := bigmod.NewModulus(pub.N.Bytes())!
 	return &rsa.PublicKey{N: N, E: pub.E}, nil
 }
 
@@ -697,9 +687,6 @@ func fipsPrivateKey(priv *PrivateKey) (*rsa.PrivateKey, error) {
 	if priv.Precomputed.fips != nil {
 		return priv.Precomputed.fips, nil
 	}
-	precomputed, err := priv.precompute()
-	if err != nil {
-		return nil, err
-	}
+	precomputed := priv.precompute()!
 	return precomputed.fips, nil
 }

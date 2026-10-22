@@ -182,9 +182,7 @@ func MarshalPKCS8PrivateKey(key any) ([]byte, error) {
 			Parameters: asn1.NullRawValue,
 		}
 		k.Precompute()
-		if err := k.Validate(); err != nil {
-			return nil, err
-		}
+		k.Validate()!
 		privKey.PrivateKey = MarshalPKCS1PrivateKey(k)
 
 	case *ecdsa.PrivateKey:

@@ -37,10 +37,7 @@ func (c *Cache[K, V]) Get(k *K, new func() (*V, error), check func(*V) bool) (*V
 			return v, nil
 		}
 	}
-	v, err := new()
-	if err != nil {
-		return nil, err
-	}
+	v := new()!
 	if _, present := c.m.Swap(p, v); !present {
 		runtime.AddCleanup(k, c.evict, p)
 	}

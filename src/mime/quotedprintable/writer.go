@@ -65,9 +65,7 @@ func (w *Writer) Write(p []byte) (n int, err error) {
 // Close closes the [Writer], flushing any unwritten data to the underlying
 // [io.Writer], but does not close the underlying io.Writer.
 func (w *Writer) Close() error {
-	if err := w.checkLastByte(); err != nil {
-		return err
-	}
+	w.checkLastByte()!
 
 	return w.flush()
 }
@@ -86,19 +84,13 @@ func (w *Writer) write(p []byte) error {
 				w.cr = true
 			}
 
-			if err := w.checkLastByte(); err != nil {
-				return err
-			}
-			if err := w.insertCRLF(); err != nil {
-				return err
-			}
+			w.checkLastByte()!
+			w.insertCRLF()!
 			continue
 		}
 
 		if w.i == lineMaxLen-1 {
-			if err := w.insertSoftLineBreak(); err != nil {
-				return err
-			}
+			w.insertSoftLineBreak()!
 		}
 
 		w.line[w.i] = b
@@ -111,9 +103,7 @@ func (w *Writer) write(p []byte) error {
 
 func (w *Writer) encode(b byte) error {
 	if lineMaxLen-1-w.i < 3 {
-		if err := w.insertSoftLineBreak(); err != nil {
-			return err
-		}
+		w.insertSoftLineBreak()!
 	}
 
 	w.line[w.i] = '='
@@ -135,9 +125,7 @@ func (w *Writer) checkLastByte() error {
 	b := w.line[w.i-1]
 	if isWhitespace(b) {
 		w.i--
-		if err := w.encode(b); err != nil {
-			return err
-		}
+		w.encode(b)!
 	}
 
 	return nil
@@ -159,9 +147,7 @@ func (w *Writer) insertCRLF() error {
 }
 
 func (w *Writer) flush() error {
-	if _, err := w.w.Write(w.line[:w.i]); err != nil {
-		return err
-	}
+	w.w.Write(w.line[:w.i])!
 
 	w.i = 0
 	return nil

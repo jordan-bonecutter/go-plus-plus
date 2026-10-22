@@ -97,26 +97,20 @@ type hello struct {
 func writeFrame(w io.Writer, typ byte, payload []byte) error {
 	hdr := [5]byte{typ}
 	binary.BigEndian.PutUint32(hdr[1:], uint32(len(payload)))
-	if _, err := w.Write(hdr[:]); err != nil {
-		return err
-	}
+	w.Write(hdr[:])!
 	_, err := w.Write(payload)
 	return err
 }
 
 func readFrame(r io.Reader) (byte, []byte, error) {
 	var hdr [5]byte
-	if _, err := io.ReadFull(r, hdr[:]); err != nil {
-		return 0, nil, err
-	}
+	io.ReadFull(r, hdr[:])!
 	n := binary.BigEndian.Uint32(hdr[1:])
 	if n > maxFrame {
 		return 0, nil, fmt.Errorf("oversized frame: %d bytes", n)
 	}
 	payload := make([]byte, n)
-	if _, err := io.ReadFull(r, payload); err != nil {
-		return 0, nil, err
-	}
+	io.ReadFull(r, payload)!
 	return hdr[0], payload, nil
 }
 

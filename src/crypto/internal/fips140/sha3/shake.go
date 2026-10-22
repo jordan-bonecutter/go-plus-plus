@@ -109,9 +109,7 @@ func (s *SHAKE) UnmarshalBinary(b []byte) error {
 	if len(b) < marshaledSize {
 		return errors.New("sha3: invalid hash state")
 	}
-	if err := s.d.UnmarshalBinary(b[:marshaledSize]); err != nil {
-		return err
-	}
+	s.d.UnmarshalBinary(b[:marshaledSize])!
 	s.initBlock = bytes.Clone(b[marshaledSize:])
 	return nil
 }

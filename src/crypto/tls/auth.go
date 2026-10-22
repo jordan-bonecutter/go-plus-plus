@@ -59,18 +59,14 @@ func verifyHandshakeSignature(sigType uint8, pubkey crypto.PublicKey, hashFunc c
 		if !ok {
 			return fmt.Errorf("expected an RSA public key, got %T", pubkey)
 		}
-		if err := rsa.VerifyPKCS1v15(pubKey, hashFunc, signed, sig); err != nil {
-			return err
-		}
+		rsa.VerifyPKCS1v15(pubKey, hashFunc, signed, sig)!
 	case signatureRSAPSS:
 		pubKey, ok := pubkey.(*rsa.PublicKey)
 		if !ok {
 			return fmt.Errorf("expected an RSA public key, got %T", pubkey)
 		}
 		signOpts := &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash}
-		if err := rsa.VerifyPSS(pubKey, hashFunc, signed, sig, signOpts); err != nil {
-			return err
-		}
+		rsa.VerifyPSS(pubKey, hashFunc, signed, sig, signOpts)!
 	default:
 		return errors.New("internal error: unknown signature type")
 	}
@@ -94,9 +90,7 @@ func verifyLegacyHandshakeSignature(sigType uint8, pubkey crypto.PublicKey, hash
 		if !ok {
 			return fmt.Errorf("expected an RSA public key, got %T", pubkey)
 		}
-		if err := rsa.VerifyPKCS1v15(pubKey, hashFunc, hashed, sig); err != nil {
-			return err
-		}
+		rsa.VerifyPKCS1v15(pubKey, hashFunc, hashed, sig)!
 	default:
 		return errors.New("internal error: unknown signature type")
 	}

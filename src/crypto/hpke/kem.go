@@ -116,10 +116,7 @@ type dhKEM struct {
 
 func (kem *dhKEM) extractAndExpand(dhKey, kemContext []byte) ([]byte, error) {
 	suiteID := byteorder.BEAppendUint16([]byte("KEM"), kem.id)
-	eaePRK, err := kem.kdf.labeledExtract(suiteID, nil, "eae_prk", dhKey)
-	if err != nil {
-		return nil, err
-	}
+	eaePRK := kem.kdf.labeledExtract(suiteID, nil, "eae_prk", dhKey)!
 	return kem.kdf.labeledExpand(suiteID, eaePRK, "shared_secret", kemContext, kem.Nsecret)
 }
 
@@ -213,10 +210,7 @@ func NewDHKEMPublicKey(pub *ecdh.PublicKey) (PublicKey, error) {
 }
 
 func (kem *dhKEM) NewPublicKey(data []byte) (PublicKey, error) {
-	pub, err := kem.curve.NewPublicKey(data)
-	if err != nil {
-		return nil, err
-	}
+	pub := kem.curve.NewPublicKey(data)!
 	return NewDHKEMPublicKey(pub)
 }
 
@@ -286,33 +280,21 @@ func NewDHKEMPrivateKey(priv ecdh.KeyExchanger) (PrivateKey, error) {
 }
 
 func (kem *dhKEM) GenerateKey() (PrivateKey, error) {
-	priv, err := kem.curve.GenerateKey(rand.Reader)
-	if err != nil {
-		return nil, err
-	}
+	priv := kem.curve.GenerateKey(rand.Reader)!
 	return NewDHKEMPrivateKey(priv)
 }
 
 func (kem *dhKEM) NewPrivateKey(ikm []byte) (PrivateKey, error) {
-	priv, err := kem.curve.NewPrivateKey(ikm)
-	if err != nil {
-		return nil, err
-	}
+	priv := kem.curve.NewPrivateKey(ikm)!
 	return NewDHKEMPrivateKey(priv)
 }
 
 func (kem *dhKEM) DeriveKeyPair(ikm []byte) (PrivateKey, error) {
 	// DeriveKeyPair from RFC 9180 Section 7.1.3.
 	suiteID := byteorder.BEAppendUint16([]byte("KEM"), kem.id)
-	prk, err := kem.kdf.labeledExtract(suiteID, nil, "dkp_prk", ikm)
-	if err != nil {
-		return nil, err
-	}
+	prk := kem.kdf.labeledExtract(suiteID, nil, "dkp_prk", ikm)!
 	if kem == dhKEMX25519 {
-		s, err := kem.kdf.labeledExpand(suiteID, prk, "sk", nil, kem.Nsk)
-		if err != nil {
-			return nil, err
-		}
+		s := kem.kdf.labeledExpand(suiteID, prk, "sk", nil, kem.Nsk)!
 		return kem.NewPrivateKey(s)
 	}
 	var counter uint8
@@ -370,14 +352,8 @@ func (k *dhKEMPrivateKey) PublicKey() PublicKey {
 }
 
 func (k *dhKEMPrivateKey) decap(encPubEph []byte) ([]byte, error) {
-	pubEph, err := k.priv.Curve().NewPublicKey(encPubEph)
-	if err != nil {
-		return nil, err
-	}
-	dhVal, err := k.priv.ECDH(pubEph)
-	if err != nil {
-		return nil, err
-	}
+	pubEph := k.priv.Curve().NewPublicKey(encPubEph)!
+	dhVal := k.priv.ECDH(pubEph)!
 	kemContext := append(slices.Clip(encPubEph), k.priv.PublicKey().Bytes()...)
 	return k.kem.extractAndExpand(dhVal, kemContext)
 }

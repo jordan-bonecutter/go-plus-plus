@@ -52,10 +52,7 @@ func SealWithRandomNonce(g *GCM, nonce, out, plaintext, additionalData []byte) {
 //
 // This complies with FIPS 140-3 IG C.H Scenario 3.
 func NewGCMWithCounterNonce(cipher *aes.Block) (*GCMWithCounterNonce, error) {
-	g, err := newGCM(&GCM{}, cipher, gcmStandardNonceSize, gcmTagSize)
-	if err != nil {
-		return nil, err
-	}
+	g := newGCM(&GCM{}, cipher, gcmStandardNonceSize, gcmTagSize)!
 	return &GCMWithCounterNonce{g: *g}, nil
 }
 
@@ -65,10 +62,7 @@ func NewGCMWithCounterNonce(cipher *aes.Block) (*GCMWithCounterNonce, error) {
 //
 // This complies with FIPS 140-3 IG C.H Scenario 1.a.
 func NewGCMForTLS12(cipher *aes.Block) (*GCMWithCounterNonce, error) {
-	g, err := newGCM(&GCM{}, cipher, gcmStandardNonceSize, gcmTagSize)
-	if err != nil {
-		return nil, err
-	}
+	g := newGCM(&GCM{}, cipher, gcmStandardNonceSize, gcmTagSize)!
 	// TLS 1.2 counters always start at zero.
 	return &GCMWithCounterNonce{g: *g, startReady: true}, nil
 }
@@ -78,10 +72,7 @@ func NewGCMForTLS12(cipher *aes.Block) (*GCMWithCounterNonce, error) {
 //
 // This complies with FIPS 140-3 IG C.H Scenario 1.d.
 func NewGCMForSSH(cipher *aes.Block) (*GCMWithCounterNonce, error) {
-	g, err := newGCM(&GCM{}, cipher, gcmStandardNonceSize, gcmTagSize)
-	if err != nil {
-		return nil, err
-	}
+	g := newGCM(&GCM{}, cipher, gcmStandardNonceSize, gcmTagSize)!
 	return &GCMWithCounterNonce{g: *g}, nil
 }
 
@@ -155,10 +146,7 @@ func (g *GCMWithCounterNonce) Open(dst, nonce, ciphertext, data []byte) ([]byte,
 //
 // This complies with FIPS 140-3 IG C.H Scenario 3.
 func NewGCMWithXORCounterNonce(cipher *aes.Block) (*GCMWithXORCounterNonce, error) {
-	g, err := newGCM(&GCM{}, cipher, gcmStandardNonceSize, gcmTagSize)
-	if err != nil {
-		return nil, err
-	}
+	g := newGCM(&GCM{}, cipher, gcmStandardNonceSize, gcmTagSize)!
 	return &GCMWithXORCounterNonce{g: *g}, nil
 }
 
@@ -167,10 +155,7 @@ func NewGCMWithXORCounterNonce(cipher *aes.Block) (*GCMWithXORCounterNonce, erro
 //
 // This complies with FIPS 140-3 IG C.H Scenario 1.a.
 func NewGCMForTLS13(cipher *aes.Block) (*GCMWithXORCounterNonce, error) {
-	g, err := newGCM(&GCM{}, cipher, gcmStandardNonceSize, gcmTagSize)
-	if err != nil {
-		return nil, err
-	}
+	g := newGCM(&GCM{}, cipher, gcmStandardNonceSize, gcmTagSize)!
 	return &GCMWithXORCounterNonce{g: *g}, nil
 }
 
@@ -179,10 +164,7 @@ func NewGCMForTLS13(cipher *aes.Block) (*GCMWithXORCounterNonce, error) {
 //
 // This complies with FIPS 140-3 IG C.H Scenario 5.
 func NewGCMForHPKE(cipher *aes.Block) (*GCMWithXORCounterNonce, error) {
-	g, err := newGCM(&GCM{}, cipher, gcmStandardNonceSize, gcmTagSize)
-	if err != nil {
-		return nil, err
-	}
+	g := newGCM(&GCM{}, cipher, gcmStandardNonceSize, gcmTagSize)!
 	return &GCMWithXORCounterNonce{g: *g}, nil
 }
 
@@ -198,14 +180,9 @@ func NewGCMForHPKE(cipher *aes.Block) (*GCMWithXORCounterNonce, error) {
 //
 // This complies with FIPS 140-3 IG C.H Scenario 5.
 func NewGCMForQUIC(cipher *aes.Block, iv []byte) (*GCMWithXORCounterNonce, error) {
-	g, err := newGCM(&GCM{}, cipher, gcmStandardNonceSize, gcmTagSize)
-	if err != nil {
-		return nil, err
-	}
+	g := newGCM(&GCM{}, cipher, gcmStandardNonceSize, gcmTagSize)!
 	gcm := &GCMWithXORCounterNonce{g: *g}
-	if err := gcm.SetNoncePrefixAndMask(iv); err != nil {
-		return nil, err
-	}
+	gcm.SetNoncePrefixAndMask(iv)!
 	return gcm, nil
 }
 

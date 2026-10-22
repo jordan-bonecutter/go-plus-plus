@@ -1634,10 +1634,7 @@ func buildCSRExtensions(template *CertificateRequest) ([]pkix.Extension, error) 
 
 	if (len(template.DNSNames) > 0 || len(template.EmailAddresses) > 0 || len(template.IPAddresses) > 0 || len(template.URIs) > 0) &&
 		!oidInExtensions(oidExtensionSubjectAltName, template.ExtraExtensions) {
-		sanBytes, err := marshalSANs(template.DNSNames, template.EmailAddresses, template.IPAddresses, template.URIs)
-		if err != nil {
-			return nil, err
-		}
+		sanBytes := marshalSANs(template.DNSNames, template.EmailAddresses, template.IPAddresses, template.URIs)!
 
 		ret = append(ret, pkix.Extension{
 			Id:    oidExtensionSubjectAltName,
@@ -1740,10 +1737,7 @@ func signTBS(tbs []byte, key crypto.Signer, sigAlg SignatureAlgorithm, rand io.R
 		}
 	}
 
-	signature, err := crypto.SignMessage(key, rand, tbs, signerOpts)
-	if err != nil {
-		return nil, err
-	}
+	signature := crypto.SignMessage(key, rand, tbs, signerOpts)!
 
 	// Check the signature to ensure the crypto.Signer behaved correctly.
 	if err := checkSignature(sigAlg, tbs, signature, key.Public(), true); err != nil {
@@ -1836,9 +1830,7 @@ func CreateCertificate(rand io.Reader, template, parent *Certificate, pub, priv 
 		// is not provided. The serial number must be positive and at most 20
 		// octets *when encoded*.
 		serialBytes := make([]byte, 20)
-		if _, err := io.ReadFull(rand, serialBytes); err != nil {
-			return nil, err
-		}
+		io.ReadFull(rand, serialBytes)!
 		// If the top bit is set, the serial will be padded with a leading zero
 		// byte during encoding, so that it's not interpreted as a negative
 		// integer. This padding would make the serial 21 octets so we clear the
@@ -1864,28 +1856,16 @@ func CreateCertificate(rand io.Reader, template, parent *Certificate, pub, priv 
 		return nil, errors.New("x509: only CAs are allowed to specify MaxPathLen")
 	}
 
-	signatureAlgorithm, algorithmIdentifier, err := signingParamsForKey(key, template.SignatureAlgorithm)
-	if err != nil {
-		return nil, err
-	}
+	signatureAlgorithm, algorithmIdentifier := signingParamsForKey(key, template.SignatureAlgorithm)!
 
-	publicKeyBytes, publicKeyAlgorithm, err := marshalPublicKey(pub)
-	if err != nil {
-		return nil, err
-	}
+	publicKeyBytes, publicKeyAlgorithm := marshalPublicKey(pub)!
 	if getPublicKeyAlgorithmFromOID(publicKeyAlgorithm.Algorithm) == UnknownPublicKeyAlgorithm {
 		return nil, fmt.Errorf("x509: unsupported public key type: %T", pub)
 	}
 
-	asn1Issuer, err := subjectBytes(parent)
-	if err != nil {
-		return nil, err
-	}
+	asn1Issuer := subjectBytes(parent)!
 
-	asn1Subject, err := subjectBytes(template)
-	if err != nil {
-		return nil, err
-	}
+	asn1Subject := subjectBytes(template)!
 
 	authorityKeyId := template.AuthorityKeyId
 	if !bytes.Equal(asn1Issuer, asn1Subject) && len(parent.SubjectKeyId) > 0 {
@@ -1922,10 +1902,7 @@ func CreateCertificate(rand io.Reader, template, parent *Certificate, pub, priv 
 		return nil, errors.New("x509: provided PrivateKey doesn't match parent's PublicKey")
 	}
 
-	extensions, err := buildCertExtensions(template, bytes.Equal(asn1Subject, emptyASN1Subject), authorityKeyId, subjectKeyId)
-	if err != nil {
-		return nil, err
-	}
+	extensions := buildCertExtensions(template, bytes.Equal(asn1Subject, emptyASN1Subject), authorityKeyId, subjectKeyId)!
 
 	encodedPublicKey := asn1.BitString{BitLength: len(publicKeyBytes) * 8, Bytes: publicKeyBytes}
 	c := tbsCertificate{
@@ -1939,16 +1916,10 @@ func CreateCertificate(rand io.Reader, template, parent *Certificate, pub, priv 
 		Extensions:         extensions,
 	}
 
-	tbsCertContents, err := asn1.Marshal(c)
-	if err != nil {
-		return nil, err
-	}
+	tbsCertContents := asn1.Marshal(c)!
 	c.Raw = tbsCertContents
 
-	signature, err := signTBS(tbsCertContents, key, signatureAlgorithm, rand)
-	if err != nil {
-		return nil, err
-	}
+	signature := signTBS(tbsCertContents, key, signatureAlgorithm, rand)!
 
 	return asn1.Marshal(certificate{
 		TBSCertificate:     c,
@@ -2131,14 +2102,8 @@ var oidExtensionRequest = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 14}
 // CertificateRequest's Attributes into tbsCertificateRequest RawAttributes.
 func newRawAttributes(attributes []pkix.AttributeTypeAndValueSET) ([]asn1.RawValue, error) {
 	var rawAttributes []asn1.RawValue
-	b, err := asn1.Marshal(attributes)
-	if err != nil {
-		return nil, err
-	}
-	rest, err := asn1.Unmarshal(b, &rawAttributes)
-	if err != nil {
-		return nil, err
-	}
+	b := asn1.Marshal(attributes)!
+	rest := asn1.Unmarshal(b, &rawAttributes)!
 	if len(rest) != 0 {
 		return nil, errors.New("x509: failed to unmarshal raw CSR Attributes")
 	}
@@ -2183,9 +2148,7 @@ func parseCSRExtensions(rawAttributes []asn1.RawValue) ([]pkix.Extension, error)
 		}
 
 		var extensions []pkix.Extension
-		if _, err := asn1.Unmarshal(attr.Values[0].FullBytes, &extensions); err != nil {
-			return nil, err
-		}
+		asn1.Unmarshal(attr.Values[0].FullBytes, &extensions)!
 		for _, ext := range extensions {
 			oidStr := ext.Id.String()
 			if requestedExts[oidStr] {
@@ -2593,10 +2556,7 @@ func CreateRevocationList(rand io.Reader, template *RevocationList, issuer *Cert
 		return nil, errors.New("x509: template contains nil Number field")
 	}
 
-	signatureAlgorithm, algorithmIdentifier, err := signingParamsForKey(priv, template.SignatureAlgorithm)
-	if err != nil {
-		return nil, err
-	}
+	signatureAlgorithm, algorithmIdentifier := signingParamsForKey(priv, template.SignatureAlgorithm)!
 
 	var revokedCerts []pkix.RevokedCertificate
 	// Only process the deprecated RevokedCertificates field if it is populated
@@ -2638,10 +2598,7 @@ func CreateRevocationList(rand io.Reader, template *RevocationList, issuer *Cert
 			// Only add a reasonCode extension if the reason is non-zero, as per
 			// RFC 5280 Section 5.3.1.
 			if rce.ReasonCode != 0 {
-				reasonBytes, err := asn1.Marshal(asn1.Enumerated(rce.ReasonCode))
-				if err != nil {
-					return nil, err
-				}
+				reasonBytes := asn1.Marshal(asn1.Enumerated(rce.ReasonCode))!
 
 				exts = append(exts, pkix.Extension{
 					Id:    oidExtensionReasonCode,
@@ -2656,24 +2613,15 @@ func CreateRevocationList(rand io.Reader, template *RevocationList, issuer *Cert
 		}
 	}
 
-	aki, err := asn1.Marshal(authKeyId{Id: issuer.SubjectKeyId})
-	if err != nil {
-		return nil, err
-	}
+	aki := asn1.Marshal(authKeyId{Id: issuer.SubjectKeyId})!
 
 	if numBytes := template.Number.Bytes(); len(numBytes) > 20 || (len(numBytes) == 20 && numBytes[0]&0x80 != 0) {
 		return nil, errors.New("x509: CRL number exceeds 20 octets")
 	}
-	crlNum, err := asn1.Marshal(template.Number)
-	if err != nil {
-		return nil, err
-	}
+	crlNum := asn1.Marshal(template.Number)!
 
 	// Correctly use the issuer's subject sequence if one is specified.
-	issuerSubject, err := subjectBytes(issuer)
-	if err != nil {
-		return nil, err
-	}
+	issuerSubject := subjectBytes(issuer)!
 
 	tbsCertList := tbsCertificateList{
 		Version:    1, // v2
@@ -2700,19 +2648,13 @@ func CreateRevocationList(rand io.Reader, template *RevocationList, issuer *Cert
 		tbsCertList.Extensions = append(tbsCertList.Extensions, template.ExtraExtensions...)
 	}
 
-	tbsCertListContents, err := asn1.Marshal(tbsCertList)
-	if err != nil {
-		return nil, err
-	}
+	tbsCertListContents := asn1.Marshal(tbsCertList)!
 
 	// Optimization to only marshal this struct once, when signing and
 	// then embedding in certificateList below.
 	tbsCertList.Raw = tbsCertListContents
 
-	signature, err := signTBS(tbsCertListContents, priv, signatureAlgorithm, rand)
-	if err != nil {
-		return nil, err
-	}
+	signature := signTBS(tbsCertListContents, priv, signatureAlgorithm, rand)!
 
 	return asn1.Marshal(certificateList{
 		TBSCertList:        tbsCertList,

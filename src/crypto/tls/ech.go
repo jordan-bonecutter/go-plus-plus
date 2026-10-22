@@ -139,10 +139,7 @@ func parseECHConfigList(data []byte) ([]echConfig, error) {
 			return nil, errors.New("tls: malformed ECHConfig")
 		}
 		configLen := int(s[2])<<8 | int(s[3])
-		skip, ec, err := parseECHConfig(s)
-		if err != nil {
-			return nil, err
-		}
+		skip, ec := parseECHConfig(s)!
 		s = s[configLen+4:]
 		if !skip {
 			configs = append(configs, ec)
@@ -202,10 +199,7 @@ func pickECHConfig(list []echConfig) (*echConfig, hpke.PublicKey, hpke.KDF, hpke
 }
 
 func encodeInnerClientHello(inner *clientHelloMsg, maxNameLength int) ([]byte, error) {
-	h, err := inner.marshalMsg(true)
-	if err != nil {
-		return nil, err
-	}
+	h := inner.marshalMsg(true)!
 	h = h[4:] // strip four byte prefix
 
 	var paddingLen int
@@ -296,10 +290,7 @@ func decodeInnerClientHello(outer *clientHelloMsg, encoded []byte) (*clientHello
 		}
 	}
 
-	rawOuterExts, err := extractRawExtensions(outer)
-	if err != nil {
-		return nil, err
-	}
+	rawOuterExts := extractRawExtensions(outer)!
 
 	recon := cryptobyte.NewBuilder(nil)
 	recon.AddUint8(typeClientHello)
@@ -377,10 +368,7 @@ func decodeInnerClientHello(outer *clientHelloMsg, encoded []byte) (*clientHello
 		})
 	})
 
-	reconBytes, err := recon.Bytes()
-	if err != nil {
-		return nil, err
-	}
+	reconBytes := recon.Bytes()!
 	inner := &clientHelloMsg{}
 	if !inner.unmarshal(reconBytes) {
 		return nil, errors.New("tls: invalid reconstructed inner client hello")

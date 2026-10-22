@@ -304,10 +304,7 @@ func newHybridPrivateKey(pq crypto.Decapsulator, t ecdh.KeyExchanger, seed []byt
 
 func (kem *hybridKEM) DeriveKeyPair(ikm []byte) (PrivateKey, error) {
 	suiteID := byteorder.BEAppendUint16([]byte("KEM"), kem.id)
-	dk, err := SHAKE256().labeledDerive(suiteID, ikm, "DeriveKeyPair", nil, 32)
-	if err != nil {
-		return nil, err
-	}
+	dk := SHAKE256().labeledDerive(suiteID, ikm, "DeriveKeyPair", nil, 32)!
 	return kem.NewPrivateKey(dk)
 }
 
@@ -439,10 +436,7 @@ func NewMLKEMPublicKey(pub crypto.Encapsulator) (PublicKey, error) {
 }
 
 func (kem *mlkemKEM) NewPublicKey(data []byte) (PublicKey, error) {
-	pq, err := kem.newPublicKey(data)
-	if err != nil {
-		return nil, err
-	}
+	pq := kem.newPublicKey(data)!
 	return NewMLKEMPublicKey(pq)
 }
 
@@ -490,27 +484,18 @@ func NewMLKEMPrivateKey(priv crypto.Decapsulator) (PrivateKey, error) {
 }
 
 func (kem *mlkemKEM) GenerateKey() (PrivateKey, error) {
-	pq, err := kem.generateKey()
-	if err != nil {
-		return nil, err
-	}
+	pq := kem.generateKey()!
 	return NewMLKEMPrivateKey(pq)
 }
 
 func (kem *mlkemKEM) NewPrivateKey(priv []byte) (PrivateKey, error) {
-	pq, err := kem.newPrivateKey(priv)
-	if err != nil {
-		return nil, err
-	}
+	pq := kem.newPrivateKey(priv)!
 	return NewMLKEMPrivateKey(pq)
 }
 
 func (kem *mlkemKEM) DeriveKeyPair(ikm []byte) (PrivateKey, error) {
 	suiteID := byteorder.BEAppendUint16([]byte("KEM"), kem.id)
-	dk, err := SHAKE256().labeledDerive(suiteID, ikm, "DeriveKeyPair", nil, 64)
-	if err != nil {
-		return nil, err
-	}
+	dk := SHAKE256().labeledDerive(suiteID, ikm, "DeriveKeyPair", nil, 64)!
 	return kem.NewPrivateKey(dk)
 }
 

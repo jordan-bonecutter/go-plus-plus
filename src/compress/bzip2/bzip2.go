@@ -182,10 +182,7 @@ func (bz2 *reader) read(buf []byte) (int, error) {
 
 		case bzip2BlockMagic:
 			// Start of block.
-			err := bz2.readBlock()
-			if err != nil {
-				return 0, err
-			}
+			bz2.readBlock()!
 
 		case bzip2FinalMagic:
 			// Check end-of-file CRC.
@@ -225,9 +222,7 @@ func (bz2 *reader) read(buf []byte) (int, error) {
 			if b != 'B' || z != 'Z' {
 				return 0, StructuralError("bad magic value in continuation file")
 			}
-			if err := bz2.setup(false); err != nil {
-				return 0, err
-			}
+			bz2.setup(false)!
 		}
 	}
 }

@@ -69,10 +69,7 @@ func newGCM(cipher Block, nonceSize, tagSize int) (AEAD, error) {
 	}
 	// We don't return gcm.New directly, because it would always return a non-nil
 	// AEAD interface value with type *gcm.GCM even if the *gcm.GCM is nil.
-	g, err := gcm.New(c, nonceSize, tagSize)
-	if err != nil {
-		return nil, err
-	}
+	g := gcm.New(c, nonceSize, tagSize)!
 	return g, nil
 }
 
@@ -91,10 +88,7 @@ func NewGCMWithRandomNonce(cipher Block) (AEAD, error) {
 	if !ok {
 		return nil, errors.New("cipher: NewGCMWithRandomNonce requires aes.Block")
 	}
-	g, err := gcm.New(c, gcmStandardNonceSize, gcmTagSize)
-	if err != nil {
-		return nil, err
-	}
+	g := gcm.New(c, gcmStandardNonceSize, gcmTagSize)!
 	return gcmWithRandomNonce{g}, nil
 }
 
@@ -186,10 +180,7 @@ func (g gcmWithRandomNonce) Open(dst, nonce, ciphertext, additionalData []byte) 
 		ciphertext = ciphertext[gcmStandardNonceSize:]
 	}
 
-	_, err := g.GCM.Open(out[:0], nonce, ciphertext, additionalData)
-	if err != nil {
-		return nil, err
-	}
+	g.GCM.Open(out[:0], nonce, ciphertext, additionalData)!
 	return ret, nil
 }
 

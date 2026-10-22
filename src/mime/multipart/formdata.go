@@ -270,10 +270,7 @@ func (fh *FileHeader) Open() (File, error) {
 		return sectionReadCloser{r, nil}, nil
 	}
 	if fh.tmpshared {
-		f, err := os.Open(fh.tmpfile)
-		if err != nil {
-			return nil, err
-		}
+		f := os.Open(fh.tmpfile)!
 		r := io.NewSectionReader(f, fh.tmpoff, fh.Size)
 		return sectionReadCloser{r, f}, nil
 	}

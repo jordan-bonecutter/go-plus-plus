@@ -54,14 +54,8 @@ func MarshalECPrivateKey(key *ecdsa.PrivateKey) ([]byte, error) {
 // marshalECPrivateKeyWithOID marshals an EC private key into ASN.1, DER format and
 // sets the curve ID to the given OID, or omits it if OID is nil.
 func marshalECPrivateKeyWithOID(key *ecdsa.PrivateKey, oid asn1.ObjectIdentifier) ([]byte, error) {
-	privateKey, err := key.Bytes()
-	if err != nil {
-		return nil, err
-	}
-	publicKey, err := key.PublicKey.Bytes()
-	if err != nil {
-		return nil, err
-	}
+	privateKey := key.Bytes()!
+	publicKey := key.PublicKey.Bytes()!
 	return asn1.Marshal(ecPrivateKey{
 		Version:       1,
 		PrivateKey:    privateKey,

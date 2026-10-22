@@ -30,10 +30,7 @@ func init() {
 			0x2D, 0x3A, 0xA6, 0xDF, 0x29, 0x96,
 		}
 
-		mk, err := Key(sha256.New, "password", salt, 2, 14)
-		if err != nil {
-			return err
-		}
+		mk := Key(sha256.New, "password", salt, 2, 14)!
 		if !bytes.Equal(mk, want) {
 			return errors.New("unexpected result")
 		}

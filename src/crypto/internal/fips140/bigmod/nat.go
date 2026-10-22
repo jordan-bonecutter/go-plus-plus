@@ -181,9 +181,7 @@ func (x *Nat) Bytes(m *Modulus) []byte {
 //go:norace
 func (x *Nat) SetBytes(b []byte, m *Modulus) (*Nat, error) {
 	x.resetFor(m)
-	if err := x.setBytes(b); err != nil {
-		return nil, err
-	}
+	x.setBytes(b)!
 	if x.cmpGeq(m.nat) == yes {
 		return nil, errors.New("input overflows the modulus")
 	}
@@ -197,9 +195,7 @@ func (x *Nat) SetBytes(b []byte, m *Modulus) (*Nat, error) {
 // The output will be resized to the size of m and overwritten.
 func (x *Nat) SetOverflowingBytes(b []byte, m *Modulus) (*Nat, error) {
 	x.resetFor(m)
-	if err := x.setBytes(b); err != nil {
-		return nil, err
-	}
+	x.setBytes(b)!
 	// setBytes would have returned an error if the input overflowed the limb
 	// size of the modulus, so now we only need to check if the most significant
 	// limb of x has more bits than the most significant limb of the modulus.
@@ -1089,10 +1085,7 @@ func (x *Nat) InverseVarTime(a *Nat, m *Modulus) (*Nat, bool) {
 //
 // The output will be resized to the size of the larger of a and b.
 func (x *Nat) GCDVarTime(a, b *Nat) (*Nat, error) {
-	u, _, err := extendedGCD(a, b)
-	if err != nil {
-		return nil, err
-	}
+	u, _ := extendedGCD(a, b)!
 	return x.set(u), nil
 }
 

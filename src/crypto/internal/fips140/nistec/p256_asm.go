@@ -98,9 +98,7 @@ func (p *P256Point) SetBytes(b []byte) (*P256Point, error) {
 		}
 		p256Mul(&r.x, &r.x, &rr)
 		p256Mul(&r.y, &r.y, &rr)
-		if err := p256CheckOnCurve(&r.x, &r.y); err != nil {
-			return nil, err
-		}
+		p256CheckOnCurve(&r.x, &r.y)!
 		r.z = p256One
 		return p.Set(&r), nil
 

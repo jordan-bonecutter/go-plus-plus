@@ -233,10 +233,7 @@ func TestingOnlyNewDecapsulationKey768(b []byte) (*DecapsulationKey768, error) {
 		b = b[encodingSize12:]
 	}
 
-	ek, err := NewEncapsulationKey768(b[:EncapsulationKeySize768])
-	if err != nil {
-		return nil, err
-	}
+	ek := NewEncapsulationKey768(b[:EncapsulationKeySize768])!
 	dk.ρ = ek.ρ
 	dk.h = ek.h
 	dk.encryptionKey = ek.encryptionKey
@@ -318,10 +315,7 @@ func kemKeyGen(dk *DecapsulationKey768, d, z *[32]byte) {
 func kemPCT(dk *DecapsulationKey768) error {
 	ek := dk.EncapsulationKey()
 	K, c := ek.Encapsulate()
-	K1, err := dk.Decapsulate(c)
-	if err != nil {
-		return err
-	}
+	K1 := dk.Decapsulate(c)!
 	if subtle.ConstantTimeCompare(K, K1) != 1 {
 		return errors.New("mlkem: PCT failed")
 	}

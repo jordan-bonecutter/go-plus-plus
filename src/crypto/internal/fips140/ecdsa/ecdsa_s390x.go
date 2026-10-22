@@ -145,14 +145,8 @@ func sign[P Point[P]](c *Curve[P], priv *PrivateKey, drbg *hmacDRBG, hash []byte
 		switch kdsa(functionCode+136, &params) {
 		case 0: // success
 			elementSize := (c.N.BitLen() + 7) / 8
-			r, err := trimBlock(params[:blockSize], elementSize)
-			if err != nil {
-				return nil, err
-			}
-			s, err := trimBlock(params[blockSize:2*blockSize], elementSize)
-			if err != nil {
-				return nil, err
-			}
+			r := trimBlock(params[:blockSize], elementSize)!
+			s := trimBlock(params[blockSize:2*blockSize], elementSize)!
 			return &Signature{R: r, S: s}, nil
 		case 1: // error
 			return nil, errors.New("zero parameter")

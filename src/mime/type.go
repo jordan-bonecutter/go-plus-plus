@@ -213,10 +213,7 @@ func TypeByExtension(ext string) string {
 //
 // On Windows, extensions are extracted from the registry.
 func ExtensionsByType(typ string) ([]string, error) {
-	justType, _, err := ParseMediaType(typ)
-	if err != nil {
-		return nil, err
-	}
+	justType, _ := ParseMediaType(typ)!
 
 	once.Do(initMime)
 	s, ok := extensions.Load(justType)
@@ -240,10 +237,7 @@ func AddExtensionType(ext, typ string) error {
 }
 
 func setExtensionType(extension, mimeType string) error {
-	justType, param, err := ParseMediaType(mimeType)
-	if err != nil {
-		return err
-	}
+	justType, param := ParseMediaType(mimeType)!
 	if strings.HasPrefix(mimeType, "text/") && param["charset"] == "" {
 		param["charset"] = "utf-8"
 		mimeType = FormatMediaType(justType, param)

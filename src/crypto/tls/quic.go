@@ -396,9 +396,7 @@ func quicError(err error) error {
 
 func (c *Conn) quicReadHandshakeBytes(n int) error {
 	for c.handLen() < n {
-		if err := c.quicWaitForSignal(); err != nil {
-			return err
-		}
+		c.quicWaitForSignal()!
 	}
 	return nil
 }
@@ -452,9 +450,7 @@ func (c *Conn) quicResumeSession(session *SessionState) error {
 	})
 	c.quic.waitingForDrain = true
 	for c.quic.waitingForDrain {
-		if err := c.quicWaitForSignal(); err != nil {
-			return err
-		}
+		c.quicWaitForSignal()!
 	}
 	return nil
 }
@@ -480,9 +476,7 @@ func (c *Conn) quicGetTransportParameters() ([]byte, error) {
 		})
 	}
 	for c.quic.transportParams == nil {
-		if err := c.quicWaitForSignal(); err != nil {
-			return nil, err
-		}
+		c.quicWaitForSignal()!
 	}
 	return c.quic.transportParams, nil
 }
