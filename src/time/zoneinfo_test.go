@@ -336,13 +336,13 @@ func TestTzsetRule(t *testing.T) {
 	}{
 		{"", time.Rule{}, "", false},
 		{"X", time.Rule{}, "", false},
-		{"J10", time.Rule{Kind: time.RuleJulian, Day: 10, Time: 2 * 60 * 60}, "", true},
-		{"20", time.Rule{Kind: time.RuleDOY, Day: 20, Time: 2 * 60 * 60}, "", true},
-		{"M1.2.3", time.Rule{Kind: time.RuleMonthWeekDay, Mon: 1, Week: 2, Day: 3, Time: 2 * 60 * 60}, "", true},
-		{"30/03:00:00", time.Rule{Kind: time.RuleDOY, Day: 30, Time: 3 * 60 * 60}, "", true},
-		{"M4.5.6/03:00:00", time.Rule{Kind: time.RuleMonthWeekDay, Mon: 4, Week: 5, Day: 6, Time: 3 * 60 * 60}, "", true},
+		{"J10", time.JulianRule(10, 2*60*60), "", true},
+		{"20", time.DOYRule(20, 2*60*60), "", true},
+		{"M1.2.3", time.MonthWeekDayRule(1, 2, 3, 2*60*60), "", true},
+		{"30/03:00:00", time.DOYRule(30, 3*60*60), "", true},
+		{"M4.5.6/03:00:00", time.MonthWeekDayRule(4, 5, 6, 3*60*60), "", true},
 		{"M4.5.7/03:00:00", time.Rule{}, "", false},
-		{"M4.5.6/-04", time.Rule{Kind: time.RuleMonthWeekDay, Mon: 4, Week: 5, Day: 6, Time: -4 * 60 * 60}, "", true},
+		{"M4.5.6/-04", time.MonthWeekDayRule(4, 5, 6, -4*60*60), "", true},
 	} {
 		r, out, ok := time.TzsetRule(test.in)
 		if r != test.r || out != test.out || ok != test.ok {

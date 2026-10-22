@@ -453,21 +453,18 @@ func tzsetOffset(s string) (offset int, rest string, ok bool) {
 	return off, s, true
 }
 
-// ruleKind is the kinds of rules that can be seen in a tzset string.
-type ruleKind int
+// ruleDate is one of the date forms allowed in a tzset string.
+type ruleDate union {
+	Julian       int
+	DayOfYear    int
+	MonthWeekDay monthWeekDay
+}
 
-const (
-	ruleJulian ruleKind = iota
-	ruleDOY
-	ruleMonthWeekDay
-)
+type monthWeekDay struct{ mon, week, day int }
 
 // rule is a rule read from a tzset string.
 type rule struct {
-	kind ruleKind
-	day  int
-	week int
-	mon  int
+	date ruleDate
 	time int // transition time
 }
 
@@ -485,8 +482,7 @@ func tzsetRule(s string) (rule, string, bool) {
 		if !ok {
 			return rule{}, "", false
 		}
-		r.kind = ruleJulian
-		r.day = jday
+		r.date = ruleDate.Julian(jday)
 	} else if s[0] == 'M' {
 		var mon int
 		mon, s, ok = tzsetNum(s[1:], 1, 12)
@@ -504,18 +500,14 @@ func tzsetRule(s string) (rule, string, bool) {
 		if !ok {
 			return rule{}, "", false
 		}
-		r.kind = ruleMonthWeekDay
-		r.day = day
-		r.week = week
-		r.mon = mon
+		r.date = ruleDate.MonthWeekDay(monthWeekDay{mon, week, day})
 	} else {
 		var day int
 		day, s, ok = tzsetNum(s, 0, 365)
 		if !ok {
 			return rule{}, "", false
 		}
-		r.kind = ruleDOY
-		r.day = day
+		r.date = ruleDate.DayOfYear(day)
 	}
 
 	if len(s) == 0 || s[0] != '/' {
@@ -564,19 +556,19 @@ func tzsetNum(s string, min, max int) (num int, rest string, ok bool) {
 // that the rule takes effect.
 func tzruleTime(year int, r rule, off int) int {
 	var s int
-	switch r.kind {
-	case ruleJulian:
-		s = (r.day - 1) * secondsPerDay
-		if isLeap(year) && r.day >= 60 {
+	switch date := r.date.(variant) {
+	case Julian:
+		s = (date - 1) * secondsPerDay
+		if isLeap(year) && date >= 60 {
 			s += secondsPerDay
 		}
-	case ruleDOY:
-		s = r.day * secondsPerDay
-	case ruleMonthWeekDay:
+	case DayOfYear:
+		s = date * secondsPerDay
+	case MonthWeekDay:
 		// Zeller's Congruence.
-		m1 := (r.mon+9)%12 + 1
+		m1 := (date.mon+9)%12 + 1
 		yy0 := year
-		if r.mon <= 2 {
+		if date.mon <= 2 {
 			yy0--
 		}
 		yy1 := yy0 / 100
@@ -585,20 +577,20 @@ func tzruleTime(year int, r rule, off int) int {
 		if dow < 0 {
 			dow += 7
 		}
-		// Now dow is the day-of-week of the first day of r.mon.
+		// Now dow is the day-of-week of the first day of date.mon.
 		// Get the day-of-month of the first "dow" day.
-		d := r.day - dow
+		d := date.day - dow
 		if d < 0 {
 			d += 7
 		}
-		for i := 1; i < r.week; i++ {
-			if d+7 >= daysIn(Month(r.mon), year) {
+		for i := 1; i < date.week; i++ {
+			if d+7 >= daysIn(Month(date.mon), year) {
 				break
 			}
 			d += 7
 		}
-		d += daysBefore(Month(r.mon))
-		if isLeap(year) && r.mon > 2 {
+		d += daysBefore(Month(date.mon))
+		if isLeap(year) && date.mon > 2 {
 			d++
 		}
 		s = d * secondsPerDay

@@ -46,34 +46,18 @@ func LoadFromEmbeddedTZData(zone string) (string, error) {
 	return loadFromEmbeddedTZData(zone)
 }
 
-type RuleKind int
+const UnixToInternal = unixToInternal
 
-const (
-	RuleJulian       = RuleKind(ruleJulian)
-	RuleDOY          = RuleKind(ruleDOY)
-	RuleMonthWeekDay = RuleKind(ruleMonthWeekDay)
-	UnixToInternal   = unixToInternal
-)
+type Rule = rule
 
-type Rule struct {
-	Kind RuleKind
-	Day  int
-	Week int
-	Mon  int
-	Time int
-}
-
-func TzsetRule(s string) (Rule, string, bool) {
-	r, rs, ok := tzsetRule(s)
-	rr := Rule{
-		Kind: RuleKind(r.kind),
-		Day:  r.day,
-		Week: r.week,
-		Mon:  r.mon,
-		Time: r.time,
+var (
+	TzsetRule        = tzsetRule
+	JulianRule       = func(day, sec int) rule { return rule{ruleDate.Julian(day), sec} }
+	DOYRule          = func(day, sec int) rule { return rule{ruleDate.DayOfYear(day), sec} }
+	MonthWeekDayRule = func(mon, week, day, sec int) rule {
+		return rule{ruleDate.MonthWeekDay(monthWeekDay{mon, week, day}), sec}
 	}
-	return rr, rs, ok
-}
+)
 
 // StdChunkNames maps from nextStdChunk results to the matched strings.
 var StdChunkNames = map[int]string{
