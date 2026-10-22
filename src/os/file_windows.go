@@ -208,8 +208,7 @@ func (f *File) seek(offset int64, whence int) (ret int64, err error) {
 func Truncate(name string, size int64) error {
 	f := OpenFile(name, O_WRONLY, 0666)!
 	defer f.Close()
-	f.Truncate(size)!
-	return nil
+	return f.Truncate(size)
 }
 
 // Remove removes the named file or directory.

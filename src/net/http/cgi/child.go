@@ -157,8 +157,7 @@ func Serve(handler http.Handler) error {
 	}
 	handler.ServeHTTP(rw, req)
 	rw.Write(nil) // make sure a response is sent
-	rw.bufw.Flush()!
-	return nil
+	return rw.bufw.Flush()
 }
 
 type response struct {

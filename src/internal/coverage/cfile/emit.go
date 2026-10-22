@@ -320,8 +320,7 @@ func emitCounterDataToDirectory(outdir string) error {
 
 // emitCounterDataToWriter emits counter data for this coverage run to an io.Writer.
 func (s *emitState) emitCounterDataToWriter(w io.Writer) error {
-	s.emitCounterDataFile(finalHash, w)!
-	return nil
+	return s.emitCounterDataFile(finalHash, w)
 }
 
 // openMetaFile determines whether we need to emit a meta-data output
@@ -542,8 +541,7 @@ func captureOsArgs() map[string]string {
 // coverage output file (to the file 's.cf').
 func (s *emitState) emitCounterDataFile(finalHash [16]byte, w io.Writer) error {
 	cfw := encodecounter.NewCoverageDataWriter(w, coverage.CtrULeb128)
-	cfw.Write(finalHash, capturedOsArgs, s)!
-	return nil
+	return cfw.Write(finalHash, capturedOsArgs, s)
 }
 
 // MarkProfileEmitted signals the coverage machinery that

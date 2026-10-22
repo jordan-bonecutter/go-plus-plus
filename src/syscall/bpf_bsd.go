@@ -50,14 +50,12 @@ func SetBpfDatalink(fd, t int) (int, error) {
 
 // Deprecated: Use golang.org/x/net/bpf instead.
 func SetBpfPromisc(fd, m int) error {
-	ioctlPtr(fd, BIOCPROMISC, unsafe.Pointer(&m))!
-	return nil
+	return ioctlPtr(fd, BIOCPROMISC, unsafe.Pointer(&m))
 }
 
 // Deprecated: Use golang.org/x/net/bpf instead.
 func FlushBpf(fd int) error {
-	ioctlPtr(fd, BIOCFLUSH, nil)!
-	return nil
+	return ioctlPtr(fd, BIOCFLUSH, nil)
 }
 
 type ivalue struct {
@@ -76,8 +74,7 @@ func BpfInterface(fd int, name string) (string, error) {
 func SetBpfInterface(fd int, name string) error {
 	var iv ivalue
 	copy(iv.name[:], []byte(name))
-	ioctlPtr(fd, BIOCSETIF, unsafe.Pointer(&iv))!
-	return nil
+	return ioctlPtr(fd, BIOCSETIF, unsafe.Pointer(&iv))
 }
 
 // Deprecated: Use golang.org/x/net/bpf instead.
@@ -89,8 +86,7 @@ func BpfTimeout(fd int) (*Timeval, error) {
 
 // Deprecated: Use golang.org/x/net/bpf instead.
 func SetBpfTimeout(fd int, tv *Timeval) error {
-	ioctlPtr(fd, BIOCSRTIMEOUT, unsafe.Pointer(tv))!
-	return nil
+	return ioctlPtr(fd, BIOCSRTIMEOUT, unsafe.Pointer(tv))
 }
 
 // Deprecated: Use golang.org/x/net/bpf instead.
@@ -102,8 +98,7 @@ func BpfStats(fd int) (*BpfStat, error) {
 
 // Deprecated: Use golang.org/x/net/bpf instead.
 func SetBpfImmediate(fd, m int) error {
-	ioctlPtr(fd, BIOCIMMEDIATE, unsafe.Pointer(&m))!
-	return nil
+	return ioctlPtr(fd, BIOCIMMEDIATE, unsafe.Pointer(&m))
 }
 
 // Deprecated: Use golang.org/x/net/bpf instead.
@@ -111,8 +106,7 @@ func SetBpf(fd int, i []BpfInsn) error {
 	var p BpfProgram
 	p.Len = uint32(len(i))
 	p.Insns = (*BpfInsn)(unsafe.Pointer(&i[0]))
-	ioctlPtr(fd, BIOCSETF, unsafe.Pointer(&p))!
-	return nil
+	return ioctlPtr(fd, BIOCSETF, unsafe.Pointer(&p))
 }
 
 // Deprecated: Use golang.org/x/net/bpf instead.
@@ -134,6 +128,5 @@ func BpfHeadercmpl(fd int) (int, error) {
 
 // Deprecated: Use golang.org/x/net/bpf instead.
 func SetBpfHeadercmpl(fd, f int) error {
-	ioctlPtr(fd, BIOCSHDRCMPLT, unsafe.Pointer(&f))!
-	return nil
+	return ioctlPtr(fd, BIOCSHDRCMPLT, unsafe.Pointer(&f))
 }

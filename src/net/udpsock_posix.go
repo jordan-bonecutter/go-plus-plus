@@ -245,8 +245,7 @@ func listenIPv4MulticastUDP(c *UDPConn, ifi *Interface, ip IP) error {
 		setIPv4MulticastInterface(c.fd, ifi)!
 	}
 	setIPv4MulticastLoopback(c.fd, false)!
-	joinIPv4Group(c.fd, ifi, ip)!
-	return nil
+	return joinIPv4Group(c.fd, ifi, ip)
 }
 
 func listenIPv6MulticastUDP(c *UDPConn, ifi *Interface, ip IP) error {
@@ -254,6 +253,5 @@ func listenIPv6MulticastUDP(c *UDPConn, ifi *Interface, ip IP) error {
 		setIPv6MulticastInterface(c.fd, ifi)!
 	}
 	setIPv6MulticastLoopback(c.fd, false)!
-	joinIPv6Group(c.fd, ifi, ip)!
-	return nil
+	return joinIPv6Group(c.fd, ifi, ip)
 }

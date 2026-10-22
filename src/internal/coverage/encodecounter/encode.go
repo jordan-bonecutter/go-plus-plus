@@ -174,8 +174,7 @@ func (cfw *CoverageDataWriter) writeHeader(metaFileHash [16]byte) error {
 		CFlavor:   cfw.cflavor,
 		BigEndian: false,
 	}
-	binary.Write(cfw.w, binary.LittleEndian, ch)!
-	return nil
+	return binary.Write(cfw.w, binary.LittleEndian, ch)
 }
 
 func (cfw *CoverageDataWriter) writeBytes(b []byte) error {
@@ -236,8 +235,7 @@ func (cfw *CoverageDataWriter) writeCounters(visitor CounterVisitor, ws *slicewr
 		}
 		return nil
 	}
-	visitor.VisitFuncs(emitter)!
-	return nil
+	return visitor.VisitFuncs(emitter)
 }
 
 func (cfw *CoverageDataWriter) writeFooter() error {
@@ -246,6 +244,5 @@ func (cfw *CoverageDataWriter) writeFooter() error {
 		Magic:       coverage.CovCounterMagic,
 		NumSegments: cfw.segs,
 	}
-	binary.Write(cfw.w, binary.LittleEndian, cf)!
-	return nil
+	return binary.Write(cfw.w, binary.LittleEndian, cf)
 }

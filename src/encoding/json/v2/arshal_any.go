@@ -153,8 +153,7 @@ func marshalObjectAny(enc *jsontext.Encoder, obj map[string]any, mo *jsonopts.St
 		}
 		putStrings(names)
 	}
-	enc.WriteToken(jsontext.EndObject)!
-	return nil
+	return enc.WriteToken(jsontext.EndObject)
 }
 
 // unmarshalObjectAny unmarshals a JSON object as a Go map[string]any.
@@ -236,8 +235,7 @@ func marshalArrayAny(enc *jsontext.Encoder, arr []any, mo *jsonopts.Struct) erro
 	for _, val := range arr {
 		marshalValueAny(enc, val, mo)!
 	}
-	enc.WriteToken(jsontext.EndArray)!
-	return nil
+	return enc.WriteToken(jsontext.EndArray)
 }
 
 // unmarshalArrayAny unmarshals a JSON array as a Go []any.

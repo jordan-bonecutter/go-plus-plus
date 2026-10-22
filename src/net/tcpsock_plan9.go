@@ -59,8 +59,7 @@ func (ln *TCPListener) close() error {
 		ln.fd.ctl.Close()
 		return err
 	}
-	ln.fd.ctl.Close()!
-	return nil
+	return ln.fd.ctl.Close()
 }
 
 func (ln *TCPListener) file() (*os.File, error) {
