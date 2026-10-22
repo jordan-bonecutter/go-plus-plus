@@ -24,3 +24,11 @@ func Equal[T comparable](x, y Result[T]) bool { return x == y }
 func Keys[T comparable](value T) map[Result[T]]T {
 	return map[Result[T]]T{Result[T].Value(value): value}
 }
+
+// Private variants retain their declaration's package through derived types.
+type Private union {
+	hidden int
+	Public string
+}
+
+func Hidden() Private { return Private.hidden(7) }

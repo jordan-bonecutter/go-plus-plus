@@ -6,6 +6,7 @@ package types
 
 import (
 	"go/ast"
+	"internal/abi"
 	. "internal/types/errors"
 	"strings"
 )
@@ -16,7 +17,7 @@ const taggedUnionPrefix = "union·variant·"
 // Zero-length variant fields preserve the payload types in ordinary export data.
 func taggedUnion(t Type) *Struct {
 	s, _ := t.Underlying().(*Struct)
-	if s != nil && len(s.fields) == 2 && s.fields[0].name == "union·data" && s.fields[1].name == "union·tag" {
+	if s != nil && len(s.fields) == 3 && s.fields[0].name == "union·data" && s.fields[1].name == "union·anchor" && s.fields[2].name == "union·tag" {
 		data, _ := s.fields[0].typ.Underlying().(*Struct)
 		return data
 	}
@@ -57,10 +58,20 @@ func (check *Checker) taggedUnionType(styp *Struct, e *ast.StructType) {
 	fields = append(fields,
 		NewField(e.Pos(), check.pkg, "_", NewArray(Typ[Uintptr], 0), false),
 		NewField(e.Pos(), check.pkg, "union·raw", NewArray(Typ[Uint8], 0), false))
-	header := NewStruct([]*Var{NewField(e.Pos(), check.pkg, "Index", Typ[Uintptr], false)}, nil)
+	tag := Typ[Uint8]
+	switch abi.UnionTagSize(uint64(len(fields) - 2)) {
+	case 2:
+		tag = Typ[Uint16]
+	case 4:
+		tag = Typ[Uint32]
+	case 8:
+		tag = Typ[Uint64]
+	}
+	header := NewStruct(nil, nil)
 	styp.fields = []*Var{
 		NewField(e.Pos(), check.pkg, "union·data", NewStruct(fields, nil), false),
-		NewField(e.Pos(), check.pkg, "union·tag", NewPointer(header), false),
+		NewField(e.Pos(), check.pkg, "union·anchor", NewPointer(header), false),
+		NewField(e.Pos(), check.pkg, "union·tag", tag, false),
 	}
 	styp.markComplete()
 }

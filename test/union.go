@@ -132,7 +132,7 @@ func generic() {
 	if value.Get()[63] != 42 {
 		panic("generic large payload")
 	}
-	if unsafe.Sizeof(value) != 64+unsafe.Sizeof(uintptr(0)) || reflect.TypeOf(value).Size() != unsafe.Sizeof(value) || resultSize(value) != unsafe.Sizeof(value) {
+	if unsafe.Sizeof(value) != 64+2*unsafe.Sizeof(uintptr(0)) || reflect.TypeOf(value).Size() != unsafe.Sizeof(value) || resultSize(value) != unsafe.Sizeof(value) {
 		panic("generic layout")
 	}
 	pointer := new(int)
@@ -204,14 +204,14 @@ func main() {
 	generic()
 	local()
 	// Repeated payload types must remain distinct variants, and sizeof must not
-	// grow when a smaller variant is added. Tags occupy one machine word.
-	if unsafe.Sizeof(Foo{}) != unsafe.Sizeof(uintptr(0))+unsafe.Sizeof("") {
+	// grow when a smaller variant is added. Tags are inline; anchors occupy one machine word.
+	if unsafe.Sizeof(Foo{}) != 2*unsafe.Sizeof(uintptr(0))+unsafe.Sizeof("") {
 		panic("union layout")
 	}
-	if unsafe.Sizeof(Pointer{}) != 2*unsafe.Sizeof(uintptr(0)) {
+	if unsafe.Sizeof(Pointer{}) != 3*unsafe.Sizeof(uintptr(0)) {
 		panic("pointer union layout")
 	}
-	if unsafe.Sizeof(Empty{}) != unsafe.Sizeof(uintptr(0)) {
+	if unsafe.Sizeof(Empty{}) != 2*unsafe.Sizeof(uintptr(0)) {
 		panic("empty payload layout")
 	}
 	var construct func(int) Foo = Foo.Bar

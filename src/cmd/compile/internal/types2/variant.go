@@ -14,7 +14,7 @@ import (
 
 func unionStruct(t Type) *Struct {
 	s, _ := t.Underlying().(*Struct)
-	if s != nil && len(s.fields) == 2 && s.fields[0].name == syntax.UnionDataField && s.fields[1].name == syntax.UnionTagField {
+	if s != nil && len(s.fields) == 3 && s.fields[0].name == syntax.UnionDataField && s.fields[1].name == syntax.UnionAnchor && s.fields[2].name == syntax.UnionTagField {
 		data, _ := s.fields[0].typ.Underlying().(*Struct)
 		return data
 	}
@@ -39,11 +39,11 @@ func unionFunction(pos syntax.Pos, typ Type, variant int, operation string) *syn
 	var body string
 	switch operation {
 	case "construct":
-		body = fmt.Sprintf(`func f(V T) U { var R U; R.D = H(A(&V, %d)); *(*T)(P(&R.B)) = V; return R }`, variant)
+		body = fmt.Sprintf(`func f(V T) U { var R U; R.D = %d; R.C = H(A(&V)); *(*T)(P(&R.B)) = V; return R }`, variant)
 	case "extract":
-		body = `func f(V U) T { R := *(*T)(P(&V.B)); K(V.D); return R }`
+		body = `func f(V U) T { R := *(*T)(P(&V.B)); K(V.C); return R }`
 	case "index":
-		body = `func f(V U) W { if V.D == N { return 0 }; return V.D.Index }`
+		body = `func f(V U) W { return W(V.D) }`
 	}
 	file, err := syntax.Parse(syntax.NewFileBase(pos.RelFilename()), strings.NewReader("package p;"+body), nil, nil, 0)
 	if err != nil {
@@ -55,7 +55,7 @@ func unionFunction(pos syntax.Pos, typ Type, variant int, operation string) *syn
 	if operation != "index" {
 		types["T"] = unionStruct(typ).fields[variant].typ.(*Array).elem
 	}
-	names := map[string]string{"V": "union·value", "R": "union·result", "D": syntax.UnionTagField, "B": syntax.UnionDataField, "A": syntax.UnionAnchor, "K": syntax.UnionKeepAlive, "N": "union·nil"}
+	names := map[string]string{"V": "union·value", "R": "union·result", "D": syntax.UnionTagField, "C": syntax.UnionAnchor, "B": syntax.UnionDataField, "A": syntax.UnionAnchor, "K": syntax.UnionKeepAlive, "N": "union·nil"}
 	syntax.Inspect(lit, func(n syntax.Node) bool {
 		if n != nil {
 			n.SetPos(pos)
@@ -207,13 +207,13 @@ func (check *Checker) variantSwitchStmt(inner stmtContext, s *syntax.SwitchStmt,
 }
 
 func init() {
-	Universe.Insert(NewFunc(nopos, nil, syntax.UnionAnchor, makeSig(Typ[UnsafePointer], &emptyInterface, Typ[Uintptr])))
+	Universe.Insert(NewFunc(nopos, nil, syntax.UnionAnchor, makeSig(Typ[UnsafePointer], &emptyInterface)))
 	Universe.Insert(NewFunc(nopos, nil, syntax.UnionKeepAlive, makeSig(nil, &emptyInterface)))
 }
 
 func unionBuiltin(name string) string {
 	switch name {
-	case "union·byte", "union·uintptr", "union·nil":
+	case "union·byte", "union·uintptr", "union·uint8", "union·uint16", "union·uint32", "union·uint64", "union·nil":
 		return strings.TrimPrefix(name, "union·")
 	}
 	return ""

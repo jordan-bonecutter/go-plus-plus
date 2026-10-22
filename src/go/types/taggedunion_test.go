@@ -73,11 +73,11 @@ func TestTaggedUnion(t *testing.T) {
 	if methods := types.NewMethodSet(pkg.Scope().Lookup("large").Type()); methods.Len() != 1 || methods.At(0).Obj().Name() != "HasValue" {
 		t.Fatalf("generic union method set: %v", methods)
 	}
-	if size := sizes.Sizeof(pkg.Scope().Lookup("Foo").Type()); size != 24 {
-		t.Fatalf("sizeof Foo = %d, want 24", size)
+	if size := sizes.Sizeof(pkg.Scope().Lookup("Foo").Type()); size != 32 {
+		t.Fatalf("sizeof Foo = %d, want 32", size)
 	}
-	if size := sizes.Sizeof(pkg.Scope().Lookup("large").Type()); size != 72 {
-		t.Fatalf("sizeof Result[[64]byte] = %d, want 72", size)
+	if size := sizes.Sizeof(pkg.Scope().Lookup("large").Type()); size != 80 {
+		t.Fatalf("sizeof Result[[64]byte] = %d, want 80", size)
 	}
 	missing := strings.Replace(source, "case Baz: return len(data)", "", 1)
 	file, err = parser.ParseFile(fset, "missing.go", missing, 0)

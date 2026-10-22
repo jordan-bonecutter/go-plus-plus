@@ -40,6 +40,22 @@ import (
 // so they can be used as map keys.
 // Two Type values are equal if they represent identical types.
 type Type interface {
+	// IsUnion reports whether this type is a tagged union. Tagged unions
+	// currently have Kind Struct; their representation fields are private.
+	IsUnion() bool
+
+	// NumVariant returns the number of declared variants.
+	// It panics if the type is not a tagged union.
+	NumVariant() int
+
+	// Variant returns the i'th declared variant.
+	// It panics if the type is not a tagged union or i is out of range.
+	Variant(i int) UnionVariant
+
+	// VariantByName returns the declared variant with the given name.
+	// It panics if the type is not a tagged union.
+	VariantByName(name string) (UnionVariant, bool)
+
 	// Methods applicable to all types.
 
 	// Align returns the alignment in bytes of a value of
@@ -2983,4 +2999,60 @@ func addTypeBits(bv *bitVector, offset uintptr, t *abi.Type) {
 			addTypeBits(bv, offset+f.Offset, f.Typ)
 		}
 	}
+}
+
+// UnionVariant describes one declared variant of a tagged union.
+type UnionVariant struct {
+	Name    string
+	PkgPath string // empty for exported variants
+	Type    Type
+	Index   int
+}
+
+// IsExported reports whether the variant is exported.
+func (v UnionVariant) IsExported() bool { return v.PkgPath == "" }
+
+func unionType(t *abi.Type) *abi.StructType {
+	if t.Kind() != abi.Struct {
+		return nil
+	}
+	st := (*abi.StructType)(unsafe.Pointer(t))
+	if !st.IsTaggedUnion() {
+		return nil
+	}
+	return (*abi.StructType)(unsafe.Pointer(st.Fields[0].Typ))
+}
+
+func (t *rtype) IsUnion() bool { return unionType(t.common()) != nil }
+
+func (t *rtype) NumVariant() int {
+	data := unionType(t.common())
+	if data == nil {
+		panic("reflect: NumVariant of non-union type")
+	}
+	return len(data.Fields) - 2 // alignment and raw storage follow variant markers
+}
+
+func (t *rtype) Variant(i int) UnionVariant {
+	if uint(i) >= uint(t.NumVariant()) {
+		panic("reflect: Variant index out of range")
+	}
+	data := unionType(t.common())
+	f := data.Fields[i]
+	name := f.Name.Name()[len("union·variant·"):]
+	pkg := ""
+	if !isExportedVariant(name) {
+		pkg = data.PkgPath.Name()
+	}
+	return UnionVariant{name, pkg, toType((*abi.ArrayType)(unsafe.Pointer(f.Typ)).Elem), i}
+}
+
+func (t *rtype) VariantByName(name string) (UnionVariant, bool) {
+	for i := 0; i < t.NumVariant(); i++ {
+		v := t.Variant(i)
+		if v.Name == name {
+			return v, true
+		}
+	}
+	return UnionVariant{}, false
 }

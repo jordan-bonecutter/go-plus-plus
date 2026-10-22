@@ -3848,17 +3848,14 @@ func contentEscapes(x unsafe.Pointer) {
 
 // unionPayload exposes the active inline value only within reflection.
 func (v Value) unionPayload() (Value, uintptr, bool) {
-	st := (*abi.StructType)(unsafe.Pointer(v.typ()))
-	if len(st.Fields) != 2 || st.Fields[0].Name.Name() != "union·data" {
+	data := unionType(v.typ())
+	if data == nil {
 		return Value{}, 0, false
 	}
+	st := (*abi.StructType)(unsafe.Pointer(v.typ()))
 	// Unions are always indirect: their anchors do not determine equality.
 	p := v.ptr
-	index := uintptr(0)
-	if tag := *(*unsafe.Pointer)(add(p, st.Fields[1].Offset, "union tag")); tag != nil {
-		index = *(*uintptr)(tag)
-	}
-	data := (*abi.StructType)(unsafe.Pointer(st.Fields[0].Typ))
+	index := uintptr(abi.UnionIndex(st, p))
 	t := (*abi.ArrayType)(unsafe.Pointer(data.Fields[index].Typ)).Elem
 	return Value{t, p, flag(t.Kind()) | flagIndir | v.flag&flagRO}, index, true
 }
@@ -3867,7 +3864,8 @@ func (v Value) unionPayload() (Value, uintptr, bool) {
 // For other values, including an invalid Value, it returns an empty name and
 // an invalid Value. The payload is not settable and retains v's restrictions
 // on accessing unexported fields. Unexported variants also return a payload
-// that cannot be accessed through Interface.
+// that cannot be accessed through Interface. The returned payload is a copy
+// and is not addressable; subsequent replacement of v does not change it.
 func (v Value) Variant() (string, Value) {
 	if v.Kind() != Struct {
 		return "", Value{}
@@ -3885,5 +3883,48 @@ func (v Value) Variant() (string, Value) {
 		}
 		break
 	}
+	// Give the payload its own precisely scanned allocation. Union storage
+	// itself is unscanned and can be overwritten after this call returns.
+	p := unsafe_New(payload.typ())
+	typedmemmove(payload.typ(), p, payload.ptr)
+	payload.ptr = p
 	return name, payload
 }
+
+func isExportedVariant(name string) bool {
+	for _, r := range name {
+		return unicode.IsUpper(r)
+	}
+	return false
+}
+
+// SetVariant replaces v with the named variant carrying x. It panics if v
+// is not a settable tagged union, name is unknown or unexported, or x is
+// not assignable to the variant's payload type. The payload is copied;
+// subsequent changes to x do not change v.
+func (v Value) SetVariant(name string, x Value) {
+	v.mustBeAssignable()
+	variant, ok := v.Type().VariantByName(name)
+	if !ok {
+		panic("reflect: unknown union variant " + name)
+	}
+	if !variant.IsExported() {
+		panic("reflect: SetVariant of unexported variant")
+	}
+	// Set checks assignability and visibility before changing the destination.
+	payload := New(variant.Type).Elem()
+	payload.Set(x)
+	anchor := unionAnchor(payload.Addr().Interface())
+	result := New(v.Type()).Elem()
+	memmove(result.ptr, payload.ptr, payload.typ().Size())
+	st := (*abi.StructType)(unsafe.Pointer(v.typ()))
+	*(*unsafe.Pointer)(add(result.ptr, st.Fields[1].Offset, "union anchor")) = anchor
+	tag := result.Field(2)
+	tag.flag &^= flagRO
+	tag.SetUint(uint64(variant.Index))
+	v.Set(result)
+	runtime.KeepAlive(payload)
+}
+
+// implemented in runtime; payload is a pointer to a precisely typed copy.
+func unionAnchor(payload any) unsafe.Pointer

@@ -52,18 +52,22 @@ methods with generic union receivers:
 Layout and collection
 
 Payloads overlap inline. After type arguments are substituted, the value's
-size is one pointer-sized tag plus its largest payload, with alignment padding.
-The tag currently follows payload storage. unsafe.Sizeof and reflect.Type.Size
+size includes its largest payload, a pointer-sized GC anchor, and an inline
+variant tag, with alignment padding. The tag uses uint8 for up to 256 variants,
+uint16 for up to 65,536, uint32 for up to 2^32, and uint64 beyond that.
+The anchor and tag follow payload storage. Variant dispatch reads the inline
+tag without dereferencing the anchor. unsafe.Sizeof and reflect.Type.Size
 agree on this layout. A union is comparable when every payload type is
 comparable. Equality compares the variant and its active payload; comparable
 unions can be map keys. The zero value equals the first variant with a zero
 payload. Interface payloads retain ordinary Go dynamic comparison rules.
 
-The tag points to immutable GC metadata containing the variant index and the
-payload's pointer roots. This keeps raw inline payload bytes safe during garbage
-collection, stack growth, copies, and interface conversion without teaching the
-collector a conditional pointer layout. Constructing a union can allocate this
-metadata and escape the payload's pointer contents. Inline size is therefore
+The anchor points to immutable GC metadata containing only the payload's
+pointer roots. Pointer-free payloads use a nil anchor. This keeps raw inline
+payload bytes safe during garbage collection, stack growth, copies, and
+interface conversion without teaching the collector a conditional pointer
+layout. Constructing a pointer-bearing union can allocate this metadata and
+escape the payload's pointer contents. Inline size is therefore
 not a promise of allocation-free construction or total heap usage.
 
 The compiler, go/parser, go/printer, go/format, gofmt, and go/types support the
@@ -74,7 +78,7 @@ private layout metadata rather than introducing a new export-data version.
 Build and focused validation
 
     cd src && bash make.bash
-    ../bin/go test cmd/internal/testdir -run '^Test/(union.go|union_errors.go|union_import.go|union_more.go|union_properties.go|union_format.go|union_syntax.go)$'
+    ../bin/go test cmd/internal/testdir -run '^Test/(union.go|union_errors.go|union_import.go|union_more.go|union_properties.go|union_format.go|union_syntax.go|union_reflect.go)$'
     ../bin/go test go/parser go/printer go/types cmd/compile/internal/syntax cmd/compile/internal/types2
 
 The added tests cover dispatch and binding, exhaustiveness diagnostics, layout,
@@ -89,9 +93,20 @@ Formatting and editor support
 
 Formatting includes the active variant and payload, including inside containers.
 User-defined Formatter, Stringer, and GoStringer methods take precedence as usual.
-reflect.Value.Variant returns the active variant name and a non-settable payload;
+reflect.Value.Variant returns the active variant name and a non-settable,
+non-addressable copy of the payload;
 unexported fields and variants retain their Interface restrictions. Rebuild
 existing executables with bin/go to pick up the formatting change.
+
+reflect.Type.IsUnion identifies tagged unions (whose Kind remains Struct).
+NumVariant, Variant(i), and VariantByName expose declared variant names, payload
+types, indices, and export visibility. reflect.New(t).Elem().SetVariant(name, x)
+constructs or replaces a union using an assignable payload. SetVariant requires
+a settable destination and an exported variant and preserves the destination
+if validation fails. Extracted payload copies retain their own GC references
+and survive replacement of the original union. Ordinary reflection operations
+including Set, SetZero, Call, container access, comparison, and DeepEqual use
+the same representation and semantics as compiled union operations.
 
 Build the matching editor server from the repository root:
 

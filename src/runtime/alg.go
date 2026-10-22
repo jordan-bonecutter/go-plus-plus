@@ -253,7 +253,7 @@ func typehash(t *_type, p unsafe.Pointer, h uintptr) uintptr {
 		return h
 	case abi.Struct:
 		s := (*structtype)(unsafe.Pointer(t))
-		if len(s.Fields) == 2 && s.Fields[0].Name.Name() == "union·data" {
+		if s.IsTaggedUnion() {
 			return unionhash(t, p, h)
 		}
 		for _, f := range s.Fields {

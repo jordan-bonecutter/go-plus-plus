@@ -4,6 +4,11 @@
 
 package syntax
 
+import (
+	"internal/abi"
+	"strconv"
+)
+
 // The lowered representation is private, including to reflection. Zero-length
 // variant fields preserve payload types and alignment in ordinary export data.
 const UnionTagField = "union·tag"
@@ -82,10 +87,10 @@ func lowerUnion(d *TypeDecl) {
 	data.FieldList = append(data.FieldList, unionField(pos, "_", unionZeroArray(pos, NewName(pos, "union·uintptr"))), unionField(pos, "union·raw", unionZeroArray(pos, NewName(pos, "union·byte"))))
 	header := new(StructType)
 	header.pos = pos
-	header.FieldList = []*Field{unionField(pos, "Index", NewName(pos, "union·uintptr"))}
+	tag := NewName(pos, "union·uint"+strconv.Itoa(int(8*abi.UnionTagSize(uint64(len(st.FieldList)-1)))))
 	ptr := &Operation{Op: Mul, X: header}
 	ptr.pos = pos
-	st.FieldList = []*Field{unionField(pos, UnionDataField, data), unionField(pos, UnionTagField, ptr)}
+	st.FieldList = []*Field{unionField(pos, UnionDataField, data), unionField(pos, UnionAnchor, ptr), unionField(pos, UnionTagField, tag)}
 }
 
 // variant is contextual only in a switch header. Ordinary assertions against a

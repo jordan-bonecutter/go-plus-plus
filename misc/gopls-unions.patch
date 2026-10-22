@@ -30,7 +30,7 @@
 +// private export metadata. Constructors are functions, not receiver methods.
 +func (c *completer) unionConstructors(typ types.Type) {
 +	st, ok := typ.Underlying().(*types.Struct)
-+	if !ok || st.NumFields() != 2 || st.Field(0).Name() != "union·data" || st.Field(1).Name() != "union·tag" {
++	if !ok || st.NumFields() != 3 || st.Field(0).Name() != "union·data" || st.Field(1).Name() != "union·anchor" || st.Field(2).Name() != "union·tag" {
 +		return
 +	}
 +	data, ok := st.Field(0).Type().Underlying().(*types.Struct)
