@@ -685,10 +685,7 @@ func Pipe(p []Handle) (err error) {
 		return EINVAL
 	}
 	var r, w Handle
-	e := CreatePipe(&r, &w, makeInheritSa(), 0)
-	if e != nil {
-		return e
-	}
+	CreatePipe(&r, &w, makeInheritSa(), 0)!
 	p[0] = r
 	p[1] = w
 	return nil
@@ -698,16 +695,10 @@ func Utimes(path string, tv []Timeval) (err error) {
 	if len(tv) != 2 {
 		return EINVAL
 	}
-	pathp, e := UTF16PtrFromString(path)
-	if e != nil {
-		return e
-	}
-	h, e := CreateFile(pathp,
+	pathp := UTF16PtrFromString(path)!
+	h := CreateFile(pathp,
 		FILE_WRITE_ATTRIBUTES, FILE_SHARE_WRITE, nil,
-		OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0)
-	if e != nil {
-		return e
-	}
+		OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0)!
 	defer Close(h)
 	a := Filetime{}
 	w := Filetime{}
@@ -727,16 +718,10 @@ func UtimesNano(path string, ts []Timespec) (err error) {
 	if len(ts) != 2 {
 		return EINVAL
 	}
-	pathp, e := UTF16PtrFromString(path)
-	if e != nil {
-		return e
-	}
-	h, e := CreateFile(pathp,
+	pathp := UTF16PtrFromString(path)!
+	h := CreateFile(pathp,
 		FILE_WRITE_ATTRIBUTES, FILE_SHARE_WRITE, nil,
-		OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0)
-	if e != nil {
-		return e
-	}
+		OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0)!
 	defer Close(h)
 	a := Filetime{}
 	w := Filetime{}
@@ -754,14 +739,8 @@ func Fsync(fd Handle) (err error) {
 }
 
 func Chmod(path string, mode uint32) (err error) {
-	p, e := UTF16PtrFromString(path)
-	if e != nil {
-		return e
-	}
-	attrs, e := GetFileAttributes(p)
-	if e != nil {
-		return e
-	}
+	p := UTF16PtrFromString(path)!
+	attrs := GetFileAttributes(p)!
 	if mode&S_IWRITE != 0 {
 		attrs &^= FILE_ATTRIBUTE_READONLY
 	} else {

@@ -42,8 +42,7 @@ func unixSocket(ctx context.Context, net string, laddr, raddr sockaddr, mode str
 		return nil, errors.New("unknown mode: " + mode)
 	}
 
-	fd := socket(ctx, net, syscall.AF_UNIX, sotype, 0, false, laddr, raddr, ctxCtrlFn)!
-	return fd, nil
+	return socket(ctx, net, syscall.AF_UNIX, sotype, 0, false, laddr, raddr, ctxCtrlFn)!, nil
 }
 
 func sockaddrToUnix(sa syscall.Sockaddr) Addr {
@@ -188,8 +187,7 @@ func (ln *UnixListener) close() error {
 }
 
 func (ln *UnixListener) file() (*os.File, error) {
-	f := ln.fd.dup()!
-	return f, nil
+	return ln.fd.dup()!, nil
 }
 
 // SetUnlinkOnClose sets whether the underlying socket file should be removed

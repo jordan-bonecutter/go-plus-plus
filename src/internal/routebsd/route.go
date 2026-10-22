@@ -48,6 +48,5 @@ func fetchRIB(typ, arg int) ([]byte, error) {
 // The argument is an interface index or 0 for all.
 func FetchRIBMessages(typ, arg int) ([]Message, error) {
 	b := fetchRIB(typ, arg)!
-	ms := parseRIB(b)!
-	return ms, nil
+	return parseRIB(b)!, nil
 }

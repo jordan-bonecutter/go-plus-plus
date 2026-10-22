@@ -84,9 +84,7 @@ func (m *mmapper) Munmap(data []byte) (err error) {
 	}
 
 	// Unmap the memory and update m.
-	if errno := m.munmap(uintptr(unsafe.Pointer(&b[0])), uintptr(len(b))); errno != nil {
-		return errno
-	}
+	m.munmap(uintptr(unsafe.Pointer(&b[0])), uintptr(len(b)))!
 	delete(m.active, p)
 	return nil
 }

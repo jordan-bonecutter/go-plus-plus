@@ -1140,9 +1140,7 @@ func (wc *workerClient) ping(ctx context.Context) error {
 func (wc *workerClient) callLocked(ctx context.Context, c call, resp any) (err error) {
 	enc := json.NewEncoder(wc.fuzzIn)
 	dec := json.NewDecoder(&contextReader{ctx: ctx, r: wc.fuzzOut})
-	if err := enc.Encode(c); err != nil {
-		return err
-	}
+	enc.Encode(c)!
 	return dec.Decode(resp)
 }
 

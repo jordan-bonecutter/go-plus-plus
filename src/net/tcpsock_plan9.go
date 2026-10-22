@@ -64,8 +64,7 @@ func (ln *TCPListener) close() error {
 }
 
 func (ln *TCPListener) file() (*os.File, error) {
-	f := ln.dup()!
-	return f, nil
+	return ln.dup()!, nil
 }
 
 func (sl *sysListener) listenTCP(ctx context.Context, laddr *TCPAddr) (*TCPListener, error) {

@@ -904,9 +904,7 @@ func parse(s string, flags Flags) (_ *Regexp, err error) {
 
 	if flags&Literal != 0 {
 		// Trivial parser for literal string.
-		if err := checkUTF8(s); err != nil {
-			return nil, err
-		}
+		checkUTF8(s)!
 		return literalRegexp(s, flags), nil
 	}
 
@@ -1032,10 +1030,7 @@ func parse(s string, flags Flags) (_ *Regexp, err error) {
 					var lit string
 					lit, t, _ = strings.Cut(t[2:], `\E`)
 					for lit != "" {
-						c, rest, err := nextRune(lit)
-						if err != nil {
-							return nil, err
-						}
+						c, rest := nextRune(lit)!
 						p.literal(c)
 						lit = rest
 					}
@@ -1052,10 +1047,7 @@ func parse(s string, flags Flags) (_ *Regexp, err error) {
 
 			// Look for Unicode character group like \p{Han}
 			if len(t) >= 2 && (t[1] == 'p' || t[1] == 'P') {
-				r, rest, err := p.parseUnicodeClass(t, re.Rune0[:0])
-				if err != nil {
-					return nil, err
-				}
+				r, rest := p.parseUnicodeClass(t, re.Rune0[:0])!
 				if r != nil {
 					re.Rune = r
 					t = rest

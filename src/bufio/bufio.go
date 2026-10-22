@@ -808,9 +808,7 @@ func (b *Writer) ReadFrom(r io.Reader) (n int64, err error) {
 	var m int
 	for {
 		if b.Available() == 0 {
-			if err1 := b.Flush(); err1 != nil {
-				return n, err1
-			}
+			b.Flush()!
 		}
 		if readerFromOK && b.Buffered() == 0 {
 			nn, err := readerFrom.ReadFrom(r)

@@ -381,9 +381,7 @@ func (t *transferWriter) writeBody(w io.Writer) (err error) {
 	}
 	if t.BodyCloser != nil {
 		closed = true
-		if err := t.BodyCloser.Close(); err != nil {
-			return err
-		}
+		t.BodyCloser.Close()!
 	}
 
 	if !t.ResponseToHEAD && t.ContentLength != -1 && t.ContentLength != ncopy {
@@ -394,9 +392,7 @@ func (t *transferWriter) writeBody(w io.Writer) (err error) {
 	if !t.ResponseToHEAD && chunked(t.TransferEncoding) {
 		// Write Trailer header
 		if t.Trailer != nil {
-			if err := t.Trailer.Write(w); err != nil {
-				return err
-			}
+			t.Trailer.Write(w)!
 		}
 		// Last chunk, empty trailer
 		_, err = io.WriteString(w, "\r\n")
@@ -522,9 +518,7 @@ func readTransfer(msg any, r *bufio.Reader, maxTrailerHeaders int64) (err error)
 	}
 
 	// Content-Length and Transfer-Encoding.
-	if err := t.determineBodyLength(isResponse); err != nil {
-		return err
-	}
+	t.determineBodyLength(isResponse)!
 
 	// Trailer
 	t.Trailer, err = fixTrailer(t.Header, t.Chunked, maxTrailerHeaders)

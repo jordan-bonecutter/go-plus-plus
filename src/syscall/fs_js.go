@@ -303,9 +303,7 @@ func Getcwd(buf []byte) (n int, err error) {
 }
 
 func Chdir(path string) (err error) {
-	if err := checkPath(path); err != nil {
-		return err
-	}
+	checkPath(path)!
 	defer recoverErr(&err)
 	jsProcess.Call("chdir", path)
 	return
@@ -348,10 +346,7 @@ func Fsync(fd int) error {
 }
 
 func Read(fd int, b []byte) (int, error) {
-	f, err := fdToFile(fd)
-	if err != nil {
-		return 0, err
-	}
+	f := fdToFile(fd)!
 
 	if f.seeked {
 		n, err := Pread(fd, b, f.pos)
@@ -360,24 +355,18 @@ func Read(fd int, b []byte) (int, error) {
 	}
 
 	buf := uint8Array.New(len(b))
-	n, err := fsCall("read", fd, buf, 0, len(b), nil)
-	if err != nil {
-		return 0, err
-	}
+	n := fsCall("read", fd, buf, 0, len(b), nil)!
 	n2 := n.Int()
 	if n2 > 0 {
 		js.CopyBytesToGo(b[:n2], buf)
 	}
 
 	f.pos += int64(n2)
-	return n2, err
+	return n2, nil
 }
 
 func Write(fd int, b []byte) (int, error) {
-	f, err := fdToFile(fd)
-	if err != nil {
-		return 0, err
-	}
+	f := fdToFile(fd)!
 
 	if f.seeked {
 		n, err := Pwrite(fd, b, f.pos)
@@ -395,13 +384,10 @@ func Write(fd int, b []byte) (int, error) {
 
 	buf := uint8Array.New(len(b))
 	js.CopyBytesToJS(buf, b)
-	n, err := fsCall("write", fd, buf, 0, len(b), nil)
-	if err != nil {
-		return 0, err
-	}
+	n := fsCall("write", fd, buf, 0, len(b), nil)!
 	n2 := n.Int()
 	f.pos += int64(n2)
-	return n2, err
+	return n2, nil
 }
 
 func Pread(fd int, b []byte, offset int64) (int, error) {

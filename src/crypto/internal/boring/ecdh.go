@@ -156,8 +156,7 @@ func ECDH(priv *PrivateKeyECDH, pub *PublicKeyECDH) ([]byte, error) {
 	if C._goboringcrypto_EC_POINT_mul(group, pt, nil, pub.key, privBig, nil) == 0 {
 		return nil, fail("EC_POINT_mul")
 	}
-	out := xCoordBytesECDH(priv.curve, group, pt)!
-	return out, nil
+	return xCoordBytesECDH(priv.curve, group, pt)!, nil
 }
 
 func xCoordBytesECDH(curve string, group *C.GO_EC_GROUP, pt *C.GO_EC_POINT) ([]byte, error) {

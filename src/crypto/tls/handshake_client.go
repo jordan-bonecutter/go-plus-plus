@@ -269,16 +269,12 @@ func (c *Conn) clientHandshake(ctx context.Context) (err error) {
 		// work around _possibly_ broken middleboxes, but there is little-to-no
 		// evidence that this is actually a problem.
 
-		if err := computeAndUpdateOuterECHExtension(hello, ech.innerHello, ech, true); err != nil {
-			return err
-		}
+		computeAndUpdateOuterECHExtension(hello, ech.innerHello, ech, true)!
 	}
 
 	c.serverName = hello.serverName
 
-	if _, err := c.writeHandshakeRecord(hello, nil); err != nil {
-		return err
-	}
+	c.writeHandshakeRecord(hello, nil)!
 
 	if hello.earlyData {
 		suite := cipherSuiteTLS13ByID(session.cipherSuite)
@@ -287,9 +283,7 @@ func (c *Conn) clientHandshake(ctx context.Context) (err error) {
 		if ech != nil {
 			transcriptHello = ech.innerHello
 		}
-		if err := transcriptMsg(transcriptHello, transcript); err != nil {
-			return err
-		}
+		transcriptMsg(transcriptHello, transcript)!
 		earlyTrafficSecret := earlySecret.ClientEarlyTrafficSecret(transcript)
 		c.quicSetWriteSecret(QUICEncryptionLevelEarly, suite.id, earlyTrafficSecret)
 	}
@@ -306,9 +300,7 @@ func (c *Conn) clientHandshake(ctx context.Context) (err error) {
 		return unexpectedMessageError(serverHello, msg)
 	}
 
-	if err := c.pickTLSVersion(serverHello); err != nil {
-		return err
-	}
+	c.pickTLSVersion(serverHello)!
 
 	// If we are negotiating a protocol version that's lower than what we
 	// support, check for the server downgrade canaries.

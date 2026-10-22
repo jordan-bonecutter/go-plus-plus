@@ -128,8 +128,7 @@ func (ke *mlkem1024KeyExchange) serverSharedSecret(_ io.Reader, clientKeyShare [
 }
 
 func (ke *mlkem1024KeyExchange) clientSharedSecret(priv *keySharePrivateKeys, serverKeyShare []byte) ([]byte, error) {
-	sharedKey := priv.mlkem.Decapsulate(serverKeyShare)!
-	return sharedKey, nil
+	return priv.mlkem.Decapsulate(serverKeyShare)!, nil
 }
 
 type ecdhKeyExchange struct {
@@ -151,8 +150,7 @@ func (ke *ecdhKeyExchange) serverSharedSecret(rand io.Reader, clientKeyShare []b
 
 func (ke *ecdhKeyExchange) clientSharedSecret(priv *keySharePrivateKeys, serverKeyShare []byte) ([]byte, error) {
 	peerKey := ke.curve.NewPublicKey(serverKeyShare)!
-	sharedKey := priv.ecdhe.ECDH(peerKey)!
-	return sharedKey, nil
+	return priv.ecdhe.ECDH(peerKey)!, nil
 }
 
 type hybridKeyExchange struct {

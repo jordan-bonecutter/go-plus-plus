@@ -39,15 +39,11 @@ func (w *Writer) Write(p []byte) (n int, err error) {
 		}
 
 		if i > n {
-			if err := w.write(p[n:i]); err != nil {
-				return n, err
-			}
+			w.write(p[n:i])!
 			n = i
 		}
 
-		if err := w.encode(b); err != nil {
-			return n, err
-		}
+		w.encode(b)!
 		n++
 	}
 
@@ -55,9 +51,7 @@ func (w *Writer) Write(p []byte) (n int, err error) {
 		return n, nil
 	}
 
-	if err := w.write(p[n:]); err != nil {
-		return n, err
-	}
+	w.write(p[n:])!
 
 	return len(p), nil
 }

@@ -634,9 +634,7 @@ func findDirectory64End(r io.ReaderAt, directoryEndOffset int64) (int64, error) 
 // directory end with the zip64 directory end values.
 func readDirectory64End(r io.ReaderAt, offset int64, d *directoryEnd) (err error) {
 	buf := make([]byte, directory64EndLen)
-	if _, err := r.ReadAt(buf, offset); err != nil {
-		return err
-	}
+	r.ReadAt(buf, offset)!
 
 	b := readBuf(buf)
 	if sig := b.uint32(); sig != directory64EndSignature {

@@ -368,8 +368,7 @@ func (ip IP) AppendText(b []byte) ([]byte, error) {
 // When len(ip) is zero, it returns an empty slice.
 func (ip IP) MarshalText() ([]byte, error) {
 	// 24 is satisfied with all IPv4 addresses and short IPv6 addresses
-	b := ip.AppendText(make([]byte, 0, 24))!
-	return b, nil
+	return ip.AppendText(make([]byte, 0, 24))!, nil
 }
 
 // UnmarshalText implements the [encoding.TextUnmarshaler] interface.

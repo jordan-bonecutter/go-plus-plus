@@ -83,9 +83,7 @@ type CoordinateFuzzingOpts struct {
 // If a crash occurs, the function will return an error containing information
 // about the crash, which can be reported to the user.
 func CoordinateFuzzing(ctx context.Context, opts CoordinateFuzzingOpts) (err error) {
-	if err := ctx.Err(); err != nil {
-		return err
-	}
+	ctx.Err()!
 	if opts.Log == nil {
 		opts.Log = io.Discard
 	}
@@ -1040,9 +1038,7 @@ func CheckCorpus(vals []any, types []reflect.Type) error {
 func writeToCorpus(entry *CorpusEntry, dir string) (err error) {
 	sum := fmt.Sprintf("%x", sha256.Sum256(entry.Data))[:16]
 	entry.Path = filepath.Join(dir, sum)
-	if err := os.MkdirAll(dir, 0777); err != nil {
-		return err
-	}
+	os.MkdirAll(dir, 0777)!
 	if err := os.WriteFile(entry.Path, entry.Data, 0666); err != nil {
 		os.Remove(entry.Path) // remove partially written file
 		return err

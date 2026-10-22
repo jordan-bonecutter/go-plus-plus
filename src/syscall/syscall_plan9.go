@@ -339,10 +339,7 @@ func Unmount(name, old string) (err error) {
 	if name == "" {
 		r0, _, e = Syscall(SYS_UNMOUNT, _zero, oldptr, 0)
 	} else {
-		namep, err := BytePtrFromString(name)
-		if err != nil {
-			return err
-		}
+		namep := BytePtrFromString(name)!
 		r0, _, e = Syscall(SYS_UNMOUNT, uintptr(unsafe.Pointer(namep)), oldptr, 0)
 	}
 

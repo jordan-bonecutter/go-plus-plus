@@ -328,6 +328,5 @@ func ParseRoutingMessage(b []byte) (msgs []RoutingMessage, err error) {
 //
 // Deprecated: Use golang.org/x/net/route instead.
 func ParseRoutingSockaddr(msg RoutingMessage) ([]Sockaddr, error) {
-	sas := msg.sockaddr()!
-	return sas, nil
+	return msg.sockaddr()!, nil
 }

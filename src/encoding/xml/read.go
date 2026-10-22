@@ -638,40 +638,28 @@ func copyValue(dst reflect.Value, src []byte) (err error) {
 			dst.SetInt(0)
 			return nil
 		}
-		itmp, err := strconv.ParseInt(strings.TrimSpace(string(src)), 10, dst.Type().Bits())
-		if err != nil {
-			return err
-		}
+		itmp := strconv.ParseInt(strings.TrimSpace(string(src)), 10, dst.Type().Bits())!
 		dst.SetInt(itmp)
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		if len(src) == 0 {
 			dst.SetUint(0)
 			return nil
 		}
-		utmp, err := strconv.ParseUint(strings.TrimSpace(string(src)), 10, dst.Type().Bits())
-		if err != nil {
-			return err
-		}
+		utmp := strconv.ParseUint(strings.TrimSpace(string(src)), 10, dst.Type().Bits())!
 		dst.SetUint(utmp)
 	case reflect.Float32, reflect.Float64:
 		if len(src) == 0 {
 			dst.SetFloat(0)
 			return nil
 		}
-		ftmp, err := strconv.ParseFloat(strings.TrimSpace(string(src)), dst.Type().Bits())
-		if err != nil {
-			return err
-		}
+		ftmp := strconv.ParseFloat(strings.TrimSpace(string(src)), dst.Type().Bits())!
 		dst.SetFloat(ftmp)
 	case reflect.Bool:
 		if len(src) == 0 {
 			dst.SetBool(false)
 			return nil
 		}
-		value, err := strconv.ParseBool(strings.TrimSpace(string(src)))
-		if err != nil {
-			return err
-		}
+		value := strconv.ParseBool(strings.TrimSpace(string(src)))!
 		dst.SetBool(value)
 	case reflect.String:
 		dst.SetString(string(src))

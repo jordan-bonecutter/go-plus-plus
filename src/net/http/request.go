@@ -762,9 +762,7 @@ func (r *Request) write(w io.Writer, usingProxy bool, extraHeaders Header, waitF
 	}
 
 	if bw, ok := w.(*bufio.Writer); ok && tw.FlushHeaders {
-		if err := bw.Flush(); err != nil {
-			return err
-		}
+		bw.Flush()!
 	}
 
 	// Write body and trailer

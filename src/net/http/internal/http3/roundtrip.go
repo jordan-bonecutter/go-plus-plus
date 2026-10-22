@@ -185,35 +185,23 @@ func (cc *clientConn) RoundTrip(req *http.Request) (_ *http.Response, err error)
 	case rt.reqBody == http.NoBody && len(req.Trailer) == 0:
 		st.CloseWrite()
 	case is100ContinueReq:
-		if err := st.Flush(); err != nil {
-			return nil, err
-		}
+		st.Flush()!
 		hasUnsent100Body = true
 		rt.maybeCallWait100Continue()
 	default:
-		if err := st.Flush(); err != nil {
-			return nil, err
-		}
+		st.Flush()!
 		wg.Go(func() { cc.writeBodyAndTrailer(rt, req) })
 	}
 
 	// Read the response headers.
 	for {
-		ftype, err := st.readFrameHeader()
-		if err != nil {
-			return nil, err
-		}
+		ftype := st.readFrameHeader()!
 		switch ftype {
 		case frameTypeHeaders:
-			statusCode, h, err := rt.handleHeaders()
-			if err != nil {
-				return nil, err
-			}
+			statusCode, h := rt.handleHeaders()!
 
 			if isInfoStatus(statusCode) {
-				if err := rt.maybeCallGot1xxResponse(statusCode, h); err != nil {
-					return nil, err
-				}
+				rt.maybeCallGot1xxResponse(statusCode, h)!
 				if statusCode == 100 {
 					rt.maybeCallGot100Continue()
 					if hasUnsent100Body {
@@ -226,10 +214,7 @@ func (cc *clientConn) RoundTrip(req *http.Request) (_ *http.Response, err error)
 
 			// We have the response headers.
 			// Set up the response and return it to the caller.
-			contentLength, err := parseResponseContentLength(req.Method, statusCode, h)
-			if err != nil {
-				return nil, err
-			}
+			contentLength := parseResponseContentLength(req.Method, statusCode, h)!
 
 			trailer := make(http.Header)
 			extractTrailerFromHeader(h, trailer)
@@ -264,13 +249,9 @@ func (cc *clientConn) RoundTrip(req *http.Request) (_ *http.Response, err error)
 			}
 			return resp, nil
 		case frameTypePushPromise:
-			if err := cc.handlePushPromise(st); err != nil {
-				return nil, err
-			}
+			cc.handlePushPromise(st)!
 		default:
-			if err := st.discardUnknownFrame(ftype); err != nil {
-				return nil, err
-			}
+			st.discardUnknownFrame(ftype)!
 		}
 	}
 }

@@ -165,8 +165,7 @@ func (ln *TCPListener) close() error {
 }
 
 func (ln *TCPListener) file() (*os.File, error) {
-	f := ln.fd.dup()!
-	return f, nil
+	return ln.fd.dup()!, nil
 }
 
 func (sl *sysListener) listenTCP(ctx context.Context, laddr *TCPAddr) (*TCPListener, error) {

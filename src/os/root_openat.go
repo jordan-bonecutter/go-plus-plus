@@ -335,9 +335,7 @@ const (
 // If f or openDirFunc return a *PathError, doInRoot will set PathError.Path to the
 // full path which caused the error.
 func doInRoot[T any](r *Root, name string, flags uint, openDirFunc func(parent sysfdType, name string) (sysfdType, error), f func(parent sysfdType, name string, endsInSlash bool) (T, error)) (ret T, err error) {
-	if err := r.root.incref(); err != nil {
-		return ret, err
-	}
+	r.root.incref()!
 	defer r.root.decref()
 
 	parts, endsInSlash, err := splitPathInRoot(name, nil, nil)
@@ -461,10 +459,7 @@ Loop:
 				return ret, syscall.ELOOP
 			}
 			lastPart := i == len(parts)-1
-			newparts, newEndsInSlash, err := splitPathInRoot(string(e), parts[:i], parts[i+1:])
-			if err != nil {
-				return ret, err
-			}
+			newparts, newEndsInSlash := splitPathInRoot(string(e), parts[:i], parts[i+1:])!
 			if lastPart && newEndsInSlash {
 				// If a link target in the final path component ends in a slash,
 				// then the path now ends in a slash.

@@ -368,6 +368,5 @@ func cgoResSearch(hostname string, rtype, class int) ([]dnsmessage.Resource, err
 	var p dnsmessage.Parser
 	p.Start(unsafe.Slice((*byte)(unsafe.Pointer(buf)), size))!
 	p.SkipAllQuestions()
-	resources := p.AllAnswers()!
-	return resources, nil
+	return p.AllAnswers()!, nil
 }

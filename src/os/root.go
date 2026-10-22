@@ -358,8 +358,7 @@ func (rfs *rootFS) Open(name string) (fs.File, error) {
 	if !isValidRootFSPath(name) {
 		return nil, &PathError{Op: "open", Path: name, Err: ErrInvalid}
 	}
-	f := r.Open(name)!
-	return f, nil
+	return r.Open(name)!, nil
 }
 
 func (rfs *rootFS) ReadDir(name string) ([]DirEntry, error) {

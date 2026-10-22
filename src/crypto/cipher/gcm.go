@@ -69,8 +69,7 @@ func newGCM(cipher Block, nonceSize, tagSize int) (AEAD, error) {
 	}
 	// We don't return gcm.New directly, because it would always return a non-nil
 	// AEAD interface value with type *gcm.GCM even if the *gcm.GCM is nil.
-	g := gcm.New(c, nonceSize, tagSize)!
-	return g, nil
+	return gcm.New(c, nonceSize, tagSize)!, nil
 }
 
 // NewGCMWithRandomNonce returns the given cipher wrapped in Galois Counter

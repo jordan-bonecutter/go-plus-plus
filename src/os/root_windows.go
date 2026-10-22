@@ -392,8 +392,7 @@ func readlinkat(dirfd syscall.Handle, name string) (string, error) {
 func lstatat(parent syscall.Handle, name string) (FileInfo, error) {
 	fd := openat(parent, name, windows.O_FILE_FLAG_OPEN_REPARSE_POINT, 0)!
 	defer syscall.CloseHandle(fd)
-	fi := statHandle(name, fd)!
-	return fi, nil
+	return statHandle(name, fd)!, nil
 }
 
 // isLink reports whether fi is a symlink or other surrogate reparse point (such as a junction).

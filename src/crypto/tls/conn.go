@@ -1660,9 +1660,7 @@ func (c *Conn) handshakeContext(ctx context.Context) (ret error) {
 			// Provide the 1-RTT read secret now that the handshake is complete.
 			// The QUIC layer MUST NOT decrypt 1-RTT packets prior to completing
 			// the handshake (RFC 9001, Section 5.7).
-			if err := c.quicSetReadSecret(QUICEncryptionLevelApplication, c.cipherSuite, c.in.trafficSecret); err != nil {
-				return err
-			}
+			c.quicSetReadSecret(QUICEncryptionLevelApplication, c.cipherSuite, c.in.trafficSecret)!
 		} else {
 			c.out.Lock()
 			a, ok := errors.AsType[alert](c.out.err)

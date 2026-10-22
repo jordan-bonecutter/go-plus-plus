@@ -76,9 +76,7 @@ func (idx *routingIndex) possiblyConflictingPatterns(pat *pattern, f func(*patte
 
 	// Our simple indexing scheme doesn't try to prune multi patterns; assume
 	// any of them can match the argument.
-	if err := apply(idx.multis); err != nil {
-		return err
-	}
+	apply(idx.multis)!
 	if pat.lastSegment().s == "/" {
 		// All paths that a dollar pattern matches end in a slash; no paths that
 		// an ordinary pattern matches do. So only other dollar or multi

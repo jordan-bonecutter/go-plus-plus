@@ -389,8 +389,7 @@ func openSymlink(path string) (syscall.Handle, error) {
 	// Use FILE_FLAG_OPEN_REPARSE_POINT, otherwise CreateFile will follow symlink.
 	// See https://docs.microsoft.com/en-us/windows/desktop/FileIO/symbolic-link-effects-on-file-systems-functions#createfile-and-createfiletransacted
 	attrs |= syscall.FILE_FLAG_OPEN_REPARSE_POINT
-	h := syscall.CreateFile(p, 0, 0, nil, syscall.OPEN_EXISTING, attrs, 0)!
-	return h, nil
+	return syscall.CreateFile(p, 0, 0, nil, syscall.OPEN_EXISTING, attrs, 0)!, nil
 }
 
 var winreadlinkvolume = godebug.New("winreadlinkvolume")

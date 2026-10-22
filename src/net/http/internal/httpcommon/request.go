@@ -65,9 +65,7 @@ func EncodeHeaders(ctx context.Context, param EncodeHeadersParam, headerf func(n
 	req := param.Request
 
 	// Check for invalid connection-level headers.
-	if err := checkConnHeaders(req.Header); err != nil {
-		return res, err
-	}
+	checkConnHeaders(req.Header)!
 
 	if req.URL == nil {
 		return res, errors.New("Request.URL is nil")

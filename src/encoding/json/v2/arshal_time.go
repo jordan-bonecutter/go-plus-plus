@@ -410,9 +410,7 @@ func (a *timeArshaler) unmarshal(b []byte) (err error) {
 	switch a.base {
 	case 0:
 		// Use time.Time.UnmarshalText to avoid possible string allocation.
-		if err := a.tt.UnmarshalText(b); err != nil {
-			return err
-		}
+		a.tt.UnmarshalText(b)!
 		// TODO(https://go.dev/issue/57912):
 		// RFC 3339 specifies the grammar for a valid timestamp.
 		// However, the parsing functionality in "time" is too loose and
