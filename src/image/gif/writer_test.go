@@ -29,10 +29,7 @@ func readImg(filename string) (image.Image, error) {
 }
 
 func readGIF(filename string) (*GIF, error) {
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
+	f := os.Open(filename)!
 	defer f.Close()
 	return DecodeAll(f)
 }

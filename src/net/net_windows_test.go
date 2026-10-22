@@ -65,17 +65,11 @@ func TestAcceptIgnoreSomeErrors(t *testing.T) {
 	}
 
 	send := func(addr string, data string) error {
-		c, err := Dial("tcp", addr)
-		if err != nil {
-			return err
-		}
+		c := Dial("tcp", addr)!
 		defer c.Close()
 
 		b := []byte(data)
-		n, err := c.Write(b)
-		if err != nil {
-			return err
-		}
+		n := c.Write(b)!
 		if n != len(b) {
 			return fmt.Errorf(`Only %d chars of string "%s" sent`, n, data)
 		}
@@ -188,11 +182,8 @@ func runCmd(args ...string) ([]byte, error) {
 		if len(out) != 0 {
 			return nil, fmt.Errorf("%s failed: %v: %q", args[0], err, string(removeUTF8BOM(out)))
 		}
-		var err2 error
-		out, err2 = os.ReadFile(f.Name())
-		if err2 != nil {
-			return nil, err2
-		}
+
+		out = os.ReadFile(f.Name())!
 		if len(out) != 0 {
 			return nil, fmt.Errorf("%s failed: %v: %q", args[0], err, string(removeUTF8BOM(out)))
 		}
@@ -226,10 +217,7 @@ func checkNetsh(t *testing.T) {
 }
 
 func netshInterfaceIPShowInterface(ipver string, ifaces map[string]bool) error {
-	out, err := runCmd("netsh", "interface", ipver, "show", "interface", "level=verbose")
-	if err != nil {
-		return err
-	}
+	out := runCmd("netsh", "interface", ipver, "show", "interface", "level=verbose")!
 	// interface information is listed like:
 	//
 	//Interface Local Area Connection Parameters

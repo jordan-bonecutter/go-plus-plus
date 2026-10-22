@@ -793,10 +793,7 @@ func TestIssue69912(t *testing.T) {
 	}
 
 	check := func(pkgname, src string, imports importMap) (*types.Package, error) {
-		f, err := parser.ParseFile(fset, "a.go", src, parser.SkipObjectResolution)
-		if err != nil {
-			return nil, err
-		}
+		f := parser.ParseFile(fset, "a.go", src, parser.SkipObjectResolution)!
 		config := &types.Config{
 			Importer: imports,
 		}
@@ -853,10 +850,7 @@ func TestGenMeth(t *testing.T) {
 	}
 
 	check := func(pkgname, src string, imports importMap) (*types.Package, error) {
-		f, err := parser.ParseFile(fset, "genmeth.go", src, parser.SkipObjectResolution)
-		if err != nil {
-			return nil, err
-		}
+		f := parser.ParseFile(fset, "genmeth.go", src, parser.SkipObjectResolution)!
 		config := &types.Config{
 			Importer: imports,
 		}

@@ -1551,10 +1551,7 @@ func TestTransportDoubleCloseOnWriteError(t *testing.T) {
 
 	tr := newTransport(t)
 	tr.DialTLS = func(network, addr string) (net.Conn, error) {
-		tc, err := tls.Dial(network, addr, tlsConfigInsecure)
-		if err != nil {
-			return nil, err
-		}
+		tc := tls.Dial(network, addr, tlsConfigInsecure)!
 		mu.Lock()
 		defer mu.Unlock()
 		conn = tc
@@ -1577,10 +1574,7 @@ func TestTransportDisableKeepAlives(t *testing.T) {
 	connClosed := make(chan struct{}) // closed on tls.Conn.Close
 	tr := newTransport(t)
 	tr.Dial = func(network, addr string) (net.Conn, error) {
-		tc, err := net.Dial(network, addr)
-		if err != nil {
-			return nil, err
-		}
+		tc := net.Dial(network, addr)!
 		return &noteCloseConn{Conn: tc, closefn: func() { close(connClosed) }}, nil
 	}
 	tr.DisableKeepAlives = true
@@ -1617,10 +1611,7 @@ func TestTransportDisableKeepAlives_Concurrency(t *testing.T) {
 	var conns sync.WaitGroup
 	tr := newTransport(t)
 	tr.Dial = func(network, addr string) (net.Conn, error) {
-		tc, err := net.Dial(network, addr)
-		if err != nil {
-			return nil, err
-		}
+		tc := net.Dial(network, addr)!
 		atomic.AddInt32(&dials, 1)
 		conns.Add(1)
 		return &noteCloseConn{Conn: tc, closefn: func() { conns.Done() }}, nil

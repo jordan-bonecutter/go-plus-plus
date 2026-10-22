@@ -158,10 +158,7 @@ var tests = []string{
 }
 
 func String(s string) (string, error) {
-	res, err := Source([]byte(s))
-	if err != nil {
-		return "", err
-	}
+	res := Source([]byte(s))!
 	return string(res), nil
 }
 

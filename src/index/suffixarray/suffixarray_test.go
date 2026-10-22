@@ -506,10 +506,7 @@ func makeText(name string) ([]byte, error) {
 	case "go":
 		err := filepath.WalkDir("../..", func(path string, info fs.DirEntry, err error) error {
 			if err == nil && strings.HasSuffix(path, ".go") && !info.IsDir() {
-				file, err := os.ReadFile(path)
-				if err != nil {
-					return err
-				}
+				file := os.ReadFile(path)!
 				data = append(data, file...)
 			}
 			return nil

@@ -31,12 +31,8 @@ func translateCPUProfile(data []uint64, count int) (*profile.Profile, error) {
 	var buf bytes.Buffer
 	b := newProfileBuilder(&buf)
 	tags := make([]unsafe.Pointer, count)
-	if err := b.addCPUData(data, tags); err != nil {
-		return nil, err
-	}
-	if err := b.build(); err != nil {
-		return nil, err
-	}
+	b.addCPUData(data, tags)!
+	b.build()!
 	return profile.Parse(&buf)
 }
 

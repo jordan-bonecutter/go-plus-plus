@@ -43,10 +43,7 @@ func TestRecorder(t *testing.T) {
 	}
 	hasResultContents := func(want string) checkFunc {
 		return func(rec *ResponseRecorder) error {
-			contentBytes, err := io.ReadAll(rec.Result().Body)
-			if err != nil {
-				return err
-			}
+			contentBytes := io.ReadAll(rec.Result().Body)!
 			contents := string(contentBytes)
 			if contents != want {
 				return fmt.Errorf("Result().Body = %s; want %s", contents, want)

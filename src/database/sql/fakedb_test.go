@@ -61,10 +61,7 @@ type fakeConnector struct {
 }
 
 func (c *fakeConnector) Connect(context.Context) (driver.Conn, error) {
-	conn, err := fdriver.Open(c.name)
-	if err != nil {
-		return nil, err
-	}
+	conn := fdriver.Open(c.name)!
 	conn.(*fakeConn).waiter = c.waiter
 	return conn, nil
 }
@@ -270,9 +267,7 @@ func (d *fakeDriver) Open(dsn string) (driver.Conn, error) {
 	fn := hookOpenErr.fn
 	hookOpenErr.Unlock()
 	if fn != nil {
-		if err := fn(); err != nil {
-			return nil, err
-		}
+		fn()!
 	}
 	parts := strings.Split(dsn, ";")
 	if len(parts) < 1 {
@@ -489,10 +484,7 @@ func (c *fakeConn) ExecContext(ctx context.Context, query string, args []driver.
 	// just to check that all the args are of the proper types.
 	// ErrSkip is returned so the caller acts as if we didn't
 	// implement this at all.
-	err := checkSubsetTypes(c.db.allowAny, args)
-	if err != nil {
-		return nil, err
-	}
+	checkSubsetTypes(c.db.allowAny, args)!
 	return nil, driver.ErrSkip
 }
 
@@ -506,10 +498,7 @@ func (c *fakeConn) QueryContext(ctx context.Context, query string, args []driver
 	// just to check that all the args are of the proper types.
 	// ErrSkip is returned so the caller acts as if we didn't
 	// implement this at all.
-	err := checkSubsetTypes(c.db.allowAny, args)
-	if err != nil {
-		return nil, err
-	}
+	checkSubsetTypes(c.db.allowAny, args)!
 	return nil, driver.ErrSkip
 }
 
@@ -685,9 +674,7 @@ func (c *fakeConn) PrepareContext(ctx context.Context, query string) (driver.Stm
 
 		if c.waiter != nil {
 			c.waiter(ctx)
-			if err := ctx.Err(); err != nil {
-				return nil, err
-			}
+			ctx.Err()!
 		}
 
 		if stmt.wait > 0 {
@@ -787,10 +774,7 @@ func (s *fakeStmt) ExecContext(ctx context.Context, args []driver.NamedValue) (d
 		return nil, errFakeConnSessionDirty
 	}
 
-	err := checkSubsetTypes(s.c.db.allowAny, args)
-	if err != nil {
-		return nil, err
-	}
+	checkSubsetTypes(s.c.db.allowAny, args)!
 	s.touchMem()
 
 	if s.wait > 0 {
@@ -809,9 +793,7 @@ func (s *fakeStmt) ExecContext(ctx context.Context, args []driver.NamedValue) (d
 		db.wipe()
 		return driver.ResultNoRows, nil
 	case "CREATE":
-		if err := db.createTable(s.table, s.colName, s.colType); err != nil {
-			return nil, err
-		}
+		db.createTable(s.table, s.colName, s.colType)!
 		return driver.ResultNoRows, nil
 	case "INSERT":
 		return s.execInsert(args, true)
@@ -907,10 +889,7 @@ func (s *fakeStmt) QueryContext(ctx context.Context, args []driver.NamedValue) (
 		return nil, errFakeConnSessionDirty
 	}
 
-	err := checkSubsetTypes(s.c.db.allowAny, args)
-	if err != nil {
-		return nil, err
-	}
+	checkSubsetTypes(s.c.db.allowAny, args)!
 
 	s.touchMem()
 	db := s.c.db

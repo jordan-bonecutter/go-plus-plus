@@ -379,17 +379,12 @@ func readRequest(reader io.Reader) (*request, error) {
 	//   string. All numbers are 32-bit little-endian and values are
 	//   concatenated in the order specified.
 	var numArgs uint32
-	if err := binary.Read(reader, binary.LittleEndian, &numArgs); err != nil {
-		return nil, err
-	}
+	binary.Read(reader, binary.LittleEndian, &numArgs)!
 	if numArgs == 0 {
 		return nil, errors.New("invalid request: zero args")
 	}
 
-	args, err := readArgs(reader, numArgs)
-	if err != nil {
-		return nil, err
-	}
+	args := readArgs(reader, numArgs)!
 
 	return &request{
 		name: string(args[0]),
@@ -987,10 +982,7 @@ func cmdEcdsaKeyVerAft() command {
 	return command{
 		requiredArgs: 3, // Curve name, X, Y
 		handler: func(args [][]byte) ([][]byte, error) {
-			curve, err := lookupCurve(string(args[0]))
-			if err != nil {
-				return nil, err
-			}
+			curve := lookupCurve(string(args[0]))!
 
 			x := new(big.Int).SetBytes(args[1])
 			y := new(big.Int).SetBytes(args[2])
@@ -1991,10 +1983,7 @@ func getRSAKey(bits int) (*rsa.PrivateKey, error) {
 		return key, nil
 	}
 
-	key, err := rsa.GenerateKey(rand.Reader, bits)
-	if err != nil {
-		return nil, err
-	}
+	key := rsa.GenerateKey(rand.Reader, bits)!
 
 	rsaKeyCache[bits] = key
 	return key, nil

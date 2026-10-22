@@ -184,10 +184,7 @@ func (c *basicConn) getFakeConn() *fakeConn {
 }
 
 func (c *basicConn) Prepare(query string) (driver.Stmt, error) {
-	stmt, err := c.Conn.(*fakeConn).PrepareContext(context.Background(), query)
-	if err != nil {
-		return nil, err
-	}
+	stmt := c.Conn.(*fakeConn).PrepareContext(context.Background(), query)!
 	return &basicStmt{fc: c.Conn.(*fakeConn), Stmt: stmt}, nil
 }
 
@@ -220,18 +217,12 @@ func (s *basicStmt) valuesToNamedValues(args []driver.Value) ([]driver.NamedValu
 }
 
 func (s *basicStmt) Exec(args []driver.Value) (driver.Result, error) {
-	nvs, err := s.valuesToNamedValues(args)
-	if err != nil {
-		return nil, err
-	}
+	nvs := s.valuesToNamedValues(args)!
 	return s.Stmt.(*fakeStmt).ExecContext(context.Background(), nvs)
 }
 
 func (s *basicStmt) Query(args []driver.Value) (driver.Rows, error) {
-	nvs, err := s.valuesToNamedValues(args)
-	if err != nil {
-		return nil, err
-	}
+	nvs := s.valuesToNamedValues(args)!
 	return s.Stmt.(*fakeStmt).QueryContext(context.Background(), nvs)
 }
 
@@ -240,10 +231,7 @@ type basicConnector struct {
 }
 
 func (c *basicConnector) Connect(ctx context.Context) (driver.Conn, error) {
-	conn, err := c.fakeConnector.Connect(ctx)
-	if err != nil {
-		return nil, err
-	}
+	conn := c.fakeConnector.Connect(ctx)!
 	fc := getFakeConn(conn)
 	fc.skipDirtySession = true // Conn won't implement ResetSession
 	return &basicConn{fc}, nil
@@ -3523,10 +3511,7 @@ func testErrBadConnReconnect(t *testing.T, db *DB) {
 
 	// db.Prepare
 	simulateBadConn("db.Prepare", &hookPrepareBadConn, func() error {
-		stmt, err := db.Prepare("INSERT|t1|name=?,age=?,dead=?")
-		if err != nil {
-			return err
-		}
+		stmt := db.Prepare("INSERT|t1|name=?,age=?,dead=?")!
 		stmt.Close()
 		return nil
 	})
@@ -3610,14 +3595,8 @@ func testTxEndBadConn(t *testing.T, db *DB) {
 	// db.Exec
 	dbExec := func(endTx func(tx *Tx) error) func() error {
 		return func() error {
-			tx, err := db.Begin()
-			if err != nil {
-				return err
-			}
-			_, err = tx.Exec("INSERT|t1|name=?,age=?,dead=?", "Gordon", 3, true)
-			if err != nil {
-				return err
-			}
+			tx := db.Begin()!
+			tx.Exec("INSERT|t1|name=?,age=?,dead=?", "Gordon", 3, true)!
 			return endTx(tx)
 		}
 	}
@@ -4631,10 +4610,7 @@ type ctxOnlyDriver struct {
 }
 
 func (d *ctxOnlyDriver) Open(dsn string) (driver.Conn, error) {
-	conn, err := d.fakeDriver.Open(dsn)
-	if err != nil {
-		return nil, err
-	}
+	conn := d.fakeDriver.Open(dsn)!
 	return &ctxOnlyConn{fc: getFakeConn(conn)}, nil
 }
 
@@ -5721,10 +5697,7 @@ type rowsColumnScannerConn struct {
 }
 
 func (s *rowsColumnScannerConn) PrepareContext(ctx context.Context, query string) (driver.Stmt, error) {
-	stmt, err := s.fakeConn.PrepareContext(ctx, query)
-	if err != nil {
-		return nil, err
-	}
+	stmt := s.fakeConn.PrepareContext(ctx, query)!
 	return &rowsColumnScannerStmt{stmt.(*fakeStmt)}, nil
 }
 
@@ -5733,10 +5706,7 @@ type rowsColumnScannerStmt struct {
 }
 
 func (s *rowsColumnScannerStmt) QueryContext(ctx context.Context, args []driver.NamedValue) (driver.Rows, error) {
-	rows, err := s.fakeStmt.QueryContext(ctx, args)
-	if err != nil {
-		return nil, err
-	}
+	rows := s.fakeStmt.QueryContext(ctx, args)!
 	return &rowsColumnScannerRows{rowsCursor: rows.(*rowsCursor)}, nil
 }
 

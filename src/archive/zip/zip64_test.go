@@ -397,10 +397,7 @@ var le = binary.LittleEndian
 // indicating where data[0] sits in the original archive (0 for whole-archive
 // input).
 func parseCD(data []byte, baseOffset uint64) (*cdSnapshot, error) {
-	sigOff, err := findEOCD(data)
-	if err != nil {
-		return nil, err
-	}
+	sigOff := findEOCD(data)!
 	snap := &cdSnapshot{}
 	snap.EOCD.Records = le.Uint16(data[sigOff+10:])
 	snap.EOCD.Size = le.Uint32(data[sigOff+12:])

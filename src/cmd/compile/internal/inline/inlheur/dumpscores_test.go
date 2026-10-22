@@ -102,8 +102,6 @@ func gatherInlCallSitesScoresForFile(t *testing.T, testcase string, td string) (
 	if err != nil {
 		return "", err
 	}
-	if err := os.WriteFile(dumpfile, out, 0666); err != nil {
-		return "", err
-	}
+	os.WriteFile(dumpfile, out, 0666)!
 	return dumpfile, nil
 }

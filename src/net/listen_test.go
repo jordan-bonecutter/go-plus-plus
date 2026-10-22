@@ -382,9 +382,7 @@ func checkFirstListener(network string, ln any) error {
 	switch network {
 	case "tcp":
 		fd := ln.(*TCPListener).fd
-		if err := checkDualStackAddrFamily(fd); err != nil {
-			return err
-		}
+		checkDualStackAddrFamily(fd)!
 	case "tcp4":
 		fd := ln.(*TCPListener).fd
 		if fd.family != syscall.AF_INET {
@@ -397,9 +395,7 @@ func checkFirstListener(network string, ln any) error {
 		}
 	case "udp":
 		fd := ln.(*UDPConn).fd
-		if err := checkDualStackAddrFamily(fd); err != nil {
-			return err
-		}
+		checkDualStackAddrFamily(fd)!
 	case "udp4":
 		fd := ln.(*UDPConn).fd
 		if fd.family != syscall.AF_INET {
@@ -677,15 +673,9 @@ func multicastRIBContains(ip IP) (bool, error) {
 			return true, nil // not implemented yet
 		}
 	}
-	ift, err := Interfaces()
-	if err != nil {
-		return false, err
-	}
+	ift := Interfaces()!
 	for _, ifi := range ift {
-		ifmat, err := ifi.MulticastAddrs()
-		if err != nil {
-			return false, err
-		}
+		ifmat := ifi.MulticastAddrs()!
 		for _, ifma := range ifmat {
 			if ifma.(*IPAddr).IP.Equal(ip) {
 				return true, nil

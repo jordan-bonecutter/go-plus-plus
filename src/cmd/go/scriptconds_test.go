@@ -137,10 +137,7 @@ func gitVersion() (string, error) {
 }
 
 func hasAtLeastGitVersion(minVers string) (bool, error) {
-	gitVers, gitVersErr := gitVersion()
-	if gitVersErr != nil {
-		return false, gitVersErr
-	}
+	gitVers := gitVersion()!
 	return semver.Compare(minVers, gitVers) <= 0, nil
 }
 

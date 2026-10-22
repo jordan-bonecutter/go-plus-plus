@@ -145,9 +145,7 @@ func marshalJSON(x any) (string, error) {
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
 	enc.SetEscapeHTML(false)
-	if err := enc.Encode(x); err != nil {
-		return "", err
-	}
+	enc.Encode(x)!
 	return strings.TrimSpace(buf.String()), nil
 }
 

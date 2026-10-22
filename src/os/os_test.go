@@ -1149,10 +1149,7 @@ func TestRenameCaseDifference(pt *testing.T) {
 			return Mkdir(from, 0777)
 		}},
 		{"file", func() error {
-			fd, err := Create(from)
-			if err != nil {
-				return err
-			}
+			fd := Create(from)!
 			return fd.Close()
 		}},
 	}
@@ -3293,10 +3290,7 @@ func TestOpenFileKeepsPermissions(t *testing.T) {
 	t.Run("RootOpenFile", func(t *testing.T) {
 		testOpenFileKeepsPermissions(t, func(name string, flag int, perm FileMode) (*File, error) {
 			dir, file := filepath.Split(name)
-			r, err := OpenRoot(dir)
-			if err != nil {
-				return nil, err
-			}
+			r := OpenRoot(dir)!
 			defer r.Close()
 			return r.OpenFile(file, flag, perm)
 		})
@@ -3801,10 +3795,7 @@ func verifyCopyFS(t *testing.T, originFS, copiedFS fs.FS) error {
 				return nil
 			}
 
-			dinfo, err := fs.Stat(copiedFS, path)
-			if err != nil {
-				return err
-			}
+			dinfo := fs.Stat(copiedFS, path)!
 
 			if dinfo.Mode() != wantDirMode {
 				return fmt.Errorf("dir %q mode is %v, want %v",
@@ -3954,10 +3945,7 @@ func TestCopyFSWithSymlinks(t *testing.T) {
 			if fi.Mode()&ModeSymlink == 0 {
 				return errors.New("original file " + path + " should be a symlink")
 			}
-			tmpfi, err := fs.Stat(tmpFsys, path)
-			if err != nil {
-				return err
-			}
+			tmpfi := fs.Stat(tmpFsys, path)!
 			if tmpfi.Mode()&ModeSymlink != 0 {
 				return errors.New("copied file " + path + " should not be a symlink")
 			}
@@ -3983,10 +3971,7 @@ func TestCopyFSWithSymlinks(t *testing.T) {
 			target = insideFile
 		}
 		if len(target) > 0 {
-			targetData, err := ReadFile(target)
-			if err != nil {
-				return err
-			}
+			targetData := ReadFile(target)!
 			if !bytes.Equal(targetData, newData) {
 				return errors.New("file " + path + " contents differ from target")
 			}

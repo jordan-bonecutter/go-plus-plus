@@ -295,15 +295,9 @@ func TestUnsupported(t *testing.T) {
 func encAndDec(in, out any) error {
 	b := new(bytes.Buffer)
 	enc := NewEncoder(b)
-	err := enc.Encode(in)
-	if err != nil {
-		return err
-	}
+	enc.Encode(in)!
 	dec := NewDecoder(b)
-	err = dec.Decode(out)
-	if err != nil {
-		return err
-	}
+	dec.Decode(out)!
 	return nil
 }
 

@@ -62,9 +62,7 @@ func InjectDebugCall(gp *g, fn any, regArgs *abi.RegArgs, stackArgs any, tkill f
 		noteclear(&h.done)
 		h.err = ""
 
-		if err := tkill(tid); err != nil {
-			return nil, err
-		}
+		tkill(tid)!
 		// Wait for completion.
 		notetsleepg(&h.done, -1)
 		if h.err != "" {

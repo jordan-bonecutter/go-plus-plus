@@ -110,10 +110,7 @@ func makeTestDial(t *testing.T) (*testConnSet, func(n, addr string) (net.Conn, e
 		closed: make(map[net.Conn]bool),
 	}
 	dial := func(n, addr string) (net.Conn, error) {
-		c, err := net.Dial(n, addr)
-		if err != nil {
-			return nil, err
-		}
+		c := net.Dial(n, addr)!
 		tc := &testCloseConn{c, connSet}
 		connSet.insert(tc)
 		return tc, nil
@@ -1797,10 +1794,7 @@ func TestOnProxyConnectResponse(t *testing.T) {
 			closes atomic.Int32
 		)
 		c.Transport.(*Transport).DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-			conn, err := net.Dial(network, addr)
-			if err != nil {
-				return nil, err
-			}
+			conn := net.Dial(network, addr)!
 			dials.Add(1)
 			return noteCloseConn{
 				Conn: conn,
@@ -2186,10 +2180,7 @@ type countingDialer struct {
 }
 
 func (d *countingDialer) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
-	conn, err := d.dialer.DialContext(ctx, network, address)
-	if err != nil {
-		return nil, err
-	}
+	conn := d.dialer.DialContext(ctx, network, address)!
 
 	counted := new(countedConn)
 	counted.Conn = conn
@@ -4018,10 +4009,7 @@ func testTransportDialTLS(t *testing.T, mode testMode) {
 		mu.Lock()
 		didDial = true
 		mu.Unlock()
-		c, err := tls.Dial(netw, addr, c.Transport.(*Transport).TLSClientConfig)
-		if err != nil {
-			return nil, err
-		}
+		c := tls.Dial(netw, addr, c.Transport.(*Transport).TLSClientConfig)!
 		return c, c.Handshake()
 	}
 
@@ -4105,10 +4093,7 @@ func testTransportDialTLSContext(t *testing.T, mode testMode) {
 		mu.Lock()
 		gotCtxValue = ctx.Value(ctxKey)
 		mu.Unlock()
-		c, err := tls.Dial(netw, addr, c.Transport.(*Transport).TLSClientConfig)
-		if err != nil {
-			return nil, err
-		}
+		c := tls.Dial(netw, addr, c.Transport.(*Transport).TLSClientConfig)!
 		return c, c.HandshakeContext(ctx)
 	}
 
@@ -4173,10 +4158,7 @@ func testTransportIdleConnRacesRequest(t *testing.T, mode testMode) {
 	dialContext := cst.tr.DialContext
 	cst.tr.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
 		<-dialsBlocked
-		c, err := dialContext(ctx, network, address)
-		if err != nil {
-			return nil, err
-		}
+		c := dialContext(ctx, network, address)!
 		return &blockCloseConn{closeBlocked, c}, nil
 	}
 
@@ -4838,16 +4820,11 @@ func TestNoCrashReturningTransportAltConn(t *testing.T) {
 			panic("shouldn't be called")
 		},
 		DialTLS: func(_, _ string) (net.Conn, error) {
-			tc, err := tls.Dial("tcp", addr, &tls.Config{
+			tc := tls.Dial("tcp", addr, &tls.Config{
 				InsecureSkipVerify: true,
 				NextProtos:         []string{"foo"},
-			})
-			if err != nil {
-				return nil, err
-			}
-			if err := tc.Handshake(); err != nil {
-				return nil, err
-			}
+			})!
+			tc.Handshake()!
 			close(cancel)
 			<-doReturned
 			return tc, nil

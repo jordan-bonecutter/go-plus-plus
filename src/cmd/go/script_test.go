@@ -214,14 +214,8 @@ func initScriptDirs(t testing.TB, s *script.State) (telemetryDir string) {
 }
 
 func scriptEnv(srv *vcstest.Server, srvCertFile string) ([]string, error) {
-	httpURL, err := url.Parse(srv.HTTP.URL)
-	if err != nil {
-		return nil, err
-	}
-	httpsURL, err := url.Parse(srv.HTTPS.URL)
-	if err != nil {
-		return nil, err
-	}
+	httpURL := url.Parse(srv.HTTP.URL)!
+	httpsURL := url.Parse(srv.HTTPS.URL)!
 	env := []string{
 		pathEnvName() + "=" + testBin + string(filepath.ListSeparator) + os.Getenv(pathEnvName()),
 		homeEnvName() + "=/no-home",

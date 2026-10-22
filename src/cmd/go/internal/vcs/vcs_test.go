@@ -277,9 +277,7 @@ func touch(path string) error {
 func createGitWorktreeFile(path string) error {
 	gitdir := path + ".worktree"
 	// gitdir must point to a real directory
-	if err := mkdir(gitdir); err != nil {
-		return err
-	}
+	mkdir(gitdir)!
 	return os.WriteFile(path, []byte("gitdir: "+gitdir+"\n"), 0o644)
 }
 

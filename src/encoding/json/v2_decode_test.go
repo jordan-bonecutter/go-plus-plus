@@ -73,9 +73,7 @@ type TAlias T
 
 func (tt *TAlias) UnmarshalJSON(data []byte) error {
 	t := T{}
-	if err := Unmarshal(data, &t); err != nil {
-		return err
-	}
+	Unmarshal(data, &t)!
 	*tt = TAlias(t)
 	return nil
 }
@@ -158,10 +156,7 @@ func (u8 *u8marshal) UnmarshalText(b []byte) error {
 	if !bytes.HasPrefix(b, []byte{'u'}) {
 		return errMissingU8Prefix
 	}
-	n, err := strconv.Atoi(string(b[1:]))
-	if err != nil {
-		return err
-	}
+	n := strconv.Atoi(string(b[1:]))!
 	*u8 = u8marshal(n)
 	return nil
 }
@@ -2489,10 +2484,7 @@ func (t *Time3339) UnmarshalJSON(b []byte) error {
 	if len(b) < 2 || b[0] != '"' || b[len(b)-1] != '"' {
 		return fmt.Errorf("types: failed to unmarshal non-string value %q as an RFC 3339 time", b)
 	}
-	tm, err := time.Parse(time.RFC3339, string(b[1:len(b)-1]))
-	if err != nil {
-		return err
-	}
+	tm := time.Parse(time.RFC3339, string(b[1:len(b)-1]))!
 	*t = Time3339(tm)
 	return nil
 }

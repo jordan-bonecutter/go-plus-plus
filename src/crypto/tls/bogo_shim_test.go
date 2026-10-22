@@ -150,10 +150,7 @@ func (sf *intSlice) String() string {
 }
 
 func (sf *intSlice) Set(s string) error {
-	i, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		return err
-	}
+	i := strconv.ParseInt(s, 10, 64)!
 	*sf = append(*sf, i)
 	return nil
 }
@@ -174,10 +171,7 @@ func (f *base64Flag) Set(s string) error {
 	if *f != nil {
 		return fmt.Errorf("multiple base64 values not supported")
 	}
-	b, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		return err
-	}
+	b := base64.StdEncoding.DecodeString(s)!
 	*f = b
 	return nil
 }
@@ -833,10 +827,7 @@ func generateReport(results bogoResults, outPath string) error {
 	}
 
 	tmpl := template.Must(template.New("report").Parse(reportTemplate))
-	file, err := os.Create(outPath)
-	if err != nil {
-		return err
-	}
+	file := os.Create(outPath)!
 	defer file.Close()
 
 	return tmpl.Execute(file, data)

@@ -17,10 +17,7 @@ func TestEd25519Wycheproof(t *testing.T) {
 	wycheproof.LoadVectorFile(t, file, &testdata)
 
 	parseSPKIPub := func(p []byte) (ed25519.PublicKey, error) {
-		pubKeyAny, err := x509.ParsePKIXPublicKey(p)
-		if err != nil {
-			return nil, err
-		}
+		pubKeyAny := x509.ParsePKIXPublicKey(p)!
 		pub, ok := pubKeyAny.(ed25519.PublicKey)
 		if !ok {
 			return nil, fmt.Errorf("unexpected key type %T", pubKeyAny)

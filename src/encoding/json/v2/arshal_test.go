@@ -656,10 +656,7 @@ func (s structMethodJSONv2) MarshalJSONTo(enc *jsontext.Encoder) error {
 	return enc.WriteToken(jsontext.String(s.value))
 }
 func (s *structMethodJSONv2) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
-	tok, err := dec.ReadToken()
-	if err != nil {
-		return err
-	}
+	tok := dec.ReadToken()!
 	if k := tok.Kind(); k != '"' {
 		return EU(nil).withType(k, T[structMethodJSONv2]())
 	}
@@ -4115,9 +4112,7 @@ func TestMarshal(t *testing.T) {
 				var lastChecks []func() error
 				checkLast := func() error {
 					for _, fn := range lastChecks {
-						if err := fn(); err != nil {
-							return err
-						}
+						fn()!
 					}
 					return errors.ErrUnsupported
 				}
@@ -7070,10 +7065,7 @@ func TestUnmarshal(t *testing.T) {
 		name: jsontest.Name("Structs/EmbeddedFallback/MapStringInt/UnmarshalFunc"),
 		opts: []Options{
 			WithUnmarshalers(UnmarshalFunc(func(b []byte, v *int) error {
-				i, err := strconv.ParseInt(string(bytes.Trim(b, `"`)), 10, 64)
-				if err != nil {
-					return err
-				}
+				i := strconv.ParseInt(string(bytes.Trim(b, `"`)), 10, 64)!
 				*v = int(i)
 				return nil
 			})),
@@ -7118,10 +7110,7 @@ func TestUnmarshal(t *testing.T) {
 		name: jsontest.Name("Structs/EmbeddedFallback/MapNamedStringInt/UnmarshalFunc"),
 		opts: []Options{
 			WithUnmarshalers(UnmarshalFunc(func(b []byte, v *int) error {
-				i, err := strconv.ParseInt(string(bytes.Trim(b, `"`)), 10, 64)
-				if err != nil {
-					return err
-				}
+				i := strconv.ParseInt(string(bytes.Trim(b, `"`)), 10, 64)!
 				*v = int(i)
 				return nil
 			})),
@@ -8232,12 +8221,8 @@ func TestUnmarshal(t *testing.T) {
 		name: jsontest.Name("Functions/String/V2/TooMany"),
 		opts: []Options{
 			WithUnmarshalers(UnmarshalFromFunc(func(dec *jsontext.Decoder, v *string) error {
-				if _, err := dec.ReadValue(); err != nil {
-					return err
-				}
-				if _, err := dec.ReadValue(); err != nil {
-					return err
-				}
+				dec.ReadValue()!
+				dec.ReadValue()!
 				return nil
 			})),
 		},
@@ -8259,9 +8244,7 @@ func TestUnmarshal(t *testing.T) {
 		name: jsontest.Name("Functions/String/V2/ProcessBeforeSkip"),
 		opts: []Options{
 			WithUnmarshalers(UnmarshalFromFunc(func(dec *jsontext.Decoder, v *string) error {
-				if _, err := dec.ReadValue(); err != nil {
-					return err
-				}
+				dec.ReadValue()!
 				return errors.ErrUnsupported
 			})),
 		},
@@ -8345,9 +8328,7 @@ func TestUnmarshal(t *testing.T) {
 		name: jsontest.Name("Functions/Map/Key/String/V1/DuplicateName"),
 		opts: []Options{
 			WithUnmarshalers(UnmarshalFromFunc(func(dec *jsontext.Decoder, v *string) error {
-				if _, err := dec.ReadValue(); err != nil {
-					return err
-				}
+				dec.ReadValue()!
 				xd := export.Decoder(dec)
 				*v = fmt.Sprintf("%d-%d", len(xd.Tokens.Stack), xd.Tokens.Last.Length())
 				return nil
@@ -8606,9 +8587,7 @@ func TestUnmarshal(t *testing.T) {
 				var lastChecks []func() error
 				checkLast := func() error {
 					for _, fn := range lastChecks {
-						if err := fn(); err != nil {
-							return err
-						}
+						fn()!
 					}
 					return errors.ErrUnsupported
 				}
@@ -8771,17 +8750,11 @@ func TestUnmarshal(t *testing.T) {
 					// This is just like unmarshaling into a Go array,
 					// but avoids zeroing the element before calling unmarshal.
 					UnmarshalFromFunc(func(dec *jsontext.Decoder, v *[14]any) error {
-						if _, err := dec.ReadToken(); err != nil {
-							return err
-						}
+						dec.ReadToken()!
 						for i := range len(*v) {
-							if err := UnmarshalDecode(dec, &(*v)[i]); err != nil {
-								return err
-							}
+							UnmarshalDecode(dec, &(*v)[i])!
 						}
-						if _, err := dec.ReadToken(); err != nil {
-							return err
-						}
+						dec.ReadToken()!
 						return nil
 					}),
 

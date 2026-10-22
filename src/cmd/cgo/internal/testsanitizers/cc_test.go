@@ -157,15 +157,9 @@ func mustRun(t *testing.T, cmd *exec.Cmd) {
 
 // cc returns a cmd that executes `$(go env CC) $(go env GOGCCFLAGS) $args`.
 func cc(ctx context.Context, args ...string) (*exec.Cmd, error) {
-	CC, err := goEnv("CC")
-	if err != nil {
-		return nil, err
-	}
+	CC := goEnv("CC")!
 
-	GOGCCFLAGS, err := goEnv("GOGCCFLAGS")
-	if err != nil {
-		return nil, err
-	}
+	GOGCCFLAGS := goEnv("GOGCCFLAGS")!
 
 	// Split GOGCCFLAGS, respecting quoting.
 	//

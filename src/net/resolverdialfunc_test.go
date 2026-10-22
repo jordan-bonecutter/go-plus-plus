@@ -110,9 +110,7 @@ func newResolverDialFunc(h *resolverDialHandler) func(ctx context.Context, netwo
 			ttl:     10, // 10 second default if unset
 		}
 		if h.StartDial != nil {
-			if err := h.StartDial(network, address); err != nil {
-				return nil, err
-			}
+			h.StartDial(network, address)!
 		}
 		return a, nil
 	}

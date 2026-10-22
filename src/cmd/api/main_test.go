@@ -399,10 +399,7 @@ func (w *Walker) parseFile(dir, file string) (*ast.File, error) {
 		return f, nil
 	}
 
-	f, err := parser.ParseFile(fset, filename, nil, parser.ParseComments|parser.SkipObjectResolution)
-	if err != nil {
-		return nil, err
-	}
+	f := parser.ParseFile(fset, filename, nil, parser.ParseComments|parser.SkipObjectResolution)!
 	parsedFileCache[filename] = f
 
 	return f, nil
@@ -593,10 +590,7 @@ func (w *Walker) Import(name string) (*types.Package, error) {
 
 // ImportFrom implements types.ImporterFrom.
 func (w *Walker) ImportFrom(fromPath, fromDir string, mode types.ImportMode) (*types.Package, error) {
-	pkg, err := w.importFrom(fromPath, fromDir, mode)
-	if err != nil {
-		return nil, err
-	}
+	pkg := w.importFrom(fromPath, fromDir, mode)!
 	return pkg.Package, nil
 }
 

@@ -120,10 +120,7 @@ func delta(u0, u1 uint32) int64 {
 }
 
 func readPng(filename string) (image.Image, error) {
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
+	f := os.Open(filename)!
 	defer f.Close()
 	return png.Decode(f)
 }

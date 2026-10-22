@@ -393,10 +393,7 @@ func typecheckFiles(path string, filenames []string, importer Importer) (*Packag
 	// Parse package files.
 	var files []*ast.File
 	for _, filename := range filenames {
-		file, err := parser.ParseFile(fset, filename, nil, parser.AllErrors|parser.SkipObjectResolution)
-		if err != nil {
-			return nil, err
-		}
+		file := parser.ParseFile(fset, filename, nil, parser.AllErrors|parser.SkipObjectResolution)!
 
 		files = append(files, file)
 	}

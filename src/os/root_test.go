@@ -1633,9 +1633,7 @@ func testRootConsistencyMove(t *testing.T, rename bool) {
 						}
 					}
 
-					if err := move(srcPath, dstPath); err != nil {
-						return "", err
-					}
+					move(srcPath, dstPath)!
 					fi, err := lstat(dstPath)
 					if err != nil {
 						t.Errorf("stat(%q) after successful copy: %v", dstPath, err)

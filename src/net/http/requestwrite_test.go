@@ -812,9 +812,7 @@ func testRequestWriteTransport(t *testing.T) {
 	all := func(checks ...func(string) error) func(string) error {
 		return func(req string) error {
 			for _, c := range checks {
-				if err := c(req); err != nil {
-					return err
-				}
+				c(req)!
 			}
 			return nil
 		}
@@ -1065,10 +1063,7 @@ func dumpRequestOut(req *Request, onReadHeaders func()) ([]byte, error) {
 		dr.c <- strings.NewReader("HTTP/1.1 204 No Content\r\nConnection: close\r\n\r\n")
 	}()
 
-	_, err := t.RoundTrip(req)
-	if err != nil {
-		return nil, err
-	}
+	t.RoundTrip(req)!
 	return buf.Bytes(), nil
 }
 

@@ -249,16 +249,11 @@ func TestTransportBodyAltRewind(t *testing.T) {
 			},
 		},
 		DialTLS: func(_, _ string) (net.Conn, error) {
-			tc, err := tls.Dial("tcp", addr, &tls.Config{
+			tc := tls.Dial("tcp", addr, &tls.Config{
 				InsecureSkipVerify: true,
 				NextProtos:         []string{"foo"},
-			})
-			if err != nil {
-				return nil, err
-			}
-			if err := tc.Handshake(); err != nil {
-				return nil, err
-			}
+			})!
+			tc.Handshake()!
 			return tc, nil
 		},
 	}

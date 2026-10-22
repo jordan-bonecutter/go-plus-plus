@@ -85,9 +85,7 @@ func (ms msgs) validate() ([]string, error) {
 			} else {
 				attrs = addrAttrs(nativeEndian.Uint32(m.raw[4:8]))
 			}
-			if err := addrs(m.Addrs).match(attrs); err != nil {
-				return nil, err
-			}
+			addrs(m.Addrs).match(attrs)!
 			ss = append(ss, m.String()+" "+addrs(m.Addrs).String())
 		case *InterfaceAddrMessage:
 			var attrs addrAttrs
@@ -96,14 +94,10 @@ func (ms msgs) validate() ([]string, error) {
 			} else {
 				attrs = addrAttrs(nativeEndian.Uint32(m.raw[4:8]))
 			}
-			if err := addrs(m.Addrs).match(attrs); err != nil {
-				return nil, err
-			}
+			addrs(m.Addrs).match(attrs)!
 			ss = append(ss, m.String()+" "+addrs(m.Addrs).String())
 		case *InterfaceMulticastAddrMessage:
-			if err := addrs(m.Addrs).match(addrAttrs(nativeEndian.Uint32(m.raw[4:8]))); err != nil {
-				return nil, err
-			}
+			addrs(m.Addrs).match(addrAttrs(nativeEndian.Uint32(m.raw[4:8])))!
 			ss = append(ss, m.String()+" "+addrs(m.Addrs).String())
 		default:
 			ss = append(ss, fmt.Sprintf("%+v", m))

@@ -304,10 +304,7 @@ type resolvConfTest struct {
 }
 
 func newResolvConfTest() (*resolvConfTest, error) {
-	dir, err := os.MkdirTemp("", "go-resolvconftest")
-	if err != nil {
-		return nil, err
-	}
+	dir := os.MkdirTemp("", "go-resolvconftest")!
 	conf := &resolvConfTest{
 		dir:            dir,
 		path:           path.Join(dir, "resolv.conf"),
@@ -318,10 +315,7 @@ func newResolvConfTest() (*resolvConfTest, error) {
 }
 
 func (conf *resolvConfTest) write(lines []string) error {
-	f, err := os.OpenFile(conf.path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
-	if err != nil {
-		return err
-	}
+	f := os.OpenFile(conf.path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)!
 	if _, err := f.WriteString(strings.Join(lines, "\n")); err != nil {
 		f.Close()
 		return err
@@ -335,9 +329,7 @@ func (conf *resolvConfTest) writeAndUpdate(lines []string) error {
 }
 
 func (conf *resolvConfTest) writeAndUpdateWithLastCheckedTime(lines []string, lastChecked time.Time) error {
-	if err := conf.write(lines); err != nil {
-		return err
-	}
+	conf.write(lines)!
 	return conf.forceUpdate(conf.path, lastChecked)
 }
 
