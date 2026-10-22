@@ -304,16 +304,10 @@ func processFile(filename string, info fs.FileInfo, in io.Reader, r *reporter) e
 func readFile(filename string, info fs.FileInfo, in io.Reader) ([]byte, error) {
 	if in == nil {
 		fdSem <- true
-		var err error
-		f, err := os.Open(filename)
-		if err != nil {
-			return nil, err
-		}
+		defer func() { <-fdSem }()
+		f := os.Open(filename)!
 		in = f
-		defer func() {
-			f.Close()
-			<-fdSem
-		}()
+		defer f.Close()
 	}
 
 	// Compute the file's size and read its contents with minimal allocations.
@@ -329,11 +323,8 @@ func readFile(filename string, info fs.FileInfo, in io.Reader) ([]byte, error) {
 	}
 	if size+1 <= 0 {
 		// The file is not known to be regular, so we don't have a reliable size for it.
-		var err error
-		src, err := io.ReadAll(in)
-		if err != nil {
-			return nil, err
-		}
+
+		src := io.ReadAll(in)!
 		return src, nil
 	}
 
@@ -386,15 +377,13 @@ func gofmtMain(s *sequencer) {
 
 	if *cpuprofile != "" {
 		fdSem <- true
+		defer func() { <-fdSem }()
 		f, err := os.Create(*cpuprofile)
 		if err != nil {
 			s.AddReport(fmt.Errorf("creating cpu profile: %s", err))
 			return
 		}
-		defer func() {
-			f.Close()
-			<-fdSem
-		}()
+		defer f.Close()
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
 	}
