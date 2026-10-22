@@ -11,9 +11,14 @@ import time
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SOURCE = '''package main
-import ("fmt"; "bangeditor/model")
+import ("fmt"; "net/http"; "bangeditor/model")
 type UnitOption[T any] union { Empty; Value T }
-func emptyUnit() UnitOption[int] { return UnitOption[int].Empty(unit{}) }
+func emptyUnit() UnitOption[int] { return UnitOption[int].Empty() }
+func readHTTP(client *http.Client) error {
+ resp := client.Get("http://localhost/")!
+ defer resp.Body.Close()
+ return nil
+ }
 type Item struct { Field int }
 func value() (Item, error) { return Item{7}, nil }
 func pair() (int, string, error) { return 7, "ok", nil }

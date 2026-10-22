@@ -58,7 +58,7 @@ func run(pass *analysis.Pass) (any, error) {
 			return true
 		}
 		call := n.(*ast.CallExpr)
-		if !isHTTPFuncOrMethodOnClient(pass.TypesInfo, call) {
+		if call.Bang.IsValid() || !isHTTPFuncOrMethodOnClient(pass.TypesInfo, call) {
 			return true // the function call is not related to this check.
 		}
 
