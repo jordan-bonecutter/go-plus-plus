@@ -190,10 +190,7 @@ func makeTimeUnmarshaler(fncs *unmarshaler, t reflect.Type) *unmarshaler {
 			stringify := !u.isNumeric() || xd.Tokens.Last.NeedObjectName() || uo.Flags.Get(jsonflags.StringifyNumbers|jsonflags.StringTag)
 			var flags jsonwire.ValueFlags
 			tt, _ := reflect.TypeAssert[*time.Time](va.Addr())
-			val, err := xd.ReadValue(&flags)
-			if err != nil {
-				return err
-			}
+			val := xd.ReadValue(&flags)!
 			switch k := val.Kind(); k {
 			case 'n':
 				if !uo.Flags.Get(jsonflags.MergeWithLegacySemantics) {

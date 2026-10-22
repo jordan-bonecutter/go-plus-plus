@@ -13,22 +13,10 @@ import (
 )
 
 func getCurrentKeepAliveSettings(fd fdType) (cfg KeepAliveConfig, err error) {
-	tcpKeepAlive, err := syscall.GetsockoptInt(fd, syscall.SOL_SOCKET, syscall.SO_KEEPALIVE)
-	if err != nil {
-		return
-	}
-	tcpKeepAliveIdle, err := syscall.GetsockoptInt(fd, syscall.IPPROTO_TCP, syscall_TCP_KEEPIDLE)
-	if err != nil {
-		return
-	}
-	tcpKeepAliveInterval, err := syscall.GetsockoptInt(fd, syscall.IPPROTO_TCP, syscall_TCP_KEEPINTVL)
-	if err != nil {
-		return
-	}
-	tcpKeepAliveCount, err := syscall.GetsockoptInt(fd, syscall.IPPROTO_TCP, syscall_TCP_KEEPCNT)
-	if err != nil {
-		return
-	}
+	tcpKeepAlive := syscall.GetsockoptInt(fd, syscall.SOL_SOCKET, syscall.SO_KEEPALIVE)!
+	tcpKeepAliveIdle := syscall.GetsockoptInt(fd, syscall.IPPROTO_TCP, syscall_TCP_KEEPIDLE)!
+	tcpKeepAliveInterval := syscall.GetsockoptInt(fd, syscall.IPPROTO_TCP, syscall_TCP_KEEPINTVL)!
+	tcpKeepAliveCount := syscall.GetsockoptInt(fd, syscall.IPPROTO_TCP, syscall_TCP_KEEPCNT)!
 	cfg = KeepAliveConfig{
 		Enable:   tcpKeepAlive != 0,
 		Idle:     time.Duration(tcpKeepAliveIdle) * time.Second,

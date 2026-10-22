@@ -79,10 +79,7 @@ func GenerateKey(curve Curve, rand io.Reader) (priv []byte, x, y *big.Int, err e
 	priv = make([]byte, byteLen)
 
 	for x == nil {
-		_, err = io.ReadFull(rand, priv)
-		if err != nil {
-			return
-		}
+		io.ReadFull(rand, priv)!
 		// We have to mask off any excess bits in the case that the size of the
 		// underlying field is not a whole number of bytes.
 		priv[0] &= mask[bitSize%8]

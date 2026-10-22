@@ -269,18 +269,9 @@ var execveLibc func(path *byte, argv **byte, envp **byte) error
 
 // Exec invokes the execve(2) system call.
 func Exec(argv0 string, argv []string, envv []string) (err error) {
-	argv0p, err := BytePtrFromString(argv0)
-	if err != nil {
-		return err
-	}
-	argvp, err := SlicePtrFromStrings(argv)
-	if err != nil {
-		return err
-	}
-	envvp, err := SlicePtrFromStrings(envv)
-	if err != nil {
-		return err
-	}
+	argv0p := BytePtrFromString(argv0)!
+	argvp := SlicePtrFromStrings(argv)!
+	envvp := SlicePtrFromStrings(envv)!
 	runtime_BeforeExec()
 
 	rlim := origRlimitNofile.Load()

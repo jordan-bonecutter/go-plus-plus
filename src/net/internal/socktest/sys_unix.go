@@ -50,14 +50,9 @@ func (sw *Switch) Close(s int) (err error) {
 	f := sw.fltab[FilterClose]
 	sw.fmu.RUnlock()
 
-	af, err := f.apply(so)
-	if err != nil {
-		return err
-	}
+	af := f.apply(so)!
 	so.Err = syscall.Close(s)
-	if err = af.apply(so); err != nil {
-		return err
-	}
+	af.apply(so)!
 
 	sw.smu.Lock()
 	defer sw.smu.Unlock()
@@ -80,14 +75,9 @@ func (sw *Switch) Connect(s int, sa syscall.Sockaddr) (err error) {
 	f := sw.fltab[FilterConnect]
 	sw.fmu.RUnlock()
 
-	af, err := f.apply(so)
-	if err != nil {
-		return err
-	}
+	af := f.apply(so)!
 	so.Err = syscall.Connect(s, sa)
-	if err = af.apply(so); err != nil {
-		return err
-	}
+	af.apply(so)!
 
 	sw.smu.Lock()
 	defer sw.smu.Unlock()
@@ -109,14 +99,9 @@ func (sw *Switch) Listen(s, backlog int) (err error) {
 	f := sw.fltab[FilterListen]
 	sw.fmu.RUnlock()
 
-	af, err := f.apply(so)
-	if err != nil {
-		return err
-	}
+	af := f.apply(so)!
 	so.Err = syscall.Listen(s, backlog)
-	if err = af.apply(so); err != nil {
-		return err
-	}
+	af.apply(so)!
 
 	sw.smu.Lock()
 	defer sw.smu.Unlock()

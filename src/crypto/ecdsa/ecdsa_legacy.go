@@ -203,9 +203,7 @@ func randFieldElement(c elliptic.Curve, rand io.Reader) (k *big.Int, err error) 
 	for {
 		N := c.Params().N
 		b := make([]byte, (N.BitLen()+7)/8)
-		if _, err = io.ReadFull(rand, b); err != nil {
-			return
-		}
+		io.ReadFull(rand, b)!
 		if excess := len(b)*8 - N.BitLen(); excess > 0 {
 			b[0] >>= excess
 		}

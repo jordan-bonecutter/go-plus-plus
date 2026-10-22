@@ -324,8 +324,7 @@ func readFile(filename string, info fs.FileInfo, in io.Reader) ([]byte, error) {
 	if size+1 <= 0 {
 		// The file is not known to be regular, so we don't have a reliable size for it.
 
-		src := io.ReadAll(in)!
-		return src, nil
+		return io.ReadAll(in)!, nil
 	}
 
 	// We try to read size+1 bytes so that we can detect modifications: if we

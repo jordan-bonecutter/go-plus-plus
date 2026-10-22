@@ -244,17 +244,11 @@ func decryptPKCS1v15(priv *PrivateKey, ciphertext []byte) (valid int, em []byte,
 
 // nonZeroRandomBytes fills the given slice with non-zero random octets.
 func nonZeroRandomBytes(s []byte, random io.Reader) (err error) {
-	_, err = io.ReadFull(random, s)
-	if err != nil {
-		return
-	}
+	io.ReadFull(random, s)!
 
 	for i := 0; i < len(s); i++ {
 		for s[i] == 0 {
-			_, err = io.ReadFull(random, s[i:i+1])
-			if err != nil {
-				return
-			}
+			io.ReadFull(random, s[i:i+1])!
 			// In tests, the PRNG may return all zeros so we do
 			// this to break the loop.
 			s[i] ^= 0x42

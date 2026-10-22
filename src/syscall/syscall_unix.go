@@ -283,27 +283,19 @@ type SockaddrUnix struct {
 }
 
 func Bind(fd int, sa Sockaddr) (err error) {
-	ptr, n, err := sa.sockaddr()
-	if err != nil {
-		return err
-	}
+	ptr, n := sa.sockaddr()!
 	return bind(fd, ptr, n)
 }
 
 func Connect(fd int, sa Sockaddr) (err error) {
-	ptr, n, err := sa.sockaddr()
-	if err != nil {
-		return err
-	}
+	ptr, n := sa.sockaddr()!
 	return connect(fd, ptr, n)
 }
 
 func Getpeername(fd int) (sa Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	var len _Socklen = SizeofSockaddrAny
-	if err = getpeername(fd, &rsa, &len); err != nil {
-		return
-	}
+	getpeername(fd, &rsa, &len)!
 	return anyToSockaddr(&rsa)
 }
 
@@ -435,18 +427,12 @@ func sendmsgNInet6(fd int, p, oob []byte, to *SockaddrInet6, flags int) (n int, 
 }
 
 func sendtoInet4(fd int, p []byte, flags int, to *SockaddrInet4) (err error) {
-	ptr, n, err := to.sockaddr()
-	if err != nil {
-		return err
-	}
+	ptr, n := to.sockaddr()!
 	return sendto(fd, p, flags, ptr, n)
 }
 
 func sendtoInet6(fd int, p []byte, flags int, to *SockaddrInet6) (err error) {
-	ptr, n, err := to.sockaddr()
-	if err != nil {
-		return err
-	}
+	ptr, n := to.sockaddr()!
 	return sendto(fd, p, flags, ptr, n)
 }
 
@@ -456,10 +442,7 @@ func Sendto(fd int, p []byte, flags int, to Sockaddr) (err error) {
 		salen _Socklen
 	)
 	if to != nil {
-		ptr, salen, err = to.sockaddr()
-		if err != nil {
-			return err
-		}
+		ptr, salen = to.sockaddr()!
 	}
 	return sendto(fd, p, flags, ptr, salen)
 }

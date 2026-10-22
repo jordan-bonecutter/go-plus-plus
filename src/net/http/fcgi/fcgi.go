@@ -130,16 +130,12 @@ type record struct {
 }
 
 func (rec *record) read(r io.Reader) (err error) {
-	if err = binary.Read(r, binary.BigEndian, &rec.h); err != nil {
-		return err
-	}
+	binary.Read(r, binary.BigEndian, &rec.h)!
 	if rec.h.Version != 1 {
 		return errors.New("fcgi: invalid header version")
 	}
 	n := int(rec.h.ContentLength) + int(rec.h.PaddingLength)
-	if _, err = io.ReadFull(r, rec.buf[:n]); err != nil {
-		return err
-	}
+	io.ReadFull(r, rec.buf[:n])!
 	return nil
 }
 

@@ -53,9 +53,7 @@ func timespecFromStatxTimestamp(x statxTimestamp) Timespec {
 func fstatat(dirfd int, path string, stat *Stat_t, flags int) (err error) {
 	var r statx_t
 	// Do it the glibc way, add AT_NO_AUTOMOUNT.
-	if err = statx(dirfd, path, _AT_NO_AUTOMOUNT|flags, _STATX_BASIC_STATS, &r); err != nil {
-		return err
-	}
+	statx(dirfd, path, _AT_NO_AUTOMOUNT|flags, _STATX_BASIC_STATS, &r)!
 
 	stat.Dev = makedev(r.Dev_major, r.Dev_minor)
 	stat.Ino = r.Ino

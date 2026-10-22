@@ -1140,10 +1140,7 @@ func (t *Transport) getConn(treq *transportRequest, cm connectMethod) (_ *persis
 		trace.GetConn(cm.addr())
 	}
 
-	pconn, err := t.poolGetConn(treq.ctx, cm)
-	if err != nil {
-		return nil, err
-	}
+	pconn := t.poolGetConn(treq.ctx, cm)!
 	if pconn.alt == nil && trace != nil && trace.GotConn != nil {
 		info := httptrace.GotConnInfo{
 			Conn:   pconn.conn,

@@ -124,10 +124,7 @@ var errCorrupted = errors.New("suffixarray: data corrupted")
 func readSlice(r io.Reader, buf []byte, data ints, maxIndex uint64) (n int, err error) {
 	// read buffer size
 	var size64 int64
-	size64, err = readInt(r, buf)
-	if err != nil {
-		return
-	}
+	size64 = readInt(r, buf)!
 	if int64(int(size64)) != size64 || int(size64) < 0 {
 		// We never write chunks this big anyway.
 		return 0, errCorrupted
@@ -135,9 +132,7 @@ func readSlice(r io.Reader, buf []byte, data ints, maxIndex uint64) (n int, err 
 	size := int(size64)
 
 	// read buffer w/o the size
-	if _, err = io.ReadFull(r, buf[binary.MaxVarintLen64:size]); err != nil {
-		return
-	}
+	io.ReadFull(r, buf[binary.MaxVarintLen64:size])!
 
 	// decode as many elements as present in buf
 	len := data.len()

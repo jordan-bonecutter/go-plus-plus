@@ -616,10 +616,7 @@ func (r *Resolver) goLookupHostOrder(ctx context.Context, name string, order hos
 			return nil, newDNSError(errNoSuchHost, name, "")
 		}
 	}
-	ips, _, err := r.goLookupIPCNAMEOrder(ctx, "ip", name, order, conf)
-	if err != nil {
-		return
-	}
+	ips, _ := r.goLookupIPCNAMEOrder(ctx, "ip", name, order, conf)!
 	addrs = make([]string, 0, len(ips))
 	for _, ip := range ips {
 		addrs = append(addrs, ip.String())

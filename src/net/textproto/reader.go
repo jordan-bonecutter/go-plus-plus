@@ -195,10 +195,7 @@ func (r *Reader) skipSpace() int {
 }
 
 func (r *Reader) readCodeLine(expectCode int) (code int, continued bool, message string, err error) {
-	line, err := r.ReadLine()
-	if err != nil {
-		return
-	}
+	line := r.ReadLine()!
 	return parseCodeLine(line, expectCode)
 }
 

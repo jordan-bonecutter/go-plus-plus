@@ -14,10 +14,7 @@ import (
 )
 
 func getCurrentKeepAliveSettings(fd fdType) (cfg KeepAliveConfig, err error) {
-	tcpKeepAlive, err := syscall.GetsockoptInt(fd, syscall.SOL_SOCKET, syscall.SO_KEEPALIVE)
-	if err != nil {
-		return
-	}
+	tcpKeepAlive := syscall.GetsockoptInt(fd, syscall.SOL_SOCKET, syscall.SO_KEEPALIVE)!
 
 	var (
 		tcpKeepAliveIdle         int
@@ -27,36 +24,21 @@ func getCurrentKeepAliveSettings(fd fdType) (cfg KeepAliveConfig, err error) {
 		tcpKeepAliveCount        int
 	)
 	if unix.SupportTCPKeepAliveIdleIntvlCNT() {
-		tcpKeepAliveIdle, err = syscall.GetsockoptInt(fd, syscall.IPPROTO_TCP, syscall_TCP_KEEPIDLE)
-		if err != nil {
-			return
-		}
+		tcpKeepAliveIdle = syscall.GetsockoptInt(fd, syscall.IPPROTO_TCP, syscall_TCP_KEEPIDLE)!
 		tcpKeepAliveIdleTime = time.Duration(tcpKeepAliveIdle) * time.Second
 
-		tcpKeepAliveInterval, err = syscall.GetsockoptInt(fd, syscall.IPPROTO_TCP, syscall_TCP_KEEPINTVL)
-		if err != nil {
-			return
-		}
+		tcpKeepAliveInterval = syscall.GetsockoptInt(fd, syscall.IPPROTO_TCP, syscall_TCP_KEEPINTVL)!
 		tcpKeepAliveIntervalTime = time.Duration(tcpKeepAliveInterval) * time.Second
 
-		tcpKeepAliveCount, err = syscall.GetsockoptInt(fd, syscall.IPPROTO_TCP, syscall_TCP_KEEPCNT)
-		if err != nil {
-			return
-		}
+		tcpKeepAliveCount = syscall.GetsockoptInt(fd, syscall.IPPROTO_TCP, syscall_TCP_KEEPCNT)!
 	} else {
-		tcpKeepAliveIdle, err = syscall.GetsockoptInt(fd, syscall.IPPROTO_TCP, syscall.TCP_KEEPALIVE_THRESHOLD)
-		if err != nil {
-			return
-		}
+		tcpKeepAliveIdle = syscall.GetsockoptInt(fd, syscall.IPPROTO_TCP, syscall.TCP_KEEPALIVE_THRESHOLD)!
 		tcpKeepAliveIdleTime = time.Duration(tcpKeepAliveIdle) * time.Millisecond
 
 		// TCP_KEEPINTVL and TCP_KEEPCNT are not available on Solaris prior to 11.4,
 		// so we have to use the value of TCP_KEEPALIVE_ABORT_THRESHOLD for Interval
 		// and 1 for Count to keep this test going.
-		tcpKeepAliveInterval, err = syscall.GetsockoptInt(fd, syscall.IPPROTO_TCP, syscall.TCP_KEEPALIVE_ABORT_THRESHOLD)
-		if err != nil {
-			return
-		}
+		tcpKeepAliveInterval = syscall.GetsockoptInt(fd, syscall.IPPROTO_TCP, syscall.TCP_KEEPALIVE_ABORT_THRESHOLD)!
 		tcpKeepAliveIntervalTime = time.Duration(tcpKeepAliveInterval) * time.Millisecond
 		tcpKeepAliveCount = 1
 	}

@@ -1760,10 +1760,7 @@ func (p *parser) parseUnicodeClass(s string, r []rune) (out []rune, rest string,
 		sign = -1
 	}
 	t := s[2:]
-	c, t, err := nextRune(t)
-	if err != nil {
-		return
-	}
+	c, t := nextRune(t)!
 	var seq, name string
 	if c != '{' {
 		// Single-letter name.
@@ -1773,16 +1770,12 @@ func (p *parser) parseUnicodeClass(s string, r []rune) (out []rune, rest string,
 		// Name is in braces.
 		end := strings.IndexRune(s, '}')
 		if end < 0 {
-			if err = checkUTF8(s); err != nil {
-				return
-			}
+			checkUTF8(s)!
 			return nil, "", &Error{ErrInvalidCharRange, s}
 		}
 		seq, t = s[:end+1], s[end+1:]
 		name = s[3:end]
-		if err = checkUTF8(name); err != nil {
-			return
-		}
+		checkUTF8(name)!
 	}
 
 	// Group can have leading negation too.  \p{^Han} == \P{Han}, \P{^Han} == \p{Han}.

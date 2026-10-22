@@ -610,46 +610,28 @@ func Getwd() (wd string, err error) {
 }
 
 func Chdir(path string) (err error) {
-	pathp, err := UTF16PtrFromString(path)
-	if err != nil {
-		return err
-	}
+	pathp := UTF16PtrFromString(path)!
 	return SetCurrentDirectory(pathp)
 }
 
 func Mkdir(path string, mode uint32) (err error) {
-	pathp, err := UTF16PtrFromString(path)
-	if err != nil {
-		return err
-	}
+	pathp := UTF16PtrFromString(path)!
 	return CreateDirectory(pathp, nil)
 }
 
 func Rmdir(path string) (err error) {
-	pathp, err := UTF16PtrFromString(path)
-	if err != nil {
-		return err
-	}
+	pathp := UTF16PtrFromString(path)!
 	return RemoveDirectory(pathp)
 }
 
 func Unlink(path string) (err error) {
-	pathp, err := UTF16PtrFromString(path)
-	if err != nil {
-		return err
-	}
+	pathp := UTF16PtrFromString(path)!
 	return DeleteFile(pathp)
 }
 
 func Rename(oldpath, newpath string) (err error) {
-	from, err := UTF16PtrFromString(oldpath)
-	if err != nil {
-		return err
-	}
-	to, err := UTF16PtrFromString(newpath)
-	if err != nil {
-		return err
-	}
+	from := UTF16PtrFromString(oldpath)!
+	to := UTF16PtrFromString(newpath)!
 	return MoveFile(from, to)
 }
 
@@ -968,36 +950,26 @@ func SetsockoptInt(fd Handle, level, opt int, value int) (err error) {
 }
 
 func Bind(fd Handle, sa Sockaddr) (err error) {
-	ptr, n, err := sa.sockaddr()
-	if err != nil {
-		return err
-	}
+	ptr, n := sa.sockaddr()!
 	return bind(fd, ptr, n)
 }
 
 func Connect(fd Handle, sa Sockaddr) (err error) {
-	ptr, n, err := sa.sockaddr()
-	if err != nil {
-		return err
-	}
+	ptr, n := sa.sockaddr()!
 	return connect(fd, ptr, n)
 }
 
 func Getsockname(fd Handle) (sa Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	l := int32(unsafe.Sizeof(rsa))
-	if err = getsockname(fd, &rsa, &l); err != nil {
-		return
-	}
+	getsockname(fd, &rsa, &l)!
 	return rsa.Sockaddr()
 }
 
 func Getpeername(fd Handle) (sa Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	l := int32(unsafe.Sizeof(rsa))
-	if err = getpeername(fd, &rsa, &l); err != nil {
-		return
-	}
+	getpeername(fd, &rsa, &l)!
 	return rsa.Sockaddr()
 }
 
@@ -1314,10 +1286,7 @@ func removeExtendedPrefix(path []uint16) []uint16 {
 
 func Fchdir(fd Handle) (err error) {
 	var buf [MAX_PATH + 1]uint16
-	path, err := fdpath(fd, buf[:])
-	if err != nil {
-		return err
-	}
+	path := fdpath(fd, buf[:])!
 	// When using VOLUME_NAME_DOS, the path is always prefixed by "\\?\".
 	// That prefix tells the Windows APIs to disable all string parsing and to send
 	// the string that follows it straight to the file system.

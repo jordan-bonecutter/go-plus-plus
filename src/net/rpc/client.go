@@ -215,12 +215,8 @@ type gobClientCodec struct {
 }
 
 func (c *gobClientCodec) WriteRequest(r *Request, body any) (err error) {
-	if err = c.enc.Encode(r); err != nil {
-		return
-	}
-	if err = c.enc.Encode(body); err != nil {
-		return
-	}
+	c.enc.Encode(r)!
+	c.enc.Encode(body)!
 	return c.encBuf.Flush()
 }
 

@@ -205,10 +205,7 @@ func (rc *ReadCloser) Close() error {
 // Most callers should instead use [File.Open], which transparently
 // decompresses data and verifies checksums.
 func (f *File) DataOffset() (offset int64, err error) {
-	bodyOffset, err := f.findBodyOffset()
-	if err != nil {
-		return
-	}
+	bodyOffset := f.findBodyOffset()!
 	return f.headerOffset + bodyOffset, nil
 }
 
