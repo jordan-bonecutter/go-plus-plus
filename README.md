@@ -63,6 +63,14 @@ union constructors, and calls can infer type arguments. Write `Option.Some(42)`
 for `Option[int]`, or let an assignment or return supply the expected type.
 Details: [local type inference](doc/local-type-inference.txt).
 
+## Stdlib v2
+
+`option.Option[T]` represents `Some T` or `None`. The first v2 APIs use it
+for map lookups, slice searches and bounds, and HTTP status text.
+`net/http/status/v2` provides union status codes.
+Errors remain multiple returns with a final `error`, propagated with `!`.
+Details: [stdlib v2](doc/stdlib-v2.txt).
+
 ## Musings
 
 Many thanks to the Golang team. I love this language. I always will. It is home.
