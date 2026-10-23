@@ -18,7 +18,7 @@ type unitSignal union {
 }
 
 func TestUnitUnionWireFormats(t *testing.T) {
-	want := unitSignal.Stop(unit{})
+	want := unitSignal.Stop()
 	for _, format := range []string{"json", "gob", "xml"} {
 		t.Run(format, func(t *testing.T) {
 			var got unitSignal

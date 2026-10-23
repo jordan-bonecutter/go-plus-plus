@@ -22,7 +22,7 @@ func valueOr[T any](option Option[T], fallback T) T {
 }
 ```
 
-Construct values with `Option[int].Some(42)` or `Option[int].None(unit{})`.
+Construct values with `Option[int].Some(42)` or `Option[int].None()`.
 `unit` aliases `struct{}`; omitting a variant's type makes it a unit.
 
 Matches must cover every variant or include a default. Extract a specific

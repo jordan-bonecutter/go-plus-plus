@@ -194,7 +194,7 @@ func comparableUnion() {
 			operation()
 		}()
 	}
-	if Empty.Unit(struct{}{}) != (Empty{}) {
+	if Empty.Unit() != (Empty{}) {
 		panic("empty equality")
 	}
 }

@@ -76,13 +76,13 @@ func TestUnionWithoutAnchor(t *testing.T) {
 	if n := testing.AllocsPerRun(100, func() { scalarAnchorSink = genericAnchorOption(42) }); n != 0 {
 		t.Fatalf("scalar constructor allocations: %v", n)
 	}
-	if n := testing.AllocsPerRun(100, func() { mixedAnchorSink = anchorOption[string].None(unit{}) }); n != 0 {
+	if n := testing.AllocsPerRun(100, func() { mixedAnchorSink = anchorOption[string].None() }); n != 0 {
 		t.Fatalf("unit constructor allocations in pointer-bearing union: %v", n)
 	}
 	if scalarAnchorSink != anchorOption[int].Some(42) {
 		t.Fatal("scalar constructor")
 	}
-	if anchorOption[int].None(unit{}) != (anchorOption[int]{}) {
+	if anchorOption[int].None() != (anchorOption[int]{}) {
 		t.Fatal("implicit unit")
 	}
 	if !reflect.TypeFor[unit]().AssignableTo(reflect.TypeFor[struct{}]()) || reflect.TypeFor[unit]() != reflect.TypeFor[struct{}]() {
@@ -91,14 +91,14 @@ func TestUnionWithoutAnchor(t *testing.T) {
 	// Omission always means the builtin unit, even if its name is shadowed.
 	type unit int
 	type empty union{ Empty  }
-	if empty.Empty(struct{}{}) != (empty{}) {
+	if empty.Empty() != (empty{}) {
 		t.Fatal("shadowed implicit unit")
 	}
 	if reflect.TypeFor[empty]().Variant(0).Type != reflect.TypeFor[struct{}]() {
 		t.Fatal("implicit payload type")
 	}
 	none := reflect.ValueOf(anchorOption[int].None)
-	if got := none.Call([]reflect.Value{reflect.ValueOf(struct{}{})})[0].Interface(); got != (anchorOption[int]{}) {
+	if got := none.Call(nil)[0].Interface(); got != (anchorOption[int]{}) {
 		t.Fatal("unit constructor function value")
 	}
 	value := genericAnchorOption("keep me")

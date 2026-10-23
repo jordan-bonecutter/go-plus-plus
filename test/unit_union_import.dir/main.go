@@ -11,6 +11,10 @@ import (
 )
 
 func main() {
+	var none func() a.Option[int] = a.Option[int].None
+	if none() != a.Nothing() || a.Option[unit].Some() == a.Option[unit].None() {
+		panic("unit constructors")
+	}
 	x := a.Make(42)
 	y := a.Make("hello")
 	runtime.GC()
