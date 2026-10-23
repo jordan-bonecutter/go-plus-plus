@@ -1,11 +1,25 @@
 Tagged unions in this checkout
 
+The predeclared type unit is an alias for struct{}; it has size zero and one
+value, unit{}. It can be shadowed like other predeclared type names.
+
 Declare variants with one payload type each:
 
     type Result[T any] union {
         Ok  T
         Err string
     }
+
+A variant without a payload type implicitly uses the builtin unit, even when
+unit is shadowed in its scope:
+
+    type Option[T any] union {
+        None
+        Some T
+    }
+
+Construct the empty variant with Option[int].None(unit{}). Constructors still
+take one payload argument; omission changes the payload type, not the arity.
 
 Construct a value with Result[int].Ok(42) or Result[int].Err("failed").
 Constructors are ordinary function values, so f := Result[int].Ok works.
@@ -52,8 +66,10 @@ methods with generic union receivers:
 Layout and collection
 
 Payloads overlap inline. After type arguments are substituted, the value's
-size includes its largest payload, a pointer-sized GC anchor, and an inline
-variant tag, with alignment padding. The tag uses uint8 for up to 256 variants,
+size includes its largest payload and an inline variant tag, with alignment
+padding. A pointer-sized GC anchor is included only if at least one payload
+type contains GC pointers. This decision is made per concrete instantiation:
+Option[int] omits it, while Option[string] retains it. The tag uses uint8 for up to 256 variants,
 uint16 for up to 65,536, uint32 for up to 2^32, and uint64 beyond that.
 The anchor and tag follow payload storage. Variant dispatch reads the inline
 tag without dereferencing the anchor. unsafe.Sizeof and reflect.Type.Size
@@ -63,7 +79,12 @@ unions can be map keys. The zero value equals the first variant with a zero
 payload. Interface payloads retain ordinary Go dynamic comparison rules.
 
 The anchor points to immutable GC metadata containing only the payload's
-pointer roots. Pointer-free payloads use a nil anchor. This keeps raw inline
+pointer roots. Pointer-free variants of pointer-bearing unions use a nil
+anchor. Pointer-free unions have a zero-size private layout placeholder in its
+place, with no pointer slot or anchor setup call. Pointer checks recurse through
+structs, non-empty arrays, and nested unions; strings, slices, maps, channels,
+functions, interfaces, pointers, and unsafe.Pointer need roots. uintptr and
+zero-length arrays do not. This keeps raw inline
 payload bytes safe during garbage collection, stack growth, copies, and
 interface conversion without teaching the collector a conditional pointer
 layout. Constructing a pointer-bearing union can allocate this metadata and

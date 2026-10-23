@@ -147,11 +147,16 @@ func IsSyncAtomicAlign128(T Type) bool {
 
 func (s *StdSizes) Offsetsof(fields []*Var) []int64 {
 	offsets := make([]int64, len(fields))
+	noAnchor := unionWithoutAnchor(fields)
 	var offs int64
 	for i, f := range fields {
 		if offs < 0 {
 			// all remaining offsets are too large
 			offsets[i] = -1
+			continue
+		}
+		if noAnchor && i == 1 {
+			offsets[i] = offs
 			continue
 		}
 		// offs >= 0

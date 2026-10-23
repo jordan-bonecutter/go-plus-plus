@@ -758,7 +758,10 @@ func (p *parser) parseUnionType(pos token.Pos) *ast.StructType {
 	for p.tok == token.IDENT {
 		doc := p.leadComment
 		name := p.parseIdent()
-		typ := p.parseType()
+		var typ ast.Expr
+		if p.tok != token.SEMICOLON && p.tok != token.RBRACE {
+			typ = p.parseType()
+		}
 		comment := p.expectSemi()
 		list = append(list, &ast.Field{Doc: doc, Names: []*ast.Ident{name}, Type: typ, Comment: comment})
 	}

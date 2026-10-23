@@ -1846,6 +1846,32 @@ func (r *reader) stmt1(tag codeStmt, out *ir.Nodes) ir.Node {
 		}
 		return stmt
 
+	case stmtUnionAnchor:
+		pos := r.pos()
+		dst, payload := r.expr(), r.expr()
+		// This decision is made after generic shape substitution, using the
+		// concrete payload's GC layout. Discarding the address expression also
+		// avoids making pointer-free payloads escape through an interface.
+		if !payload.Type().Elem().HasPointers() {
+			return nil
+		}
+		union := dst.Type().Elem()
+		field := typecheck.XDotField(r.curfn, pos, dst, union.Field(1).Sym)
+		arg := typecheck.Conv(r.curfn, payload, types.AnyType)
+		anchor := typecheck.Call(r.curfn, pos, typecheck.LookupRuntime("unionanchor"), []ir.Node{arg}, false)
+		anchor = typecheck.Conv(r.curfn, anchor, field.Type())
+		return ir.NewAssignStmt(pos, field, anchor)
+
+	case stmtUnionKeepAlive:
+		pos := r.pos()
+		x := r.expr()
+		if !x.Type().HasPointers() {
+			return nil
+		}
+		anchor := typecheck.XDotField(r.curfn, pos, x, x.Type().Field(1).Sym)
+		arg := typecheck.Conv(r.curfn, anchor, types.AnyType)
+		return typecheck.Call(r.curfn, pos, typecheck.LookupRuntime("KeepAlive"), []ir.Node{arg}, false)
+
 	case stmtExpr:
 		return r.expr()
 

@@ -45,7 +45,14 @@ func (p *parser) unionType(pos Pos) Expr {
 			p.errorAt(name.Pos(), "duplicate union variant "+name.Value)
 		}
 		seen[name.Value] = true
-		typ.FieldList = append(typ.FieldList, unionField(name.Pos(), UnionFieldPrefix+name.Value, p.type_()))
+		var payload Expr
+		if p.tok == _Semi || p.tok == _Rbrace {
+			payload = &StructType{}
+			payload.SetPos(name.Pos())
+		} else {
+			payload = p.type_()
+		}
+		typ.FieldList = append(typ.FieldList, unionField(name.Pos(), UnionFieldPrefix+name.Value, payload))
 		return false
 	})
 	if len(typ.FieldList) == 1 {

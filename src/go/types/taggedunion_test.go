@@ -157,3 +157,52 @@ func TestTaggedUnionCases(t *testing.T) {
 		})
 	}
 }
+
+func TestUnitAndAnchorSizes(t *testing.T) {
+	const source = `package p
+ type Option[T any] union { None; Some T }
+ var integer Option[int]
+ var text Option[string]
+ var empty Option[unit]
+ var zeroArray Option[[0]*int]
+ var nested Option[Option[int]]
+ var rooted Option[Option[string]]
+ var u unit
+ var _ struct{} = u
+ func shadow() { type unit int; type U union { Empty }; var _ U = U.Empty(struct{}{}) }
+ `
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, "unit.go", source, parser.ParseComments)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var formatted bytes.Buffer
+	if err := format.Node(&formatted, fset, f); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(formatted.String(), "None unit") || !strings.Contains(formatted.String(), "None") {
+		t.Fatal("lost implicit unit syntax", formatted.String())
+	}
+	f, err = parser.ParseFile(fset, "formatted.go", formatted.String(), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, arch := range []string{"amd64", "386"} {
+		sizes := types.SizesFor("gc", arch)
+		config := types.Config{Sizes: sizes}
+		pkg, err := config.Check("p", fset, []*ast.File{f}, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		word := sizes.Sizeof(types.Typ[types.Uintptr])
+		for name, want := range map[string]int64{"integer": 2 * word, "text": 4 * word, "empty": word, "zeroArray": word, "nested": 3 * word, "rooted": 6 * word} {
+			if got := sizes.Sizeof(pkg.Scope().Lookup(name).Type()); got != want {
+				t.Errorf("%s %s size=%d, want %d", arch, name, got, want)
+			}
+		}
+	}
+	obj := types.Universe.Lookup("unit").(*types.TypeName)
+	if !obj.IsAlias() || !types.Identical(obj.Type(), types.NewStruct(nil, nil)) {
+		t.Fatal("unit alias identity")
+	}
+}

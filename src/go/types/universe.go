@@ -103,6 +103,13 @@ func defPredeclaredTypes() {
 		def(obj)
 	}
 
+	// type unit = struct{}
+	{
+		obj := NewTypeName(nopos, nil, "unit", nil)
+		NewAlias(obj, NewStruct(nil, nil))
+		def(obj)
+	}
+
 	// type any = interface{}
 	{
 		obj := NewTypeName(nopos, nil, "any", nil)

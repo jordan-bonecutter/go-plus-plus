@@ -14,6 +14,7 @@ import (
 	"go/types"
 	"strings"
 
+	"golang.org/x/tools/go/gcexportdata"
 	"golang.org/x/tools/go/ssa"
 	"golang.org/x/tools/go/ssa/interp"
 	"golang.org/x/tools/go/ssa/ssautil"
@@ -22,6 +23,7 @@ import (
 )
 
 const source = `package main
+ var UnitValue unit
  type E int
  func(E)Error()string{return "boom"}
  var boom error=E(1)
@@ -129,6 +131,18 @@ func main() {
 	}
 	if code := interp.Interpret(sp, 0, types.SizesFor("gc", "amd64"), "bang.go", nil); code != 0 {
 		panic(fmt.Sprintf("SSA execution failed: %d", code))
+	}
+	pkg := ip.Pkg
+	var exported bytes.Buffer
+	if err := gcexportdata.Write(&exported, fs, pkg); err != nil {
+		panic(err)
+	}
+	imported, err := gcexportdata.Read(bytes.NewReader(exported.Bytes()), token.NewFileSet(), make(map[string]*types.Package), pkg.Path())
+	if err != nil {
+		panic(err)
+	}
+	if !types.Identical(imported.Scope().Lookup("UnitValue").Type(), types.Universe.Lookup("unit").Type()) {
+		panic("unit export identity")
 	}
 	fmt.Println("gopls SSA and Staticcheck propagation tests passed")
 }

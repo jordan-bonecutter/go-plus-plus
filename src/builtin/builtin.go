@@ -93,6 +93,9 @@ type byte = uint8
 // used, by convention, to distinguish character values from integer values.
 type rune = int32
 
+// unit is an alias for struct{}, the zero-size type with one value.
+type unit = struct{}
+
 // any is an alias for interface{} and is equivalent to interface{} in all ways.
 type any = interface{}
 

@@ -481,7 +481,10 @@ func (p *printer) isOneLineFieldList(list []*ast.Field) bool {
 	if namesSize > 0 {
 		namesSize = 1 // blank between names and types
 	}
-	typeSize := p.nodeSize(f.Type, maxSize)
+	typeSize := 0
+	if f.Type != nil {
+		typeSize = p.nodeSize(f.Type, maxSize)
+	}
 	return namesSize+typeSize <= maxSize
 }
 
@@ -522,7 +525,9 @@ func (p *printer) fieldList(fields *ast.FieldList, isStruct, isIncomplete bool) 
 				if len(f.Names) > 0 {
 					p.print(blank)
 				}
-				p.expr(f.Type)
+				if f.Type != nil {
+					p.expr(f.Type)
+				}
 			} else { // interface
 				if len(f.Names) > 0 {
 					name := f.Names[0] // method name
@@ -530,7 +535,9 @@ func (p *printer) fieldList(fields *ast.FieldList, isStruct, isIncomplete bool) 
 					p.signature(f.Type.(*ast.FuncType)) // don't print "func"
 				} else {
 					// embedded interface
-					p.expr(f.Type)
+					if f.Type != nil {
+						p.expr(f.Type)
+					}
 				}
 			}
 			p.print(blank)
@@ -566,11 +573,15 @@ func (p *printer) fieldList(fields *ast.FieldList, isStruct, isIncomplete bool) 
 				// named fields
 				p.identList(f.Names, false)
 				p.print(sep)
-				p.expr(f.Type)
+				if f.Type != nil {
+					p.expr(f.Type)
+				}
 				extraTabs = 1
 			} else {
 				// anonymous field
-				p.expr(f.Type)
+				if f.Type != nil {
+					p.expr(f.Type)
+				}
 				extraTabs = 2
 			}
 			if f.Tag != nil {
@@ -624,7 +635,9 @@ func (p *printer) fieldList(fields *ast.FieldList, isStruct, isIncomplete bool) 
 				prev = nil
 			} else {
 				// embedded interface
-				p.expr(f.Type)
+				if f.Type != nil {
+					p.expr(f.Type)
+				}
 				prev = nil
 			}
 			p.setComment(f.Comment)

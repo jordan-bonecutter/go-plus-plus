@@ -204,14 +204,14 @@ func main() {
 	generic()
 	local()
 	// Repeated payload types must remain distinct variants, and sizeof must not
-	// grow when a smaller variant is added. Tags are inline; anchors occupy one machine word.
+	// grow when a smaller variant is added. Tags are inline; pointer-bearing unions use a one-word anchor.
 	if unsafe.Sizeof(Foo{}) != 2*unsafe.Sizeof(uintptr(0))+unsafe.Sizeof("") {
 		panic("union layout")
 	}
 	if unsafe.Sizeof(Pointer{}) != 3*unsafe.Sizeof(uintptr(0)) {
 		panic("pointer union layout")
 	}
-	if unsafe.Sizeof(Empty{}) != 2*unsafe.Sizeof(uintptr(0)) {
+	if unsafe.Sizeof(Empty{}) != unsafe.Sizeof(uintptr(0)) {
 		panic("empty payload layout")
 	}
 	var construct func(int) Foo = Foo.Bar

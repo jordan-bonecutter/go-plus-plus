@@ -3913,11 +3913,13 @@ func (v Value) SetVariant(name string, x Value) {
 	// Set checks assignability and visibility before changing the destination.
 	payload := New(variant.Type).Elem()
 	payload.Set(x)
-	anchor := unionAnchor(payload.Addr().Interface())
 	result := New(v.Type()).Elem()
 	memmove(result.ptr, payload.ptr, payload.typ().Size())
 	st := (*abi.StructType)(unsafe.Pointer(v.typ()))
-	*(*unsafe.Pointer)(add(result.ptr, st.Fields[1].Offset, "union anchor")) = anchor
+	if st.Fields[1].Typ.Pointers() {
+		anchor := unionAnchor(payload.Addr().Interface())
+		*(*unsafe.Pointer)(add(result.ptr, st.Fields[1].Offset, "union anchor")) = anchor
+	}
 	tagType := st.Fields[2].Typ
 	tag := Value{tagType, add(result.ptr, st.Fields[2].Offset, "union tag"), flag(tagType.Kind()) | flagIndir | flagAddr}
 	tag.SetUint(uint64(variant.Index))

@@ -532,6 +532,21 @@ func CalcStructSize(t *Type) {
 	}
 
 	fields := t.Fields()
+	if IsTaggedUnion(t) {
+		// Payloads overlap, so their pointer roots are retained by the anchor.
+		// Scalar-only instantiations need neither an anchor nor a pointer slot.
+		data := fields[0].Type.Fields()
+		needsAnchor := false
+		for _, f := range data[:len(data)-2] {
+			if f.Type.Elem().HasPointers() {
+				needsAnchor = true
+				break
+			}
+		}
+		if !needsAnchor {
+			fields[1].Type = NewStruct(nil)
+		}
+	}
 	if len(fields) >= 3 && fields[len(fields)-1].Sym != nil && fields[0].Sym != nil && fields[len(fields)-1].Sym.Name == "union·raw" && strings.HasPrefix(fields[0].Sym.Name, "union·variant·") {
 		var largest int64
 		for _, f := range fields[:len(fields)-2] {
