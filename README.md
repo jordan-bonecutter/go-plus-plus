@@ -22,12 +22,13 @@ func valueOr[T any](option Option[T], fallback T) T {
 }
 ```
 
+Variant switch statements must be exhaustive. You can also extract a specific variant a-la:
+```go
+value, ok := x.(Some)
+```
+
 Construct values with `Option.Some(42)` or `Option.None()`.
-`unit` aliases `struct{}`; omitting a variant's type makes it a unit.
-
-Matches must cover every variant or include a default. Extract a specific
-variant with `x.(Some)` or `value, ok := x.(Some)`.
-
+Omitting a variant's type makes it a unit, which is an alias for `struct{}`.
 Payloads overlap inline. Pointer-free unions omit the GC anchor, including
 per generic instantiation: `Option[int]` needs none; `Option[string]` does.
 Unions have their own `reflect.Union` kind and support JSON, gob, and XML.
