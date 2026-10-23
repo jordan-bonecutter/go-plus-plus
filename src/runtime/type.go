@@ -69,7 +69,7 @@ func (t rtype) pkgpath() string {
 		return t.nameOff(u.PkgPath).Name()
 	}
 	switch t.Kind() {
-	case abi.Struct:
+	case abi.Struct, abi.Union:
 		st := (*structtype)(unsafe.Pointer(t.Type))
 		return st.PkgPath.Name()
 	case abi.Interface:
@@ -229,7 +229,7 @@ top:
 			buildGCMask(e, dst)
 			dst = dst.offset(e.Size_ / goarch.PtrSize)
 		}
-	case abi.Struct:
+	case abi.Struct, abi.Union:
 		s := t.StructType()
 		var bigField abi.StructField
 		for _, f := range s.Fields {
@@ -685,7 +685,7 @@ func typesEqual(t, v *_type, seen map[_typePair]struct{}) bool {
 		st := (*slicetype)(unsafe.Pointer(t))
 		sv := (*slicetype)(unsafe.Pointer(v))
 		return typesEqual(st.Elem, sv.Elem, seen)
-	case abi.Struct:
+	case abi.Struct, abi.Union:
 		st := (*structtype)(unsafe.Pointer(t))
 		sv := (*structtype)(unsafe.Pointer(v))
 		if len(st.Fields) != len(sv.Fields) {

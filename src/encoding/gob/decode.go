@@ -898,7 +898,7 @@ func (dec *Decoder) decOpFor(wireId typeId, rt reflect.Type, name string, inProg
 				state.dec.decodeSlice(state, value, *elemOp, ovfl, helper)
 			}
 
-		case reflect.Struct:
+		case reflect.Struct, reflect.Union:
 			// Generate a closure that calls out to the engine for the nested type.
 			ut := userType(typ)
 			enginePtr, err := dec.getDecEnginePtr(wireId, ut)
@@ -1089,7 +1089,7 @@ func (dec *Decoder) compatibleType(fr reflect.Type, fw typeId, inProgress map[re
 		}
 		elem := userType(t.Elem()).base
 		return sw != nil && dec.compatibleType(elem, sw.Elem, inProgress)
-	case reflect.Struct:
+	case reflect.Struct, reflect.Union:
 		return true
 	}
 }
@@ -1144,7 +1144,7 @@ func (dec *Decoder) compileDec(remoteId typeId, ut *userTypeInfo) (engine *decEn
 	defer catchError(&err)
 	rt := ut.base
 	srt := rt
-	if srt.Kind() != reflect.Struct || ut.externalDec != 0 {
+	if (srt.Kind() != reflect.Struct && srt.Kind() != reflect.Union) || ut.externalDec != 0 {
 		return dec.compileSingle(remoteId, ut)
 	}
 	var wireStruct *structType
@@ -1173,13 +1173,16 @@ func (dec *Decoder) compileDec(remoteId typeId, ut *userTypeInfo) (engine *decEn
 		}
 		ovfl := overflow(wireField.Name)
 		// Find the field of the local type with the same name.
-		localField, present := srt.FieldByName(wireField.Name)
-		if srt.IsUnion() {
+		var localField reflect.StructField
+		var present bool
+		if srt.Kind() == reflect.Union {
 			variant, ok := srt.VariantByName(wireField.Name)
 			present = ok && variant.IsExported()
 			if present {
 				localField = reflect.StructField{Name: variant.Name, Type: variant.Type, Index: []int{variant.Index}}
 			}
+		} else {
+			localField, present = srt.FieldByName(wireField.Name)
 		}
 		// TODO(r): anonymous names
 		if !present || !isExported(wireField.Name) {
@@ -1260,9 +1263,9 @@ func (dec *Decoder) decodeValue(wireId typeId, value reflect.Value) {
 	}
 	value = decAlloc(value)
 	engine := *enginePtr
-	if st := base; st.Kind() == reflect.Struct && ut.externalDec == 0 {
+	if st := base; (st.Kind() == reflect.Struct || st.Kind() == reflect.Union) && ut.externalDec == 0 {
 		wt := dec.wireType[wireId]
-		if engine.numInstr == 0 && st.NumField() > 0 &&
+		if engine.numInstr == 0 && (st.Kind() == reflect.Union || st.NumField() > 0) &&
 			wt != nil && len(wt.StructT.Field) > 0 {
 			name := base.Name()
 			errorf("type mismatch: no fields matched compiling decoder for %s", name)

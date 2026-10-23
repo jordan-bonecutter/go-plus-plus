@@ -17,7 +17,8 @@ import (
 // Note that this will clone strings in structs and arrays found in value,
 // and will clone value if it itself is a string. It will not, however, clone
 // strings if value is of interface or slice type (that is, found via an
-// indirection).
+// indirection). Union payloads are also left intact: their pointers are rooted
+// through a GC anchor, which must stay consistent with the inline payload.
 func clone[T comparable](value T, seq *cloneSeq) T {
 	for _, offset := range seq.stringOffsets {
 		ps := (*string)(unsafe.Pointer(uintptr(unsafe.Pointer(&value)) + offset))

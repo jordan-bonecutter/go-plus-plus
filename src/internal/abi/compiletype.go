@@ -31,7 +31,7 @@ func ITabTypeOff(ptrSize int) int { return ptrSize }
 func RTypeSize(kind Kind, ptrSize int) int {
 	cs := CommonSize(ptrSize)
 	switch kind {
-	case Struct: // reflect.structType
+	case Struct, Union: // reflect.structType
 		return cs + 4*ptrSize
 	case Pointer: // reflect.ptrType
 		return cs + ptrSize

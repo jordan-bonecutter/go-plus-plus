@@ -33,3 +33,13 @@ func TestUnion(t *testing.T) {
 		t.Fatalf("dynamic comparability: %v", err)
 	}
 }
+
+func TestUnionTruth(t *testing.T) {
+	for _, value := range []any{unionKey{}, unionKey.A("x"), new(unionKey)} {
+		tmpl := template.Must(template.New("truth").Parse(`{{if .}}true{{else}}false{{end}}`))
+		var buf bytes.Buffer
+		if err := tmpl.Execute(&buf, value); err != nil || buf.String() != "true" {
+			t.Fatalf("union truth: %s %v", &buf, err)
+		}
+	}
+}

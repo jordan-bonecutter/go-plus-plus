@@ -464,10 +464,9 @@ func newTypeEncoder(t reflect.Type, allowAddr bool) encoderFunc {
 		return stringEncoder
 	case reflect.Interface:
 		return interfaceEncoder
+	case reflect.Union:
+		return unionEncoder
 	case reflect.Struct:
-		if t.IsUnion() {
-			return unionEncoder
-		}
 		return newStructEncoder(t)
 	case reflect.Map:
 		return newMapEncoder(t)
@@ -1183,7 +1182,7 @@ func typeFields(t reflect.Type) structFields {
 				}
 
 				// Record found field and index sequence.
-				if name != "" || !sf.Anonymous || ft.Kind() != reflect.Struct || ft.IsUnion() {
+				if name != "" || !sf.Anonymous || ft.Kind() != reflect.Struct {
 					tagged := name != ""
 					if name == "" {
 						name = sf.Name

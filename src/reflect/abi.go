@@ -233,7 +233,7 @@ func (a *abiSeq) regAssign(t *abi.Type, offset uintptr) bool {
 		default:
 			return false
 		}
-	case Struct:
+	case Struct, Union:
 		st := (*structType)(unsafe.Pointer(t))
 		for i := range st.Fields {
 			f := &st.Fields[i]

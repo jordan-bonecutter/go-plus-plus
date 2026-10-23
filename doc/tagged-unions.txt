@@ -98,7 +98,10 @@ non-addressable copy of the payload;
 unexported fields and variants retain their Interface restrictions. Rebuild
 existing executables with bin/go to pick up the formatting change.
 
-reflect.Type.IsUnion identifies tagged unions (whose Kind remains Struct).
+Tagged unions have their own reflect.Union kind ("union"), distinct from
+reflect.Struct. reflect.Type.IsUnion is equivalent to Kind() == reflect.Union.
+Struct-only APIs such as Field, NumField, and VisibleFields reject unions;
+use NumVariant, Variant, VariantByName, Value.Variant, and SetVariant instead.
 NumVariant, Variant(i), and VariantByName expose declared variant names, payload
 types, indices, and export visibility. reflect.New(t).Elem().SetVariant(name, x)
 constructs or replaces a union using an assignable payload. SetVariant requires
@@ -175,6 +178,12 @@ layout or ASN.1 schema; the private in-memory union layout is not a wire format.
 
 Reflection-use audit (non-vendored standard library):
 
+- The compiler emits abi.Union metadata. Runtime hashing, dynamic map key
+  validation, type identity, GC masks, linker metadata, and reflection calling
+  conventions recognize that kind while retaining the private aggregate layout.
+  Race instrumentation covers the entire union, including its tag. Cgo pointer
+  checks inspect the active payload, not the implementation GC anchor.
+
 - reflect already handles union copying, calls, containers, comparison, zero
   checks, and DeepEqual through the active payload. internal/reflectlite's
   generic copying and swapping use the same runtime type operations.
@@ -183,6 +192,9 @@ Reflection-use audit (non-vendored standard library):
   bytes. text/template inherits that order; equality checks dynamic payload
   comparability before comparing. go/ast.Print prints the active variant and
   hides payloads that reflection cannot expose.
+- unique preserves union payloads and their GC anchors while interning values;
+  it does not clone strings inside union payloads, just as it does not clone
+  strings reached through interfaces.
 - testing/quick chooses among exported variants and generates their payloads;
   unions with no exported variants are unsupported, like other inaccessible
   values. Payload generators and existing recursion limits still apply.

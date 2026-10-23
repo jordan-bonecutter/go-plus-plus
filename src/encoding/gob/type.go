@@ -533,7 +533,7 @@ func newTypeObject(name string, ut *userTypeInfo, rt reflect.Type) (gobType, err
 		st.init(type0)
 		return st, nil
 
-	case reflect.Struct:
+	case reflect.Struct, reflect.Union:
 		st := newStructType(name)
 		types[rt] = st
 		idToTypeSlice[st.id()] = st
@@ -764,7 +764,7 @@ func buildTypeInfo(ut *userTypeInfo, rt reflect.Type) (*typeInfo, error) {
 			if typ.Elem().Kind() != reflect.Uint8 {
 				info.wire.SliceT = t.(*sliceType)
 			}
-		case reflect.Struct:
+		case reflect.Struct, reflect.Union:
 			info.wire.StructT = t.(*structType)
 		}
 	}

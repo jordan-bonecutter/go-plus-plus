@@ -77,6 +77,7 @@ const (
 	String
 	Struct
 	UnsafePointer
+	Union
 )
 
 // TFlag is used by a Type to signal what extra type information is
@@ -175,6 +176,7 @@ var kindNames = []string{
 	Slice:         "slice",
 	String:        "string",
 	Struct:        "struct",
+	Union:         "union",
 	UnsafePointer: "unsafe.Pointer",
 }
 
@@ -322,7 +324,7 @@ func (t *Type) Uncommon() *UncommonType {
 		return nil
 	}
 	switch t.Kind() {
-	case Struct:
+	case Struct, Union:
 		return &(*structTypeUncommon)(unsafe.Pointer(t)).u
 	case Pointer:
 		type u struct {
@@ -397,9 +399,10 @@ func (t *Type) Elem() *Type {
 	return nil
 }
 
-// StructType returns t cast to a *StructType, or nil if its tag does not match.
+// StructType returns the physical aggregate descriptor for a struct or union,
+// or nil for other kinds. Union payload fields remain private to the runtime.
 func (t *Type) StructType() *StructType {
-	if t.Kind() != Struct {
+	if t.Kind() != Struct && t.Kind() != Union {
 		return nil
 	}
 	return (*StructType)(unsafe.Pointer(t))
@@ -764,7 +767,7 @@ func (t *Type) DescriptorSize() int {
 		baseSize, addSize = t.PointerType().descriptorSizes()
 	case Slice:
 		baseSize, addSize = t.SliceType().descriptorSizes()
-	case Struct:
+	case Struct, Union:
 		baseSize, addSize = t.StructType().descriptorSizes()
 	case Bool,
 		Int, Int8, Int16, Int32, Int64,

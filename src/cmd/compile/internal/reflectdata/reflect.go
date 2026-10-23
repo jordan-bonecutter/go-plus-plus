@@ -416,6 +416,9 @@ var kinds = []abi.Kind{
 }
 
 func ABIKindOfType(t *types.Type) abi.Kind {
+	if types.IsTaggedUnion(t) {
+		return abi.Union
+	}
 	return kinds[t.Kind()]
 }
 

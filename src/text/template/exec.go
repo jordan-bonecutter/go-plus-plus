@@ -346,8 +346,8 @@ func isTrue(val reflect.Value) (truth, ok bool) {
 		truth = val.Float() != 0
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		truth = val.Uint() != 0
-	case reflect.Struct:
-		truth = true // Struct values are always true.
+	case reflect.Struct, reflect.Union:
+		truth = true // Struct and union values are always true.
 	default:
 		return
 	}

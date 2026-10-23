@@ -823,22 +823,22 @@ func (p *pp) printValue(value reflect.Value, verb rune, depth int) {
 		} else {
 			p.buf.writeByte(']')
 		}
-	case reflect.Struct:
-		if name, payload := f.Variant(); name != "" {
-			typ := f.Type().Name()
-			if p.fmt.sharpV {
-				typ = f.Type().String()
-			}
-			if typ != "" {
-				p.buf.writeString(typ)
-				p.buf.writeByte('.')
-			}
-			p.buf.writeString(name)
-			p.buf.writeByte('(')
-			p.printValue(payload, verb, depth+1)
-			p.buf.writeByte(')')
-			return
+	case reflect.Union:
+		name, payload := f.Variant()
+		typ := f.Type().Name()
+		if p.fmt.sharpV {
+			typ = f.Type().String()
 		}
+		if typ != "" {
+			p.buf.writeString(typ)
+			p.buf.writeByte('.')
+		}
+		p.buf.writeString(name)
+		p.buf.writeByte('(')
+		p.printValue(payload, verb, depth+1)
+		p.buf.writeByte(')')
+		return
+	case reflect.Struct:
 		if p.fmt.sharpV {
 			p.buf.writeString(f.Type().String())
 		}
@@ -923,7 +923,7 @@ func (p *pp) printValue(value reflect.Value, verb rune, depth int) {
 		// but not embedded (avoid loops)
 		if depth == 0 && f.UnsafePointer() != nil {
 			switch a := f.Elem(); a.Kind() {
-			case reflect.Array, reflect.Slice, reflect.Struct, reflect.Map:
+			case reflect.Array, reflect.Slice, reflect.Struct, reflect.Union, reflect.Map:
 				p.buf.writeByte('&')
 				p.printValue(a, verb, depth+1)
 				return

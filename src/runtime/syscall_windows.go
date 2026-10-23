@@ -183,7 +183,7 @@ func (p *abiDesc) tryRegAssignArg(t *_type, offset uintptr) bool {
 		if at.Len == 1 {
 			return p.tryRegAssignArg(at.Elem, offset) // TODO fix when runtime is fully commoned up w/ abi.Type
 		}
-	case abi.Struct:
+	case abi.Struct, abi.Union:
 		st := (*structtype)(unsafe.Pointer(t))
 		for i := range st.Fields {
 			f := &st.Fields[i]

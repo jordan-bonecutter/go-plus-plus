@@ -106,17 +106,16 @@ func compare(aVal, bVal reflect.Value) int {
 			return c
 		}
 		return cmp.Compare(aVal.Pointer(), bVal.Pointer())
-	case reflect.Struct:
-		if aType.IsUnion() {
-			an, av := aVal.Variant()
-			bn, bv := bVal.Variant()
-			ai, _ := aType.VariantByName(an)
-			bi, _ := aType.VariantByName(bn)
-			if c := cmp.Compare(ai.Index, bi.Index); c != 0 {
-				return c
-			}
-			return compare(av, bv)
+	case reflect.Union:
+		an, av := aVal.Variant()
+		bn, bv := bVal.Variant()
+		ai, _ := aType.VariantByName(an)
+		bi, _ := aType.VariantByName(bn)
+		if c := cmp.Compare(ai.Index, bi.Index); c != 0 {
+			return c
 		}
+		return compare(av, bv)
+	case reflect.Struct:
 		for i := 0; i < aVal.NumField(); i++ {
 			if c := compare(aVal.Field(i), bVal.Field(i)); c != 0 {
 				return c

@@ -103,10 +103,9 @@ func makeDefaultMarshaler(t reflect.Type) *marshaler {
 		return makeFloatMarshaler(t)
 	case reflect.Map:
 		return makeMapMarshaler(t)
+	case reflect.Union:
+		return makeUnionMarshaler(t)
 	case reflect.Struct:
-		if t.IsUnion() {
-			return makeUnionMarshaler(t)
-		}
 		return makeStructMarshaler(t)
 	case reflect.Slice:
 		fnc := makeSliceMarshaler(t)
@@ -143,10 +142,9 @@ func makeDefaultUnmarshaler(t reflect.Type) *unmarshaler {
 		return makeFloatUnmarshaler(t)
 	case reflect.Map:
 		return makeMapUnmarshaler(t)
+	case reflect.Union:
+		return makeUnionUnmarshaler(t)
 	case reflect.Struct:
-		if t.IsUnion() {
-			return makeUnionUnmarshaler(t)
-		}
 		return makeStructUnmarshaler(t)
 	case reflect.Slice:
 		fnc := makeSliceUnmarshaler(t)

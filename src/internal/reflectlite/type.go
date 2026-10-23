@@ -85,6 +85,7 @@ const (
 	Slice     = abi.Slice
 	String    = abi.String
 	Struct    = abi.Struct
+	Union     = abi.Union
 )
 
 type nameOff = abi.NameOff
@@ -340,7 +341,7 @@ func (t rtype) Len() int {
 
 func (t rtype) NumField() int {
 	tt := t.Type.StructType()
-	if tt == nil {
+	if t.Kind() != Struct {
 		panic("reflect: NumField of non-struct type")
 	}
 	return len(tt.Fields)
@@ -596,7 +597,7 @@ func haveIdenticalUnderlyingType(T, V *abi.Type, cmpTags bool) bool {
 	case Ptr, abi.Slice:
 		return haveIdenticalType(T.Elem(), V.Elem(), cmpTags)
 
-	case abi.Struct:
+	case abi.Struct, abi.Union:
 		t := (*structType)(unsafe.Pointer(T))
 		v := (*structType)(unsafe.Pointer(V))
 		if len(t.Fields) != len(v.Fields) {
