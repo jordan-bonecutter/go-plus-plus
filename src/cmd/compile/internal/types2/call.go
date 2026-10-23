@@ -148,6 +148,17 @@ func (check *Checker) instantiateSignature(pos syntax.Pos, expr syntax.Expr, typ
 	inst := check.instance(pos, typ, targs, nil, check.context()).(*Signature)
 	assert(inst.TypeParams().Len() == 0) // signature is not generic anymore
 	check.recordInstance(expr, targs, inst)
+	// Inferred union constructors become ordinary monomorphic closures before
+	// unified IR is written, just like explicitly instantiated constructors.
+	if sel, ok := expr.(*syntax.SelectorExpr); ok && check.inferredConstructors[sel] {
+		result := inst.results.At(0).typ
+		variant := unionVariant(result, sel.Sel.Value)
+		check.recordInstance(sel.X, targs, result)
+		check.recordTypeAndValue(sel.X, typexpr, result, nil)
+		sel.Lowered = unionFunction(sel.Pos(), result, variant, "construct")
+		var lowered operand
+		check.expr(nil, &lowered, sel.Lowered)
+	}
 	assert(len(xlist) <= len(targs))
 
 	// verify instantiation lazily (was go.dev/issue/50450)
@@ -169,7 +180,7 @@ func (check *Checker) instantiateSignature(pos syntax.Pos, expr syntax.Expr, typ
 	return inst
 }
 
-func (check *Checker) callExpr(x *operand, call *syntax.CallExpr) exprKind {
+func (check *Checker) callExpr(T *target, x *operand, call *syntax.CallExpr) exprKind {
 	var inst *syntax.IndexExpr // function instantiation, if any
 	if iexpr, _ := call.Fun.(*syntax.IndexExpr); iexpr != nil {
 		if check.indexExpr(x, iexpr) {
@@ -313,7 +324,7 @@ func (check *Checker) callExpr(x *operand, call *syntax.CallExpr) exprKind {
 	// evaluate arguments
 	targetAt := func(i int) *target { return newTarget(sig.argType(i), "function parameter") }
 	args, atargs := check.genericExprList(targetAt, call.ArgList)
-	sig = check.arguments(call, sig, targs, xlist, args, atargs)
+	sig = check.arguments(call, sig, targs, xlist, args, atargs, T)
 
 	if wasGeneric && sig.TypeParams().Len() == 0 {
 		// update the recorded type of call.Fun to its instantiated type
@@ -493,7 +504,7 @@ func (check *Checker) genericExprList(targetAt func(int) *target, elist []syntax
 // functions are instantiated as necessary.
 // The result signature is the (possibly adjusted and instantiated) function signature.
 // If an error occurred, the result signature is the incoming sig.
-func (check *Checker) arguments(call *syntax.CallExpr, sig *Signature, targs []Type, xlist []syntax.Expr, args []*operand, atargs [][]Type) (rsig *Signature) {
+func (check *Checker) arguments(call *syntax.CallExpr, sig *Signature, targs []Type, xlist []syntax.Expr, args []*operand, atargs [][]Type, target *target) (rsig *Signature) {
 	rsig = sig
 
 	// Function call argument/parameter count requirements
@@ -645,7 +656,36 @@ func (check *Checker) arguments(call *syntax.CallExpr, sig *Signature, targs []T
 	// infer missing type arguments of callee and function arguments
 	if len(tparams) > 0 {
 		err := check.newError(CannotInferTypeArgs)
-		targs = check.infer(call.Pos(), tparams, targs, sigParams, args, false, err)
+		// Preserve argument-only inference whenever it succeeds. Result context
+		// fills gaps; it must not change existing defaulting or conversions.
+		inferred := check.infer(call.Pos(), tparams, targs, sigParams, args, false, err)
+		var result Type
+		// Function boundaries stay explicit; only bodies use result context.
+		if inferred == nil && n > 0 && check.sig != nil && target != nil && !isNonTypeParamInterface(target.typ) {
+			nresults := sig.results.Len()
+			if call.Bang {
+				nresults--
+			}
+			if nresults == 1 {
+				renamed := make([]Type, n)
+				for i, param := range tparams[:n] {
+					renamed[i] = param
+				}
+				result = check.subst(call.Pos(), sig.results.At(0).typ, makeSubstMap(sig.TypeParams().list(), renamed), nil, check.context())
+			}
+		}
+		if inferred == nil && result != nil {
+			var params []*Var
+			if sigParams != nil {
+				params = append(params, sigParams.vars...)
+			}
+			params = append(params, NewParam(call.Pos(), check.pkg, "", result))
+			contextArgs := append([]*operand(nil), args...)
+			contextArgs = append(contextArgs, &operand{mode_: value, expr: call, typ_: target.typ})
+			err = check.newError(CannotInferTypeArgs)
+			inferred = check.infer(call.Pos(), tparams, targs, NewTuple(params...), contextArgs, false, err)
+		}
+		targs = inferred
 		if targs == nil {
 			// TODO(gri) If infer inferred the first targs[:n], consider instantiating
 			//           the call signature for better error messages/gopls behavior.
@@ -812,7 +852,7 @@ func (check *Checker) selector(x *operand, e *syntax.SelectorExpr, wantType bool
 		}
 	}
 
-	check.exprOrType(x, e.X, false)
+	check.exprOrType(x, e.X, true)
 	switch x.mode() {
 	case builtin:
 		check.errorf(e.Pos(), UncalledBuiltin, "invalid use of %s in selector expression", x)
@@ -833,6 +873,20 @@ func (check *Checker) selector(x *operand, e *syntax.SelectorExpr, wantType bool
 				check.errorf(e.Sel, UnexportedName, "variant %s is not exported", sel)
 				goto Error
 			}
+			if isGeneric(x.typ()) {
+				if check.sig == nil {
+					check.nonGeneric(nil, x)
+					goto Error
+				}
+				if check.inferredConstructors == nil {
+					check.inferredConstructors = make(map[*syntax.SelectorExpr]bool)
+				}
+				check.inferredConstructors[e] = true
+				x.typ_ = check.inferredConstructor(e.Pos(), x.typ(), field.typ.(*Array).elem)
+				x.mode_ = value
+				x.expr = e
+				return
+			}
 			if e.Lowered == nil {
 				e.Lowered = unionFunction(e.Pos(), x.typ(), i, "construct")
 			}
@@ -840,6 +894,11 @@ func (check *Checker) selector(x *operand, e *syntax.SelectorExpr, wantType bool
 			x.expr = e
 			return
 		}
+	}
+
+	check.nonGeneric(nil, x)
+	if !x.isValid() {
+		goto Error
 	}
 
 	// Avoid crashing when checking an invalid selector in a method declaration.

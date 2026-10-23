@@ -49,6 +49,13 @@ named results and zero unnamed results. Defers work normally.
 
 Details: [unions and unit](doc/tagged-unions.txt) · [error propagation](doc/bang-operator.txt).
 
+## Local type inference
+
+Function signatures stay explicit; inside function bodies, generic literals,
+union constructors, and calls can infer type arguments. Write `Option.Some(42)`
+for `Option[int]`, or let an assignment or return supply the expected type.
+Details: [local type inference](doc/local-type-inference.txt).
+
 ## Musings
 
 Many thanks to the Golang team. I love this language. I always will. It is home.
