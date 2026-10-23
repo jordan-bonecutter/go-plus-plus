@@ -1,0 +1,37 @@
+Stdlib v2: first pass
+
+option.Option[T] is a union of None and Some T. Its zero value is None.
+Some(nil), Some(0), and Some("") are present values. Constructors are
+option.Option.Some(value) and option.Option[T].None().
+
+Match with .(variant), extract with .(Some), or use Get for a value/bool
+boundary. OrPanic panics on None; UnwrapOr and UnwrapOrElse supply defaults.
+Map, AndThen, OrElse, Filter, and Flatten compose optional values.
+OrElse lazily supplies another Option when the receiver is None.
+Fallbacks and callbacks run only when needed.
+
+Errors remain final error returns. Option describes absence, not failure;
+there is no Result type. Use call()! to propagate errors.
+
+maps/v2 adds Get and Take. Missing keys produce None; stored zero values
+produce Some. Take also deletes the key. Nil maps behave like empty maps.
+
+slices/v2 replaces sentinel indices and empty-input panics with Option:
+Get, First, Last, Index, IndexFunc, Find, Min, and Max. Get returns None
+for negative and out-of-range indices. Sorting and other operations that
+do not benefit from the type changes remain in slices.
+
+net/http/status/v2 introduces Code, with a unit variant for each status
+named by net/http and an Other int payload for extension codes. The zero
+value is Continue. Parse and Int round-trip every integer;
+parsing does not validate the wire protocol's status range. Text returns
+Option[string] rather than an empty-string sentinel.
+
+The status package owns its text mapping and conversions. It does not import
+or wrap net/http. There is no net/http/v2 client adapter. A future HTTP v2
+needs a complete request/response/client/server design.
+
+These are focused companion APIs, not complete replacements for the legacy
+packages. Existing APIs stay available for operations without a useful type
+change. No v2 packages are added for arithmetic, hashing, byte copying, or
+other operations whose existing signatures already describe their outcomes.
