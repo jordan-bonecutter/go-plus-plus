@@ -1,0 +1,47 @@
+env GO111MODULE=on
+env GOTOOLCHAIN=local
+env GOFLAGS=-buildvcs=false
+
+go list -f '{{.GoFiles}} {{.TestGoFiles}}' .
+stdout 'main.go\+\+'
+stdout 'main_test.go\+\+'
+go run main.go++ helper.go
+stdout '^42$'
+go run .
+stdout '^42$'
+go test -cover .
+stdout 'ok'
+go build main.go++ helper.go
+exists main$GOEXE
+[cgo] go run ./cpart
+[cgo] stdout '^7$'
+
+-- go.mod --
+module example.com/gopp
+
+go 1.26
+-- main.go++ --
+package main
+import "fmt"
+type Option[T any] union { Empty; Value T }
+func number() (int,error) { return Answer(),nil }
+func read() (int,error) { return number()!,nil }
+func main() { n,e:=read();if e!=nil{panic(e)};fmt.Println(n);_ = Option[int].Empty(unit{}) }
+-- helper.go --
+package main
+func Answer() int { return 42 }
+-- main_test.go++ --
+package main
+import "testing"
+func TestAnswer(t *testing.T) { if Answer()!=42 {t.Fatal("answer")} }
+-- ignored.go++ --
+//go:build ignore
+
+invalid source that must not be compiled
+
+-- cpart/main.go++ --
+package main
+// static int answer(void) { return 7; }
+import "C"
+import "fmt"
+func main() { fmt.Println(int(C.answer())) }

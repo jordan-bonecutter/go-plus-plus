@@ -92,7 +92,7 @@ func isGccgoTool(tool string) bool {
 func isMainPackage(dir string) bool {
 	fset := token.NewFileSet()
 	pkgs, _ := parser.ParseDir(fset, dir, func(fi os.FileInfo) bool {
-		return !strings.HasSuffix(fi.Name(), "_test.go")
+		return !(strings.HasSuffix(fi.Name(), "_test.go") || strings.HasSuffix(fi.Name(), "_test.go++"))
 	}, parser.PackageClauseOnly)
 	_, ok := pkgs["main"]
 	return ok

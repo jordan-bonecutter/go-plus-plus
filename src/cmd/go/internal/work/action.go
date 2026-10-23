@@ -765,12 +765,12 @@ func (b *Builder) cgoAction(p *load.Package, objdir string, deps []*Action, hasC
 		if hasCover {
 			cgoFiles = slices.Clone(cgoFiles)
 			for i := range cgoFiles {
-				cgoFiles[i] = strings.TrimSuffix(cgoFiles[i], ".go") + ".cover.go"
+				cgoFiles[i] = strings.TrimSuffix(strings.TrimSuffix(cgoFiles[i], "++"), ".go") + ".cover.go"
 			}
 		}
 		cfiles := []string{"_cgo_export.c"}
 		for _, fn := range slices.Concat(cgoFiles, swigGo) {
-			cfiles = append(cfiles, strings.TrimSuffix(filepath.Base(fn), ".go")+".cgo2.c")
+			cfiles = append(cfiles, strings.TrimSuffix(strings.TrimSuffix(filepath.Base(fn), "++"), ".go")+".cgo2.c")
 		}
 		for _, f := range cfiles {
 			collectDeps = append(collectDeps, compileAction(objdir+f, (*runCgoProvider).cflags, b.gcc))
