@@ -573,11 +573,12 @@ var nopos syntax.Pos
 
 // A rewriter implements rewriting the range-over-funcs in a given function.
 type rewriter struct {
-	pkg   *types2.Package
-	info  *types2.Info
-	sig   *types2.Signature
-	outer *syntax.FuncType
-	body  *syntax.BlockStmt
+	pkg       *types2.Package
+	info      *types2.Info
+	sig       *types2.Signature
+	outer     *syntax.FuncType
+	body      *syntax.BlockStmt
+	bangNamed []bool
 
 	// References to important types and values.
 	any   types2.Object
@@ -669,6 +670,10 @@ func rewriteFunc(pkg *types2.Package, info *types2.Info, typ *syntax.FuncType, b
 		sig:                   sig,
 		rangefuncBodyClosures: ri,
 	}
+	for i := 0; i < sig.Results().Len(); i++ {
+		name := sig.Results().At(i).Name()
+		r.bangNamed = append(r.bangNamed, name != "" && name != "_")
+	}
 	syntax.Inspect(body, r.inspect)
 	if (base.Flag.W != 0) && r.forStack != nil {
 		syntax.Fdump(os.Stderr, body)
@@ -718,6 +723,10 @@ func (r *rewriter) inspect(n syntax.Node) bool {
 		// Also replace any converted for statements
 		// with the rewritten block.
 		switch n := n.(type) {
+		case *syntax.CallExpr:
+			if n.Bang {
+				r.editBang(n)
+			}
 		case *syntax.BlockStmt:
 			for i, s := range n.List {
 				n.List[i] = r.editStmt(s)
@@ -868,6 +877,55 @@ func (r *rewriter) stateVar(pos syntax.Pos) (*types2.Var, *syntax.VarDecl) {
 	r.info.Defs[n] = obj
 
 	return obj, &syntax.VarDecl{NameList: []*syntax.Name{n}, Values: r.stateConst(abi.RF_READY)}
+}
+
+// editBang gives the implicit return the same iterator-unwinding path as an
+// explicit return. Iterator expressions are evaluated outside their own body.
+func (r *rewriter) editBang(call *syntax.CallExpr) {
+	call.BangNamed = append([]bool(nil), r.bangNamed...)
+	stack := r.forStack
+	active := 0
+	for _, loop := range stack {
+		inside := false
+		for _, node := range r.stack {
+			if node == loop.nfor.Body {
+				inside = true
+				break
+			}
+		}
+		if !inside {
+			break
+		}
+		active++
+	}
+	if active == 0 {
+		return
+	}
+	r.forStack = stack[:active]
+	defer func() { r.forStack = stack }()
+	var results []syntax.Expr
+	for i := 0; i < r.sig.Results().Len(); i++ {
+		result := r.sig.Results().At(i)
+		var expr syntax.Expr
+		switch {
+		case i == r.sig.Results().Len()-1:
+			expr = syntax.NewName(call.Pos(), syntax.BangError)
+		case r.bangNamed[i]:
+			expr = r.useObj(result)
+		default:
+			expr = syntax.NewName(call.Pos(), syntax.BangZero)
+		}
+		tv := syntax.TypeAndValue{Type: result.Type()}
+		tv.SetIsValue()
+		expr.SetTypeInfo(tv)
+		results = append(results, expr)
+	}
+	ret := &syntax.ReturnStmt{Results: &syntax.ListExpr{ElemList: results}}
+	if len(results) == 1 {
+		ret.Results = results[0]
+	}
+	ret.SetPos(call.Pos())
+	call.BangExit = r.editReturn(ret)
 }
 
 // editReturn returns the replacement for the return statement x.

@@ -259,9 +259,12 @@ type (
 
 	// Fun(ArgList[0], ArgList[1], ...)
 	CallExpr struct {
-		Fun     Expr
-		ArgList []Expr // nil means no arguments
-		HasDots bool   // last argument is followed by ...
+		Bang      bool   // propagate the final error to the enclosing function
+		BangNamed []bool // original result names, before rangefunc introduces names
+		BangExit  Stmt   // return path rewritten by rangefunc, if inside an iterator body
+		Fun       Expr
+		ArgList   []Expr // nil means no arguments
+		HasDots   bool   // last argument is followed by ...
 		expr
 	}
 

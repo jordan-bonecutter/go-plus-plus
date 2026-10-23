@@ -393,6 +393,7 @@ type (
 		Args     []Expr    // function arguments; or nil
 		Ellipsis token.Pos // position of "..." (token.NoPos if there is no "...")
 		Rparen   token.Pos // position of ")"
+		Bang     token.Pos // position of postfix !, or token.NoPos
 	}
 
 	// A StarExpr node represents an expression of the form "*" Expression.
@@ -552,13 +553,18 @@ func (x *IndexExpr) End() token.Pos      { return x.Rbrack + 1 }
 func (x *IndexListExpr) End() token.Pos  { return x.Rbrack + 1 }
 func (x *SliceExpr) End() token.Pos      { return x.Rbrack + 1 }
 func (x *TypeAssertExpr) End() token.Pos { return x.Rparen + 1 }
-func (x *CallExpr) End() token.Pos       { return x.Rparen + 1 }
-func (x *StarExpr) End() token.Pos       { return x.X.End() }
-func (x *UnaryExpr) End() token.Pos      { return x.X.End() }
-func (x *BinaryExpr) End() token.Pos     { return x.Y.End() }
-func (x *KeyValueExpr) End() token.Pos   { return x.Value.End() }
-func (x *ArrayType) End() token.Pos      { return x.Elt.End() }
-func (x *StructType) End() token.Pos     { return x.Fields.End() }
+func (x *CallExpr) End() token.Pos {
+	if x.Bang.IsValid() {
+		return x.Bang + 1
+	}
+	return x.Rparen + 1
+}
+func (x *StarExpr) End() token.Pos     { return x.X.End() }
+func (x *UnaryExpr) End() token.Pos    { return x.X.End() }
+func (x *BinaryExpr) End() token.Pos   { return x.Y.End() }
+func (x *KeyValueExpr) End() token.Pos { return x.Value.End() }
+func (x *ArrayType) End() token.Pos    { return x.Elt.End() }
+func (x *StructType) End() token.Pos   { return x.Fields.End() }
 func (x *FuncType) End() token.Pos {
 	if x.Results != nil {
 		return x.Results.End()

@@ -35,12 +35,13 @@ type Scanner struct {
 	mode Mode         // scanning mode
 
 	// scanning state
-	ch         rune      // current character
-	offset     int       // character offset
-	rdOffset   int       // reading offset (position after current character)
-	lineOffset int       // current line offset
-	insertSemi bool      // insert a semicolon before next newline
-	nlPos      token.Pos // position of newline in preceding comment
+	ch          rune      // current character
+	offset      int       // character offset
+	rdOffset    int       // reading offset (position after current character)
+	lineOffset  int       // current line offset
+	insertSemi  bool      // insert a semicolon before next newline
+	afterRparen bool      // previous non-comment token was )
+	nlPos       token.Pos // position of newline in preceding comment
 
 	endPosValid bool
 	endPos      token.Pos // overrides the offset as the default end position
@@ -829,6 +830,7 @@ scanAgain:
 		s.endPos = pos + 1
 		s.endPosValid = true
 		s.nlPos = token.NoPos
+		s.afterRparen = false
 		return
 	}
 
@@ -964,6 +966,7 @@ scanAgain:
 			tok = s.switch2(token.ASSIGN, token.EQL)
 		case '!':
 			tok = s.switch2(token.NOT, token.NEQ)
+			insertSemi = tok == token.NOT && s.insertSemi && s.afterRparen
 		case '&':
 			if s.ch == '^' {
 				s.next()
@@ -990,6 +993,9 @@ scanAgain:
 			tok = token.ILLEGAL
 			lit = string(ch)
 		}
+	}
+	if tok != token.COMMENT {
+		s.afterRparen = tok == token.RPAREN
 	}
 	if s.mode&dontInsertSemis == 0 {
 		s.insertSemi = insertSemi

@@ -340,6 +340,9 @@ redo:
 			s.tok = _Operator
 			break
 		}
+		// Only a closing call parenthesis can precede postfix !.
+		// In particular, return also sets nlsemi but requires prefix ! here.
+		s.nlsemi = nlsemi && s.tok == _Rparen
 		s.op, s.prec = Not, 0
 		s.tok = _Operator
 

@@ -108,6 +108,9 @@ func WriteExpr(buf *bytes.Buffer, x ast.Expr) {
 			buf.WriteString("...")
 		}
 		buf.WriteByte(')')
+		if x.Bang.IsValid() {
+			buf.WriteByte('!')
+		}
 
 	case *ast.StarExpr:
 		buf.WriteByte('*')

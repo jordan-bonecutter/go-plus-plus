@@ -1,0 +1,63 @@
+--- a/internal/golang/extract.go
++++ b/internal/golang/extract.go
+@@ -1542,6 +1542,10 @@
+ 		curEnd = last
+ 	}
+ 
++	if hasBangReturn(funcDecl.Body, curStart.Node().Pos(), curEnd.Node().End()) {
++		return nil, false, false, fmt.Errorf("selection contains postfix ! returning from its enclosing function")
++	}
++
+ 	return &fnExtractParams{
+ 		curStart:     curStart,
+ 		curEnd:       curEnd,
+@@ -1550,6 +1554,26 @@
+ 	}, true, funcDecl.Recv != nil, nil
+ }
+ 
++// hasBangReturn detects propagation whose enclosing function would change if
++// the selected code moved. A whole nested function literal retains its scope.
++func hasBangReturn(root ast.Node, start, end token.Pos) bool {
++	found := false
++	ast.Inspect(root, func(n ast.Node) bool {
++		if n == nil || found || n.End() < start || n.Pos() > end {
++			return false
++		}
++		if lit, ok := n.(*ast.FuncLit); ok && start <= lit.Pos() && lit.End() <= end {
++			return false
++		}
++		if call, ok := n.(*ast.CallExpr); ok && call.Bang.IsValid() && start <= call.Pos() && call.End() <= end {
++			found = true
++			return false
++		}
++		return true
++	})
++	return found
++}
++
+ // objUsed checks if the object is used within the range. It returns the first
+ // occurrence of the object in the range, if it exists.
+ func objUsed(info *types.Info, start, end token.Pos, obj types.Object) (bool, *ast.Ident) {
+--- a/internal/golang/inline.go
++++ b/internal/golang/inline.go
+@@ -49,6 +49,9 @@
+ 	if safetoken.Line(pgf.Tok, call.Lparen) != safetoken.Line(pgf.Tok, start) {
+ 		return nil, nil, fmt.Errorf("enclosing call is not on this line")
+ 	}
++	if hasBangReturn(call, call.Pos(), call.End()) {
++		return nil, nil, fmt.Errorf("cannot inline a call containing postfix !")
++	}
+ 	fn := typeutil.StaticCallee(pkg.TypesInfo(), call)
+ 	if fn == nil {
+ 		return nil, nil, fmt.Errorf("not a static call to a Go function")
+@@ -84,6 +87,10 @@
+ 		return nil, nil, fmt.Errorf("can't find callee")
+ 	}
+ 
++	if calleeDecl.Body != nil && hasBangReturn(calleeDecl.Body, calleeDecl.Body.Pos(), calleeDecl.Body.End()) {
++		return nil, nil, fmt.Errorf("cannot inline a function containing postfix !")
++	}
++
+ 	// The inliner assumes that input is well-typed,
+ 	// but that is frequently not the case within gopls.
+ 	// Until we are able to harden the inliner,

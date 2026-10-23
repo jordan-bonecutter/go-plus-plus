@@ -1343,3 +1343,36 @@ func TestScannerEndReuse(t *testing.T) {
 		t.Errorf("s.End() = %v; want token.NoPos", end)
 	}
 }
+
+func TestBangSemicolons(t *testing.T) {
+	cases := []struct {
+		source string
+		want   []token.Token
+	}{
+		{"return !\nfalse", []token.Token{token.RETURN, token.NOT, token.IDENT, token.SEMICOLON, token.EOF}},
+		{"return ! /*\ncomment*/ false", []token.Token{token.RETURN, token.NOT, token.IDENT, token.SEMICOLON, token.EOF}},
+		{"f()!\nreturn", []token.Token{token.IDENT, token.LPAREN, token.RPAREN, token.NOT, token.SEMICOLON, token.RETURN, token.SEMICOLON, token.EOF}},
+		{"f() /*comment*/ !\nreturn", []token.Token{token.IDENT, token.LPAREN, token.RPAREN, token.NOT, token.SEMICOLON, token.RETURN, token.SEMICOLON, token.EOF}},
+	}
+	var scan Scanner // also exercise reinitialization
+	for _, tt := range cases {
+		for _, mode := range []Mode{0, ScanComments} {
+			fs := token.NewFileSet()
+			file := fs.AddFile("bang.go", -1, len(tt.source))
+			scan.Init(file, []byte(tt.source), func(pos token.Position, msg string) { t.Errorf("%s: %s", pos, msg) }, mode)
+			var got []token.Token
+			for {
+				_, tok, _ := scan.Scan()
+				if tok != token.COMMENT {
+					got = append(got, tok)
+				}
+				if tok == token.EOF {
+					break
+				}
+			}
+			if !slices.Equal(got, tt.want) {
+				t.Errorf("%q mode=%d: got %v, want %v", tt.source, mode, got, tt.want)
+			}
+		}
+	}
+}

@@ -1137,6 +1137,18 @@ loop:
 	for {
 		pos := p.pos()
 		switch p.tok {
+		case _Operator:
+			if p.op != Not {
+				break loop
+			}
+			call, ok := x.(*CallExpr)
+			if !ok || call.Bang {
+				p.syntaxError("postfix ! requires a function call")
+			} else {
+				call.Bang = true
+			}
+			p.next()
+
 		case _Dot:
 			p.next()
 			switch p.tok {

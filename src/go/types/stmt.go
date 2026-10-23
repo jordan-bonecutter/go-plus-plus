@@ -171,6 +171,10 @@ func assignOp(op token.Token) token.Token {
 }
 
 func (check *Checker) suspendedCall(keyword string, call *ast.CallExpr) {
+	if call.Bang.IsValid() {
+		check.errorf(call, InvalidSyntaxTree, "postfix ! is not allowed in %s call", keyword)
+		return
+	}
 	var x operand
 	var msg string
 	var code Code
