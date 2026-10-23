@@ -2090,7 +2090,7 @@ func isReflexive(t *abi.Type) bool {
 		return isReflexive(tt.Elem)
 	case Union:
 		data := unionType(t)
-		for _, f := range data.Fields {
+		for _, f := range data.Fields[:len(data.Fields)-2] {
 			payload := (*arrayType)(unsafe.Pointer(f.Typ)).Elem
 			if !isReflexive(payload) {
 				return false
@@ -2126,7 +2126,7 @@ func needKeyUpdate(t *abi.Type) bool {
 		return needKeyUpdate(tt.Elem)
 	case Union:
 		data := unionType(t)
-		for _, f := range data.Fields {
+		for _, f := range data.Fields[:len(data.Fields)-2] {
 			payload := (*arrayType)(unsafe.Pointer(f.Typ)).Elem
 			if needKeyUpdate(payload) {
 				return true
@@ -2157,7 +2157,7 @@ func hashMightPanic(t *abi.Type) bool {
 		return hashMightPanic(tt.Elem)
 	case Union:
 		data := unionType(t)
-		for _, f := range data.Fields {
+		for _, f := range data.Fields[:len(data.Fields)-2] {
 			payload := (*arrayType)(unsafe.Pointer(f.Typ)).Elem
 			if hashMightPanic(payload) {
 				return true

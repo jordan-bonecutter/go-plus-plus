@@ -114,9 +114,13 @@ func (check *Checker) inferredConstructor(pos syntax.Pos, typ Type, payload Type
 		args[i] = param
 	}
 	result := check.instance(pos, generic, args, nil, check.context())
+	constructorParams := NewTuple(NewParam(pos, check.pkg, "", payload))
+	if Identical(payload, Universe.Lookup("unit").Type()) {
+		constructorParams = nil
+	}
 	return &Signature{
 		tparams: &TypeParamList{params},
-		params:  NewTuple(NewParam(pos, check.pkg, "", payload)),
+		params:  constructorParams,
 		results: NewTuple(NewParam(pos, check.pkg, "", result)),
 	}
 }

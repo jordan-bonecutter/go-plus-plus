@@ -88,7 +88,11 @@ func (s *StdSizes) Alignof(T Type) (result int64) {
 		// is the largest of the values unsafe.Alignof(x.f) for each
 		// field f of x, but at least 1."
 		max := int64(1)
-		for _, f := range t.fields {
+		noAnchor := unionWithoutAnchor(t.fields)
+		for i, f := range t.fields {
+			if noAnchor && i == 1 {
+				continue
+			}
 			if a := s.Alignof(f.typ); a > max {
 				max = a
 			}

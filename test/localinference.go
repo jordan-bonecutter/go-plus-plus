@@ -50,7 +50,11 @@ func main() {
 	if value := o.(Some); value != 42 {
 		panic("union inference")
 	}
-	var none Option[string] = Option.None(unit{})
+	var empty func() Option[string] = Option.None
+	var none Option[string] = Option.None()
+	if empty() != none {
+		panic("unit constructor inference")
+	}
 	switch none.(variant) {
 	case None:
 	case Some:

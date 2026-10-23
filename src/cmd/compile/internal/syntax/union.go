@@ -90,8 +90,10 @@ func lowerUnion(d *TypeDecl) {
 	for _, f := range st.FieldList[1:] {
 		data.FieldList = append(data.FieldList, unionField(f.Pos(), f.Name.Value, unionZeroArray(f.Pos(), f.Type)))
 	}
-	// Keep pointer alignment even for scalar-only payloads.
-	data.FieldList = append(data.FieldList, unionField(pos, "_", unionZeroArray(pos, NewName(pos, "union·uintptr"))), unionField(pos, "union·raw", unionZeroArray(pos, NewName(pos, "union·byte"))))
+	// Variant marker arrays supply the payload alignment; no pointer-size floor.
+	padding := &StructType{}
+	padding.SetPos(pos)
+	data.FieldList = append(data.FieldList, unionField(pos, "_", padding), unionField(pos, "union·raw", unionZeroArray(pos, NewName(pos, "union·byte"))))
 	header := new(StructType)
 	header.pos = pos
 	tag := NewName(pos, "union·uint"+strconv.Itoa(int(8*abi.UnionTagSize(uint64(len(st.FieldList)-1)))))

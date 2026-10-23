@@ -62,7 +62,7 @@ func TestUnionAnchorLayout(t *testing.T) {
 	if unsafe.Sizeof(anchorOption[int]{}) != 2*unsafe.Sizeof(uintptr(0)) {
 		t.Fatal("scalar union size")
 	}
-	if unsafe.Sizeof(anchorOption[unit]{}) != unsafe.Sizeof(uintptr(0)) {
+	if unsafe.Sizeof(anchorOption[unit]{}) != 1 {
 		t.Fatal("unit union size")
 	}
 }

@@ -68,10 +68,13 @@ type Option[T any] union {
 func unions() {
 	x := Option.Some(42)
 	var _ Option[int] = x
-	var _ Option[string] = Option.None(unit{})
+	var _ Option[string] = Option.None()
+	var empty func() Option[string] = Option.None
+	var _ Option[string] = empty()
+	var _ Option[string] = Option.None(unit /* ERROR "too many arguments" */ {})
 	var constructor func(int) Option[int] = Option.Some
 	var _ Option[int] = constructor(7)
-	_ = Option /* ERROR "cannot infer" */ .None(unit{})
+	_ = Option /* ERROR "cannot infer" */ .None()
 	_ = Option.Some() /* ERROR "not enough arguments" */
 	_ = Option.Some(1, 2 /* ERROR "too many arguments" */)
 }

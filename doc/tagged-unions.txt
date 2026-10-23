@@ -68,7 +68,9 @@ Layout and collection
 
 Payloads overlap inline. After type arguments are substituted, the value's
 size includes its largest payload and an inline variant tag, with alignment
-padding. A pointer-sized GC anchor is included only if at least one payload
+padding. Alignment follows the payload types and tag, without a pointer-size
+minimum: an int32/byte union occupies 8 bytes, a byte/bool union 2 bytes,
+and a unit-only union 1 byte. A pointer-sized GC anchor is included only if at least one payload
 type contains GC pointers. This decision is made per concrete instantiation:
 Option[int] omits it, while Option[string] retains it. The tag uses uint8 for up to 256 variants,
 uint16 for up to 65,536, uint32 for up to 2^32, and uint64 beyond that.

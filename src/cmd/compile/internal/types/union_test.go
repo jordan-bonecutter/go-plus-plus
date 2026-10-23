@@ -18,7 +18,7 @@ func TestUnionHasPointers(t *testing.T) {
 	pkg := NewPkg("union-layout-test", "test")
 	field := func(name string, typ *Type) *Field { return NewField(src.NoXPos, pkg.Lookup(name), typ) }
 	union := func(payload *Type) *Type {
-		data := NewStruct([]*Field{field("union·variant·Value", NewArray(payload, 0)), field("_", NewArray(NewPtr(scalar), 0)), field("union·raw", NewArray(scalar, 0))})
+		data := NewStruct([]*Field{field("union·variant·Value", NewArray(payload, 0)), field("_", NewStruct(nil)), field("union·raw", NewArray(scalar, 0))})
 		return NewStruct([]*Field{field("union·data", data), field("union·anchor", NewPtr(NewStruct(nil))), field("union·tag", scalar)})
 	}
 	for _, tt := range []struct {

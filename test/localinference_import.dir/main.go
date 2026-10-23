@@ -19,7 +19,7 @@ func main() {
 	if value := o.(Some); value != 42 {
 		panic("imported union")
 	}
-	var none a.Option[string] = a.Option.None(unit{})
+	var none a.Option[string] = a.Option.None()
 	switch none.(variant) {
 	case None:
 	case Some:

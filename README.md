@@ -49,6 +49,12 @@ named results and zero unnamed results. Defers work normally.
 
 Details: [unions and unit](doc/tagged-unions.txt) · [error propagation](doc/bang-operator.txt).
 
+## Install
+
+Run `./misc/install-go++.sh` to build and install `go++`, `go++pls`, and
+`go++fmt` in `~/.local/bin`. Requires a stock Go toolchain and network access.
+Set `GOROOT_BOOTSTRAP` if it is not auto-detected. Re-run to update.
+
 ## Local type inference
 
 Function signatures stay explicit; inside function bodies, generic literals,
