@@ -1846,13 +1846,11 @@ func maybeDrainBody(r io.Reader) bool {
 	}
 }
 
-type bodyReadStatus uint8
-
-const (
-	bodyReadEOF bodyReadStatus = iota
-	bodyReadClosedEarly
-	bodyReadError
-)
+type bodyReadStatus union {
+	EOF
+	ClosedEarly
+	Error
+}
 
 func (pc *persistConn) readLoop() {
 	closeErr := errReadLoopExiting // default value, if not changed below
@@ -1981,16 +1979,16 @@ func (pc *persistConn) readLoop() {
 		body := &bodyEOFSignal{
 			body: resp.Body,
 			earlyCloseFn: func() error {
-				waitForBodyRead <- bodyReadClosedEarly
+				waitForBodyRead <- bodyReadStatus.ClosedEarly()
 				<-eofc // will be closed by deferred call at the end of the function
 				return nil
 			},
 			fn: func(err error) error {
 				if err == io.EOF {
-					waitForBodyRead <- bodyReadEOF
+					waitForBodyRead <- bodyReadStatus.EOF()
 					<-eofc // see comment above eofc declaration
 				} else {
-					waitForBodyRead <- bodyReadError
+					waitForBodyRead <- bodyReadStatus.Error()
 					if err != nil {
 						pc.canceled()!
 					}
@@ -2025,11 +2023,11 @@ func (pc *persistConn) readLoop() {
 					pc.wroteRequest() &&
 					tryPutIdleConn(rc.treq)
 			}
-			switch status {
-			case bodyReadEOF:
+			switch status.(variant) {
+			case EOF:
 				tryPutIdle()
 				eofc <- struct{}{}
-			case bodyReadClosedEarly:
+			case ClosedEarly:
 				// Read resp before signaling eofc: the send lets the caller's
 				// Close return, and resp belongs to the caller after that.
 				tryDrain := alive && !pc.t.keepAlivesDisabled() && resp.ContentLength <= maxPostCloseReadBytes
@@ -2039,7 +2037,7 @@ func (pc *persistConn) readLoop() {
 				} else {
 					alive = false
 				}
-			case bodyReadError:
+			case Error:
 				alive = false
 			}
 		case <-rc.treq.ctx.Done():
