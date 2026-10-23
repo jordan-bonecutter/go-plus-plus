@@ -18,8 +18,9 @@ unit is shadowed in its scope:
         Some T
     }
 
-Construct the empty variant with Option[int].None(unit{}). Constructors still
-take one payload argument; omission changes the payload type, not the arity.
+Construct the empty variant with Option[int].None(). Any variant whose payload
+type is identical to unit (including struct{} and aliases) has a constructor
+with no arguments. Other constructors take one payload argument.
 
 Construct a value with Result[int].Ok(42) or Result[int].Err("failed").
 Constructors are ordinary function values, so f := Result[int].Ok works.
