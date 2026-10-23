@@ -25,6 +25,11 @@ const (
 
 // Marshal returns the XML encoding of v.
 //
+// A tagged union has one child element named for its active exported variant.
+// That child contains value elements encoding its payload. Slice payloads have
+// repeated value elements; nil pointer payloads have none. Unexported variants
+// are unsupported. Custom marshaling methods take precedence.
+//
 // Marshal handles an array or slice by marshaling each of the elements.
 // Marshal handles a pointer by marshaling the value it points at or, if the
 // pointer is nil, by writing nothing. Marshal handles an interface value by
@@ -485,6 +490,21 @@ func (p *printer) marshalValue(val reflect.Value, finfo *fieldInfo, startTemplat
 			}
 		}
 		return nil
+	}
+
+	if typ.IsUnion() {
+		name, payload := val.Variant()
+		variant, _ := typ.VariantByName(name)
+		if !variant.IsExported() || !payload.CanInterface() {
+			return &UnsupportedTypeError{typ}
+		}
+		start := defaultStart(typ, finfo, startTemplate)
+		p.writeStart(&start)!
+		wrapper := unionPayload(payload.Type())
+		wrapper.Field(0).Set(payload)
+		child := StartElement{Name: Name{Local: name}}
+		p.marshalValue(wrapper, nil, &child)!
+		return p.writeEnd(start.Name)
 	}
 
 	tinfo, err := getTypeInfo(typ)

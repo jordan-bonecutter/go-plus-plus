@@ -130,3 +130,76 @@ returns its payload and true; a mismatch returns the payload's zero value
 and false. The single-result form panics on a mismatch. The union expression
 is evaluated once, and variants are distinguished even when payload types
 are identical.
+
+Standard-library serialization and reflection
+
+encoding/json (both the legacy implementation and jsonv2) uses Serde's default
+externally tagged newtype representation. Every variant has a payload in this
+language, including struct{} payloads:
+
+    Result[int].Ok(42)     -> {"Ok":42}
+    Result[int].Err("bad") -> {"Err":"bad"}
+
+Decoding requires exactly one member whose name exactly matches an exported
+variant. Unknown, unexported, duplicate, and multiple variants are errors,
+independently of DisallowUnknownFields. Payloads use the ordinary recursive
+JSON rules and decoder options. A failed decode leaves the union unchanged.
+JSON null follows the existing struct rules: legacy JSON leaves the value
+unchanged; jsonv2 resets it to the zero union. Custom JSON and text methods
+retain their usual precedence. Anonymous union fields encode under their field
+name instead of promoting their private representation fields.
+
+encoding/gob transmits a union as a struct schema with exported variant names
+and payload types. Each value sends exactly one active field, even when that
+payload is zero. Receivers select the variant by name and reject empty,
+unknown, or multiple active variants. This also supports union arguments and
+replies in net/rpc. GobEncoder/GobDecoder retain precedence. Gob's existing
+restrictions still apply: nil pointer payloads cannot be transmitted, interface
+payloads may require Register, and payload types must be supported by gob.
+
+encoding/xml also uses an outer variant tag. Inside the union's usual enclosing
+element, one variant element wraps zero or more value elements:
+
+    Result[int].Ok(42) -> <Result><Ok><value>42</value></Ok></Result>
+
+The value wrapper lets slice payloads contain repeated value elements and nil
+pointer payloads omit their value element without losing the active variant.
+Payloads follow XML's usual type restrictions and field-tag rules. Decoding
+requires exactly one exported variant and commits it after decoding succeeds.
+Custom XML and text methods retain precedence; anonymous unions are named
+fields rather than embedded storage.
+
+encoding/binary and encoding/asn1 reject unions, including unions nested inside
+ordinary containers or structures. These formats require an explicit fixed
+layout or ASN.1 schema; the private in-memory union layout is not a wire format.
+
+Reflection-use audit (non-vendored standard library):
+
+- reflect already handles union copying, calls, containers, comparison, zero
+  checks, and DeepEqual through the active payload. internal/reflectlite's
+  generic copying and swapping use the same runtime type operations.
+- fmt already prints the active variant. internal/fmtsort now orders union keys
+  by declaration index, then active payload, without reading GC anchors or raw
+  bytes. text/template inherits that order; equality checks dynamic payload
+  comparability before comparing. go/ast.Print prints the active variant and
+  hides payloads that reflection cannot expose.
+- testing/quick chooses among exported variants and generates their payloads;
+  unions with no exported variants are unsupported, like other inaccessible
+  values. Payload generators and existing recursion limits still apply.
+- html/template's JavaScript serialization and log/slog's JSON handler inherit
+  encoding/json's tagged representation. Their text formatting uses fmt.
+- database/sql and database/sql/driver retain Scanner/Valuer and normal
+  assignability rules. Other union conversions are unsupported, like ordinary
+  composite values. flag retains its text-marshaling interfaces; fmt.Scan
+  requires a Scanner for composite values.
+- net/rpc uses the corrected gob path; net/rpc/jsonrpc uses the corrected JSON
+  path. Generic reflective method calls need no special union handling.
+- HTTP compatibility shims inspect specific known struct shapes or concrete
+  types; they do not traverse arbitrary union payloads. archive/tar uses
+  DeepEqual. errors uses assignability and Set, not field traversal.
+- Internal fuzzing supports an explicit set of primitive corpus types, so
+  unions remain unsupported. Build-configuration generators, AST/code
+  generators, and compiler diagnostics inspect their own fixed struct types,
+  not arbitrary application values. Reflection over their ordinary structs
+  retains its existing behavior. Vendored third-party walkers are outside
+  this standard-library audit.

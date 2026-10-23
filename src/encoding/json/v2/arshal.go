@@ -129,6 +129,10 @@ var export = jsontext.Internal.Export(&internal.AllowInternalUse)
 //     By default, a nil map is encoded as an empty JSON object,
 //     unless the [FormatNilMapAsNull] option is specified.
 //
+//   - A Go tagged union is encoded as a JSON object with exactly one member,
+//     whose name is the active exported variant and whose value is its
+//     recursively encoded payload. Unexported variants result in a [SemanticError].
+//
 //   - A Go struct is encoded as a JSON object.
 //     See the “JSON Representation of Go structs” section
 //     in the package-level documentation for more details.

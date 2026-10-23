@@ -467,6 +467,10 @@ func (dec *Decoder) decodeSingle(engine *decEngine, value reflect.Value) {
 // This state cannot arise for decodeSingle, which is called directly
 // from the user's value, not from the innards of an engine.
 func (dec *Decoder) decodeStruct(engine *decEngine, value reflect.Value) {
+	if value.Type().IsUnion() {
+		dec.decodeUnion(engine, value)
+		return
+	}
 	state := dec.newDecoderState(&dec.buf)
 	defer dec.freeDecoderState(state)
 	state.fieldnum = -1
@@ -1170,6 +1174,13 @@ func (dec *Decoder) compileDec(remoteId typeId, ut *userTypeInfo) (engine *decEn
 		ovfl := overflow(wireField.Name)
 		// Find the field of the local type with the same name.
 		localField, present := srt.FieldByName(wireField.Name)
+		if srt.IsUnion() {
+			variant, ok := srt.VariantByName(wireField.Name)
+			present = ok && variant.IsExported()
+			if present {
+				localField = reflect.StructField{Name: variant.Name, Type: variant.Type, Index: []int{variant.Index}}
+			}
+		}
 		// TODO(r): anonymous names
 		if !present || !isExported(wireField.Name) {
 			op := dec.decIgnoreOpFor(wireField.Id, make(map[typeId]*decOp))
@@ -1315,4 +1326,30 @@ func init() {
 // Each call allocates once.
 func allocValue(t reflect.Type) reflect.Value {
 	return reflect.New(t).Elem()
+}
+
+// decodeUnion accepts a struct with exactly one member identifying the variant.
+func (dec *Decoder) decodeUnion(engine *decEngine, value reflect.Value) {
+	state := dec.newDecoderState(&dec.buf)
+	defer dec.freeDecoderState(state)
+	state.fieldnum = -1
+	delta := state.decodeUint()
+	if delta == 0 || delta > uint64(len(engine.instr)) {
+		errorf("expected exactly one union variant")
+	}
+	instr := &engine.instr[int(delta)-1]
+	if instr.index == nil {
+		errorf("unknown union variant")
+	}
+	variant := value.Type().Variant(instr.index[0])
+	payload := reflect.New(variant.Type).Elem()
+	field := payload
+	if field.Kind() == reflect.Pointer {
+		field = decAlloc(field)
+	}
+	instr.op(instr, state, field)
+	if state.decodeUint() != 0 {
+		errorf("expected exactly one union variant")
+	}
+	value.SetVariant(variant.Name, payload)
 }

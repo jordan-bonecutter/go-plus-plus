@@ -537,11 +537,7 @@ func newTypeObject(name string, ut *userTypeInfo, rt reflect.Type) (gobType, err
 		st := newStructType(name)
 		types[rt] = st
 		idToTypeSlice[st.id()] = st
-		for i := 0; i < t.NumField(); i++ {
-			f := t.Field(i)
-			if !isSent(&f) {
-				continue
-			}
+		for _, f := range transmittedFields(t) {
 			typ := userType(f.Type).base
 			tname := typ.Name()
 			if tname == "" {
@@ -940,4 +936,25 @@ func registerBasics() {
 func init() {
 	typeInfoMap.Store(typeInfoMapInit)
 	typeInfoMapInit = nil
+}
+
+// transmittedFields exposes variants, never the private union representation.
+func transmittedFields(t reflect.Type) []reflect.StructField {
+	var fields []reflect.StructField
+	if t.IsUnion() {
+		for i := 0; i < t.NumVariant(); i++ {
+			v := t.Variant(i)
+			if v.IsExported() {
+				fields = append(fields, reflect.StructField{Name: v.Name, Type: v.Type, Index: []int{i}})
+			}
+		}
+	} else {
+		for i := 0; i < t.NumField(); i++ {
+			f := t.Field(i)
+			if isSent(&f) {
+				fields = append(fields, f)
+			}
+		}
+	}
+	return fields
 }

@@ -211,6 +211,17 @@ func (p *printer) print(x reflect.Value) {
 		p.printf("}")
 
 	case reflect.Struct:
+		if x.Type().IsUnion() {
+			name, payload := x.Variant()
+			p.printf("%s.%s(", x.Type(), name)
+			if !payload.CanInterface() {
+				p.printf("<unexported>")
+			} else if p.filter == nil || p.filter(name, payload) {
+				p.print(payload)
+			}
+			p.printf(")")
+			break
+		}
 		t := x.Type()
 		p.printf("%s {", t)
 		p.indent++

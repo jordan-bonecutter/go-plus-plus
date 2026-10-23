@@ -92,6 +92,11 @@ import (
 // []byte encodes as a base64-encoded string, and a nil slice
 // encodes as the null JSON value.
 //
+// Tagged union values encode as JSON objects with exactly one member:
+// the active exported variant name mapped to its recursively encoded payload.
+// Unexported variants are unsupported. Anonymous union fields use their
+// field name rather than promoting union representation fields.
+//
 // Struct values encode as JSON objects.
 // Each exported struct field becomes a member of the object, using the
 // field name as the object key, unless the field is omitted for one of the
@@ -410,6 +415,20 @@ var (
 	textMarshalerType = reflect.TypeFor[encoding.TextMarshaler]()
 )
 
+// unionEncoder uses Serde's externally tagged newtype representation.
+func unionEncoder(e *encodeState, v reflect.Value, opts encOpts) {
+	name, payload := v.Variant()
+	variant, _ := v.Type().VariantByName(name)
+	if !variant.IsExported() || !payload.CanInterface() {
+		e.error(&UnsupportedTypeError{v.Type()})
+	}
+	e.WriteByte('{')
+	e.Write(appendString(e.AvailableBuffer(), name, opts.escapeHTML))
+	e.WriteByte(':')
+	e.reflectValue(payload, opts)
+	e.WriteByte('}')
+}
+
 // newTypeEncoder constructs an encoderFunc for a type.
 // The returned encoder only checks CanAddr when allowAddr is true.
 func newTypeEncoder(t reflect.Type, allowAddr bool) encoderFunc {
@@ -446,6 +465,9 @@ func newTypeEncoder(t reflect.Type, allowAddr bool) encoderFunc {
 	case reflect.Interface:
 		return interfaceEncoder
 	case reflect.Struct:
+		if t.IsUnion() {
+			return unionEncoder
+		}
 		return newStructEncoder(t)
 	case reflect.Map:
 		return newMapEncoder(t)
@@ -1161,7 +1183,7 @@ func typeFields(t reflect.Type) structFields {
 				}
 
 				// Record found field and index sequence.
-				if name != "" || !sf.Anonymous || ft.Kind() != reflect.Struct {
+				if name != "" || !sf.Anonymous || ft.Kind() != reflect.Struct || ft.IsUnion() {
 					tagged := name != ""
 					if name == "" {
 						name = sf.Name

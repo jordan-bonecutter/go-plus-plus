@@ -70,7 +70,7 @@ func getTypeInfo(typ reflect.Type) (*typeInfo, error) {
 				if t.Kind() == reflect.Pointer {
 					t = t.Elem()
 				}
-				if t.Kind() == reflect.Struct {
+				if t.Kind() == reflect.Struct && !t.IsUnion() {
 					inner, err := getTypeInfo(t)
 					if err != nil {
 						return nil, err

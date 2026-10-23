@@ -104,6 +104,9 @@ func makeDefaultMarshaler(t reflect.Type) *marshaler {
 	case reflect.Map:
 		return makeMapMarshaler(t)
 	case reflect.Struct:
+		if t.IsUnion() {
+			return makeUnionMarshaler(t)
+		}
 		return makeStructMarshaler(t)
 	case reflect.Slice:
 		fnc := makeSliceMarshaler(t)
@@ -141,6 +144,9 @@ func makeDefaultUnmarshaler(t reflect.Type) *unmarshaler {
 	case reflect.Map:
 		return makeMapUnmarshaler(t)
 	case reflect.Struct:
+		if t.IsUnion() {
+			return makeUnionUnmarshaler(t)
+		}
 		return makeStructUnmarshaler(t)
 	case reflect.Slice:
 		fnc := makeSliceUnmarshaler(t)
@@ -2255,4 +2261,91 @@ func (s *uintSet) insert(i uint) bool {
 		s.hi[iHi].set(iLo)
 		return !has
 	}
+}
+
+// Tagged unions use a single object member naming the active variant.
+func makeUnionMarshaler(t reflect.Type) *marshaler {
+	return &marshaler{fnc: func(enc *jsontext.Encoder, va addressableValue, mo *jsonopts.Struct) error {
+		if mo.Flags.Get(jsonflags.StringTag) && !mo.Flags.Get(jsonflags.ReportErrorsWithLegacySemantics) {
+			return newMarshalErrorBefore(enc, t, errInvalidStringTag)
+		}
+		if mo.Flags.Has(jsonflags.FormatTag) {
+			return newInvalidFormatError(enc, t)
+		}
+		flags := mo.Flags
+		mo.Flags.Clear(jsonflags.StringTag)
+		defer func() { mo.Flags = flags }()
+		name, payload := va.Variant()
+		variant, _ := t.VariantByName(name)
+		if !variant.IsExported() || !payload.CanInterface() {
+			return newMarshalErrorBefore(enc, t, errors.New("unexported union variant"))
+		}
+		enc.WriteToken(jsontext.BeginObject)!
+		enc.WriteToken(jsontext.String(name))!
+		v := newAddressableValue(payload.Type())
+		v.Set(payload)
+		marshal := lookupMarshaler(payload.Type()).fnc
+		if mo.Marshalers != nil {
+			marshal, _ = mo.Marshalers.(*Marshalers).lookup(marshal, payload.Type())
+		}
+		marshal(enc, v, mo)!
+		return enc.WriteToken(jsontext.EndObject)
+	}}
+}
+
+func makeUnionUnmarshaler(t reflect.Type) *unmarshaler {
+	return &unmarshaler{fnc: func(dec *jsontext.Decoder, va addressableValue, uo *jsonopts.Struct) (err error) {
+		xd := export.Decoder(dec)
+		depth, length := xd.Tokens.DepthLength()
+		defer func() {
+			if err != nil && !isFatalError(err, uo.Flags) {
+				if skipErr := xd.SkipUntil(depth, length+1); skipErr != nil {
+					err = skipErr
+				}
+			}
+		}()
+		if uo.Flags.Get(jsonflags.StringTag) && !uo.Flags.Get(jsonflags.ReportErrorsWithLegacySemantics) {
+			return newUnmarshalErrorBefore(dec, t, errInvalidStringTag)
+		}
+		if uo.Flags.Has(jsonflags.FormatTag) {
+			return newInvalidFormatError(dec, t)
+		}
+		flags := uo.Flags
+		uo.Flags.Clear(jsonflags.StringTag)
+		defer func() { uo.Flags = flags }()
+		if dec.PeekKind() == 'n' {
+			dec.ReadToken()!
+			if !uo.Flags.Get(jsonflags.MergeWithLegacySemantics) {
+				va.SetZero()
+			}
+			return nil
+		}
+		if dec.PeekKind() != '{' {
+			return newUnmarshalErrorBefore(dec, t, errors.New("expected union object"))
+		}
+		dec.ReadToken()!
+		if dec.PeekKind() != '"' {
+			return newUnmarshalErrorBefore(dec, t, errors.New("expected exactly one union variant"))
+		}
+		tok, err := dec.ReadToken()
+		if err != nil {
+			return err
+		}
+		variant, ok := t.VariantByName(tok.String())
+		if !ok || !variant.IsExported() {
+			return newUnmarshalErrorBefore(dec, t, errors.New("unknown or unexported union variant"))
+		}
+		payload := newAddressableValue(variant.Type)
+		unmarshal := lookupUnmarshaler(variant.Type).fnc
+		if uo.Unmarshalers != nil {
+			unmarshal, _ = uo.Unmarshalers.(*Unmarshalers).lookup(unmarshal, variant.Type)
+		}
+		unmarshal(dec, payload, uo)!
+		if dec.PeekKind() != '}' {
+			return newUnmarshalErrorBefore(dec, t, errors.New("expected exactly one union variant"))
+		}
+		dec.ReadToken()!
+		va.SetVariant(variant.Name, payload.Value)
+		return nil
+	}}
 }

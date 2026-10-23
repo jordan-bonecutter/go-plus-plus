@@ -389,6 +389,10 @@ func (d *Decoder) unmarshal(val reflect.Value, start *StartElement) error {
 		}
 	}
 
+	if val.Type().IsUnion() {
+		return d.unmarshalUnion(val)
+	}
+
 	var (
 		data         []byte
 		saveData     reflect.Value
@@ -785,6 +789,51 @@ func (d *Decoder) Skip() error {
 				return nil
 			}
 			depth--
+		}
+	}
+}
+
+// A payload wrapper gives slices repeated value elements and preserves a nil
+// pointer by omitting its value element, without ever omitting the variant.
+func unionPayload(t reflect.Type) reflect.Value {
+	return reflect.New(reflect.StructOf([]reflect.StructField{{Name: "Value", Type: t, Tag: `xml:"value"`}})).Elem()
+}
+
+func (d *Decoder) unmarshalUnion(val reflect.Value) error {
+	d.stkDepth++
+	defer func() { d.stkDepth-- }()
+	var name string
+	var payload reflect.Value
+	for {
+		tok, err := d.Token()
+		if err != nil {
+			return err
+		}
+		switch tok := tok.(type) {
+		case StartElement:
+			if payload.IsValid() {
+				return fmt.Errorf("xml: expected exactly one union variant of %v", val.Type())
+			}
+			variant, ok := val.Type().VariantByName(tok.Name.Local)
+			if !ok || !variant.IsExported() {
+				return fmt.Errorf("xml: unknown or unexported union variant %s", tok.Name.Local)
+			}
+			name = variant.Name
+			wrapper := unionPayload(variant.Type)
+			if err := d.unmarshal(wrapper, &tok); err != nil {
+				return err
+			}
+			payload = wrapper.Field(0)
+		case EndElement:
+			if !payload.IsValid() {
+				return fmt.Errorf("xml: expected exactly one union variant of %v", val.Type())
+			}
+			val.SetVariant(name, payload)
+			return nil
+		case CharData:
+			if len(bytes.TrimSpace(tok)) != 0 {
+				return fmt.Errorf("xml: unexpected text in union %v", val.Type())
+			}
 		}
 	}
 }

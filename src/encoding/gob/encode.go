@@ -310,6 +310,30 @@ func (enc *Encoder) encodeStruct(b *encBuffer, engine *encEngine, value reflect.
 	state := enc.newEncoderState(b)
 	defer enc.freeEncoderState(state)
 	state.fieldnum = -1
+	if value.Type().IsUnion() {
+		name, payload := value.Variant()
+		variant, _ := value.Type().VariantByName(name)
+		if !variant.IsExported() || !payload.CanInterface() {
+			errorf("cannot encode unexported union variant %s", name)
+		}
+		state.sendZero = true // The variant must survive even when its payload is zero.
+		for j := 0; j < len(engine.instr)-1; j++ {
+			instr := &engine.instr[j]
+			if instr.index[0] != variant.Index {
+				continue
+			}
+			if instr.indir > 0 {
+				payload = encIndirect(payload, instr.indir)
+			}
+			if !valid(payload) {
+				errorf("cannot encode nil pointer in union variant %s", name)
+			}
+			instr.op(instr, state, payload)
+			break
+		}
+		encStructTerminator(nil, state, reflect.Value{})
+		return
+	}
 	for i := 0; i < len(engine.instr); i++ {
 		instr := &engine.instr[i]
 		if i >= value.NumField() {
@@ -603,14 +627,9 @@ func compileEnc(ut *userTypeInfo, building map[*typeInfo]bool) *encEngine {
 		rt = ut.user
 	}
 	if ut.externalEnc == 0 && srt.Kind() == reflect.Struct {
-		for fieldNum, wireFieldNum := 0, 0; fieldNum < srt.NumField(); fieldNum++ {
-			f := srt.Field(fieldNum)
-			if !isSent(&f) {
-				continue
-			}
+		for wireFieldNum, f := range transmittedFields(srt) {
 			op, indir := encOpFor(f.Type, seen, building)
 			engine.instr = append(engine.instr, encInstr{*op, wireFieldNum, f.Index, indir})
-			wireFieldNum++
 		}
 		if srt.NumField() > 0 && len(engine.instr) == 0 {
 			errorf("type %s has no exported fields", rt)

@@ -141,7 +141,7 @@ func makeStructFields(root reflect.Type) (fs structFields, serr *SemanticError) 
 				typ:          sf.Type,
 				fieldOptions: options,
 			}
-			if sf.Anonymous && !f.hasName {
+			if sf.Anonymous && !f.hasName && !indirectType(f.typ).IsUnion() {
 				if indirectType(f.typ).Kind() != reflect.Struct {
 					serr = orErrorf(serr, t, "embedded Go struct field %s of non-struct type must be explicitly given a JSON name", sf.Name)
 				} else {
@@ -172,7 +172,7 @@ func makeStructFields(root reflect.Type) (fs structFields, serr *SemanticError) 
 
 				// Handle an embedded field that serializes to/from
 				// a finite number of JSON object members backed by a Go struct.
-				if tf.Kind() == reflect.Struct {
+				if tf.Kind() == reflect.Struct && !tf.IsUnion() {
 					if qe.visitChildren {
 						queue = append(queue, queueEntry{tf, f.index, !seen[tf]})
 					}

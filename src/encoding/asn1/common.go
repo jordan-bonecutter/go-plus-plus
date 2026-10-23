@@ -169,6 +169,9 @@ func getUniversalType(t reflect.Type) (matchAny bool, tagNumber int, isCompound,
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return false, TagInteger, false, true
 	case reflect.Struct:
+		if t.IsUnion() {
+			return false, 0, false, false
+		}
 		return false, TagSequence, true, true
 	case reflect.Slice:
 		if t.Elem().Kind() == reflect.Uint8 {
