@@ -65,10 +65,7 @@ func (c ccChecker) CheckNamedValue(nv *driver.NamedValue) error {
 	// itself to a driver type. For example, a NullString
 	// struct changing into a string or nil.
 	if vr, ok := nv.Value.(driver.Valuer); ok {
-		sv, err := callValuerValue(vr)
-		if err != nil {
-			return err
-		}
+		sv := callValuerValue(vr)!
 		if !driver.IsValue(sv) {
 			return fmt.Errorf("non-subset type %T returned from Value", sv)
 		}

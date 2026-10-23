@@ -125,19 +125,13 @@ func writeSparse(w io.Writer, f *sparseFile) error {
 	var hdr [12]byte
 	le.PutUint64(hdr[:8], uint64(f.Size))
 	le.PutUint32(hdr[8:12], uint32(len(f.Spans)))
-	if _, err := w.Write(hdr[:]); err != nil {
-		return err
-	}
+	w.Write(hdr[:])!
 	for _, s := range f.Spans {
 		var b [12]byte
 		le.PutUint64(b[:8], uint64(s.Offset))
 		le.PutUint32(b[8:12], uint32(len(s.Data)))
-		if _, err := w.Write(b[:]); err != nil {
-			return err
-		}
-		if _, err := w.Write(s.Data); err != nil {
-			return err
-		}
+		w.Write(b[:])!
+		w.Write(s.Data)!
 	}
 	return nil
 }
@@ -145,9 +139,7 @@ func writeSparse(w io.Writer, f *sparseFile) error {
 // readSparse parses the on-disk format from r.
 func readSparse(r io.Reader) (*sparseFile, error) {
 	var hdr [12]byte
-	if _, err := io.ReadFull(r, hdr[:]); err != nil {
-		return nil, err
-	}
+	io.ReadFull(r, hdr[:])!
 	f := &sparseFile{
 		Size: int64(le.Uint64(hdr[:8])),
 	}
@@ -158,15 +150,11 @@ func readSparse(r io.Reader) (*sparseFile, error) {
 	f.Spans = make([]sparseSpan, n)
 	for i := range f.Spans {
 		var b [12]byte
-		if _, err := io.ReadFull(r, b[:]); err != nil {
-			return nil, err
-		}
+		io.ReadFull(r, b[:])!
 		f.Spans[i].Offset = int64(le.Uint64(b[:8]))
 		sz := le.Uint32(b[8:12])
 		f.Spans[i].Data = make([]byte, sz)
-		if _, err := io.ReadFull(r, f.Spans[i].Data); err != nil {
-			return nil, err
-		}
+		io.ReadFull(r, f.Spans[i].Data)!
 	}
 	if !slices.IsSortedFunc(f.Spans, func(a, b sparseSpan) int {
 		return cmp.Compare(a.Offset, b.Offset)
@@ -183,15 +171,9 @@ func readSparse(r io.Reader) (*sparseFile, error) {
 // gzip's header overhead is ~30 bytes, well under the bytes saved on a 4 KB
 // sparse representation.
 func readSparseFile(path string) (*sparseFile, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
+	f := os.Open(path)!
 	defer f.Close()
-	zr, err := gzip.NewReader(f)
-	if err != nil {
-		return nil, err
-	}
+	zr := gzip.NewReader(f)!
 	defer zr.Close()
 	return readSparse(zr)
 }

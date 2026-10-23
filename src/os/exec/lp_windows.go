@@ -16,10 +16,7 @@ import (
 var ErrNotFound = errors.New("executable file not found in %PATH%")
 
 func chkStat(file string) error {
-	d, err := os.Stat(file)
-	if err != nil {
-		return err
-	}
+	d := os.Stat(file)!
 	if d.IsDir() {
 		return fs.ErrPermission
 	}
@@ -101,10 +98,7 @@ func lookExtensions(path, dir string) (string, error) {
 	}
 	dirandpath := filepath.Join(dir, path)
 	// We assume that LookPath will only add file extension.
-	lp, err := lookPathExts(dirandpath, exts)
-	if err != nil {
-		return "", err
-	}
+	lp := lookPathExts(dirandpath, exts)!
 	ext := strings.TrimPrefix(lp, dirandpath)
 	return path + ext, nil
 }

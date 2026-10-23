@@ -33,10 +33,7 @@ func (imp *resolveTestImporter) ImportFrom(path, srcDir string, mode ImportMode)
 		imp.importer = defaultImporter(testFSet).(ImporterFrom)
 		imp.imported = make(map[string]bool)
 	}
-	pkg, err := imp.importer.ImportFrom(path, srcDir, mode)
-	if err != nil {
-		return nil, err
-	}
+	pkg := imp.importer.ImportFrom(path, srcDir, mode)!
 	imp.imported[path] = true
 	return pkg, nil
 }

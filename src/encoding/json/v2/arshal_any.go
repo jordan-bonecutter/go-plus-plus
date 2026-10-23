@@ -70,10 +70,7 @@ func unmarshalValueAny(dec *jsontext.Decoder, uo *jsonopts.Struct) (any, error) 
 	default:
 		xd := export.Decoder(dec)
 		var flags jsonwire.ValueFlags
-		val, err := xd.ReadValue(&flags)
-		if err != nil {
-			return nil, err
-		}
+		val := xd.ReadValue(&flags)!
 		switch val.Kind() {
 		case 'n':
 			return nil, nil
@@ -131,9 +128,7 @@ func marshalObjectAny(enc *jsontext.Encoder, obj map[string]any, mo *jsonopts.St
 		}
 	}
 
-	if err := enc.WriteToken(jsontext.BeginObject); err != nil {
-		return err
-	}
+	enc.WriteToken(jsontext.BeginObject)!
 	// A Go map guarantees that each entry has a unique key.
 	// The only possibility of duplicates is due to invalid UTF-8.
 	if !mo.Flags.Get(jsonflags.AllowInvalidUTF8) {
@@ -141,12 +136,8 @@ func marshalObjectAny(enc *jsontext.Encoder, obj map[string]any, mo *jsonopts.St
 	}
 	if !mo.Flags.Get(jsonflags.Deterministic) || len(obj) <= 1 {
 		for name, val := range obj {
-			if err := enc.WriteToken(jsontext.String(name)); err != nil {
-				return err
-			}
-			if err := marshalValueAny(enc, val, mo); err != nil {
-				return err
-			}
+			enc.WriteToken(jsontext.String(name))!
+			marshalValueAny(enc, val, mo)!
 		}
 	} else {
 		names := getStrings(len(obj))
@@ -157,19 +148,12 @@ func marshalObjectAny(enc *jsontext.Encoder, obj map[string]any, mo *jsonopts.St
 		}
 		slices.Sort(*names)
 		for _, name := range *names {
-			if err := enc.WriteToken(jsontext.String(name)); err != nil {
-				return err
-			}
-			if err := marshalValueAny(enc, obj[name], mo); err != nil {
-				return err
-			}
+			enc.WriteToken(jsontext.String(name))!
+			marshalValueAny(enc, obj[name], mo)!
 		}
 		putStrings(names)
 	}
-	if err := enc.WriteToken(jsontext.EndObject); err != nil {
-		return err
-	}
-	return nil
+	return enc.WriteToken(jsontext.EndObject)
 }
 
 // unmarshalObjectAny unmarshals a JSON object as a Go map[string]any.
@@ -247,18 +231,11 @@ func marshalArrayAny(enc *jsontext.Encoder, arr []any, mo *jsonopts.Struct) erro
 		}
 	}
 
-	if err := enc.WriteToken(jsontext.BeginArray); err != nil {
-		return err
-	}
+	enc.WriteToken(jsontext.BeginArray)!
 	for _, val := range arr {
-		if err := marshalValueAny(enc, val, mo); err != nil {
-			return err
-		}
+		marshalValueAny(enc, val, mo)!
 	}
-	if err := enc.WriteToken(jsontext.EndArray); err != nil {
-		return err
-	}
-	return nil
+	return enc.WriteToken(jsontext.EndArray)
 }
 
 // unmarshalArrayAny unmarshals a JSON array as a Go []any.

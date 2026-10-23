@@ -424,9 +424,7 @@ func TestSendfileOnWriteTimeoutExceeded(t *testing.T) {
 
 		// Set the write deadline in the past(1h ago). It makes
 		// sure that it is always write timeout.
-		if err := conn.SetWriteDeadline(time.Now().Add(-1 * time.Hour)); err != nil {
-			return err
-		}
+		conn.SetWriteDeadline(time.Now().Add(-1 * time.Hour))!
 
 		f, err := os.Open(newton)
 		if err != nil {

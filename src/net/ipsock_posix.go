@@ -225,16 +225,10 @@ func ipToSockaddrInet6(ip IP, port int, zone string) (syscall.SockaddrInet6, err
 func ipToSockaddr(family int, ip IP, port int, zone string) (syscall.Sockaddr, error) {
 	switch family {
 	case syscall.AF_INET:
-		sa, err := ipToSockaddrInet4(ip, port)
-		if err != nil {
-			return nil, err
-		}
+		sa := ipToSockaddrInet4(ip, port)!
 		return &sa, nil
 	case syscall.AF_INET6:
-		sa, err := ipToSockaddrInet6(ip, port, zone)
-		if err != nil {
-			return nil, err
-		}
+		sa := ipToSockaddrInet6(ip, port, zone)!
 		return &sa, nil
 	}
 	return nil, &AddrError{Err: "invalid address family", Addr: ip.String()}

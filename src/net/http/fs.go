@@ -475,18 +475,16 @@ func etagWeakMatch(a, b string) bool {
 
 // condResult is the result of an HTTP request precondition check.
 // See https://tools.ietf.org/html/rfc7232 section 3.
-type condResult int
-
-const (
-	condNone condResult = iota
-	condTrue
-	condFalse
-)
+type condResult union {
+	None
+	True
+	False
+}
 
 func checkIfMatch(w ResponseWriter, r *Request) condResult {
 	im := r.Header.Get("If-Match")
 	if im == "" {
-		return condNone
+		return condResult.None()
 	}
 	for {
 		im = textproto.TrimString(im)
@@ -498,44 +496,44 @@ func checkIfMatch(w ResponseWriter, r *Request) condResult {
 			continue
 		}
 		if im[0] == '*' {
-			return condTrue
+			return condResult.True()
 		}
 		etag, remain := scanETag(im)
 		if etag == "" {
 			break
 		}
 		if etagStrongMatch(etag, w.Header().get("Etag")) {
-			return condTrue
+			return condResult.True()
 		}
 		im = remain
 	}
 
-	return condFalse
+	return condResult.False()
 }
 
 func checkIfUnmodifiedSince(r *Request, modtime time.Time) condResult {
 	ius := r.Header.Get("If-Unmodified-Since")
 	if ius == "" || isZeroTime(modtime) {
-		return condNone
+		return condResult.None()
 	}
 	t, err := ParseTime(ius)
 	if err != nil {
-		return condNone
+		return condResult.None()
 	}
 
 	// The Last-Modified header truncates sub-second precision so
 	// the modtime needs to be truncated too.
 	modtime = modtime.Truncate(time.Second)
 	if ret := modtime.Compare(t); ret <= 0 {
-		return condTrue
+		return condResult.True()
 	}
-	return condFalse
+	return condResult.False()
 }
 
 func checkIfNoneMatch(w ResponseWriter, r *Request) condResult {
 	inm := r.Header.get("If-None-Match")
 	if inm == "" {
-		return condNone
+		return condResult.None()
 	}
 	buf := inm
 	for {
@@ -548,70 +546,70 @@ func checkIfNoneMatch(w ResponseWriter, r *Request) condResult {
 			continue
 		}
 		if buf[0] == '*' {
-			return condFalse
+			return condResult.False()
 		}
 		etag, remain := scanETag(buf)
 		if etag == "" {
 			break
 		}
 		if etagWeakMatch(etag, w.Header().get("Etag")) {
-			return condFalse
+			return condResult.False()
 		}
 		buf = remain
 	}
-	return condTrue
+	return condResult.True()
 }
 
 func checkIfModifiedSince(r *Request, modtime time.Time) condResult {
 	if r.Method != "GET" && r.Method != "HEAD" {
-		return condNone
+		return condResult.None()
 	}
 	ims := r.Header.Get("If-Modified-Since")
 	if ims == "" || isZeroTime(modtime) {
-		return condNone
+		return condResult.None()
 	}
 	t, err := ParseTime(ims)
 	if err != nil {
-		return condNone
+		return condResult.None()
 	}
 	// The Last-Modified header truncates sub-second precision so
 	// the modtime needs to be truncated too.
 	modtime = modtime.Truncate(time.Second)
 	if ret := modtime.Compare(t); ret <= 0 {
-		return condFalse
+		return condResult.False()
 	}
-	return condTrue
+	return condResult.True()
 }
 
 func checkIfRange(w ResponseWriter, r *Request, modtime time.Time) condResult {
 	if r.Method != "GET" && r.Method != "HEAD" {
-		return condNone
+		return condResult.None()
 	}
 	ir := r.Header.get("If-Range")
 	if ir == "" {
-		return condNone
+		return condResult.None()
 	}
 	etag, _ := scanETag(ir)
 	if etag != "" {
 		if etagStrongMatch(etag, w.Header().Get("Etag")) {
-			return condTrue
+			return condResult.True()
 		} else {
-			return condFalse
+			return condResult.False()
 		}
 	}
 	// The If-Range value is typically the ETag value, but it may also be
 	// the modtime date. See golang.org/issue/8367.
 	if modtime.IsZero() {
-		return condFalse
+		return condResult.False()
 	}
 	t, err := ParseTime(ir)
 	if err != nil {
-		return condFalse
+		return condResult.False()
 	}
 	if t.Unix() == modtime.Unix() {
-		return condTrue
+		return condResult.True()
 	}
-	return condFalse
+	return condResult.False()
 }
 
 var unixEpochTime = time.Unix(0, 0)
@@ -648,15 +646,15 @@ func writeNotModified(w ResponseWriter) {
 func checkPreconditions(w ResponseWriter, r *Request, modtime time.Time) (done bool, rangeHeader string) {
 	// This function carefully follows RFC 7232 section 6.
 	ch := checkIfMatch(w, r)
-	if ch == condNone {
+	if ch == condResult.None() {
 		ch = checkIfUnmodifiedSince(r, modtime)
 	}
-	if ch == condFalse {
+	if ch == condResult.False() {
 		w.WriteHeader(StatusPreconditionFailed)
 		return true, ""
 	}
-	switch checkIfNoneMatch(w, r) {
-	case condFalse:
+	switch checkIfNoneMatch(w, r).(variant) {
+	case False:
 		if r.Method == "GET" || r.Method == "HEAD" {
 			writeNotModified(w)
 			return true, ""
@@ -664,15 +662,16 @@ func checkPreconditions(w ResponseWriter, r *Request, modtime time.Time) (done b
 			w.WriteHeader(StatusPreconditionFailed)
 			return true, ""
 		}
-	case condNone:
-		if checkIfModifiedSince(r, modtime) == condFalse {
+	case None:
+		if checkIfModifiedSince(r, modtime) == condResult.False() {
 			writeNotModified(w)
 			return true, ""
 		}
+	case True:
 	}
 
 	rangeHeader = r.Header.get("Range")
-	if rangeHeader != "" && checkIfRange(w, r, modtime) == condFalse {
+	if rangeHeader != "" && checkIfRange(w, r, modtime) == condResult.False() {
 		rangeHeader = ""
 	}
 	return false, rangeHeader
@@ -750,7 +749,7 @@ func serveFile(w ResponseWriter, r *Request, fs FileSystem, name string, redirec
 
 	// Still a directory? (we didn't find an index.html file)
 	if d.IsDir() {
-		if checkIfModifiedSince(r, d.ModTime()) == condFalse {
+		if checkIfModifiedSince(r, d.ModTime()) == condResult.False() {
 			writeNotModified(w)
 			return
 		}

@@ -23,10 +23,7 @@ func interfaceToIPv4Addr(ifi *Interface) (IP, error) {
 	if ifi == nil {
 		return IPv4zero, nil
 	}
-	ifat, err := ifi.Addrs()
-	if err != nil {
-		return nil, err
-	}
+	ifat := ifi.Addrs()!
 	for _, ifa := range ifat {
 		switch v := ifa.(type) {
 		case *IPAddr:

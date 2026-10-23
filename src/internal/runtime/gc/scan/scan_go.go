@@ -69,7 +69,7 @@ type unsafeBuf[T any] struct {
 }
 
 func newUnsafeBuf[T any](base *T) unsafeBuf[T] {
-	return unsafeBuf[T]{base, 0}
+	return unsafeBuf{base, 0}
 }
 
 // addIf appends a value to the buffer if the predicate is true.

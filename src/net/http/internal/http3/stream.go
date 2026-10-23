@@ -216,10 +216,7 @@ func (st *stream) readFrameData() ([]byte, error) {
 	}
 	// TODO: Pool buffers to avoid allocation here.
 	b := make([]byte, st.lim)
-	_, err := io.ReadFull(st, b)
-	if err != nil {
-		return nil, err
-	}
+	io.ReadFull(st, b)!
 	return b, nil
 }
 
@@ -252,13 +249,9 @@ func (st *stream) Read(b []byte) (int, error) {
 	// if its context has been canceled. By always checking the deadline here,
 	// we make it so that I/O operations fail as soon as its relevant deadline
 	// has been exceeded.
-	if err := st.readDeadline.err(); err != nil {
-		return 0, err
-	}
+	st.readDeadline.err()!
 	n, err := st.stream.Read(b)
-	if e2 := st.recordBytesRead(n); e2 != nil {
-		return 0, e2
-	}
+	st.recordBytesRead(n)!
 	if err == io.EOF {
 		if st.lim == 0 {
 			// EOF at end of frame, ignore.
@@ -317,9 +310,7 @@ func (st *stream) Write(b []byte) (int, error) {
 	// if its context has been canceled. By always checking the deadline here,
 	// we make it so that I/O operations fail as soon as its relevant deadline
 	// has been exceeded.
-	if err := st.writeDeadline.err(); err != nil {
-		return 0, err
-	}
+	st.writeDeadline.err()!
 	n, err := st.stream.Write(b)
 	return n, st.writeDeadline.errOf(err)
 }
@@ -332,9 +323,7 @@ func (st *stream) Flush() error {
 	// if its context has been canceled. By always checking the deadline here,
 	// we make it so that I/O operations fail as soon as its relevant deadline
 	// has been exceeded.
-	if err := st.writeDeadline.err(); err != nil {
-		return err
-	}
+	st.writeDeadline.err()!
 	return st.writeDeadline.errOf(st.stream.Flush())
 }
 
@@ -346,9 +335,7 @@ func (st *stream) WriteByte(c byte) error {
 	// if its context has been canceled. By always checking the deadline here,
 	// we make it so that I/O operations fail as soon as its relevant deadline
 	// has been exceeded.
-	if err := st.writeDeadline.err(); err != nil {
-		return err
-	}
+	st.writeDeadline.err()!
 	return st.writeDeadline.errOf(st.stream.WriteByte(c))
 }
 

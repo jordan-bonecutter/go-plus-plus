@@ -340,10 +340,7 @@ func (m *clientHelloMsg) marshalMsg(echInner bool) ([]byte, error) {
 			})
 		})
 	}
-	extBytes, err := exts.Bytes()
-	if err != nil {
-		return nil, err
-	}
+	extBytes := exts.Bytes()!
 
 	var b cryptobyte.Builder
 	b.AddUint8(typeClientHello)
@@ -392,11 +389,8 @@ func (m *clientHelloMsg) marshalWithoutBinders() ([]byte, error) {
 	if m.original != nil {
 		fullMessage = m.original
 	} else {
-		var err error
-		fullMessage, err = m.marshal()
-		if err != nil {
-			return nil, err
-		}
+
+		fullMessage = m.marshal()!
 	}
 	return fullMessage[:len(fullMessage)-bindersLen], nil
 }
@@ -844,10 +838,7 @@ func (m *serverHelloMsg) marshal() ([]byte, error) {
 		exts.AddUint16(0)
 	}
 
-	extBytes, err := exts.Bytes()
-	if err != nil {
-		return nil, err
-	}
+	extBytes := exts.Bytes()!
 
 	var b cryptobyte.Builder
 	b.AddUint8(typeServerHello)
@@ -1999,10 +1990,7 @@ func transcriptMsg(msg handshakeMessage, h transcriptHash) error {
 		}
 	}
 
-	data, err := msg.marshal()
-	if err != nil {
-		return err
-	}
+	data := msg.marshal()!
 	h.Write(data)
 	return nil
 }

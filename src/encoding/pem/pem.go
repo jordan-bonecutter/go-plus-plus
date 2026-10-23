@@ -263,12 +263,8 @@ func Encode(out io.Writer, b *Block) error {
 	// All errors below are relayed from underlying io.Writer,
 	// so it is now safe to write data.
 
-	if _, err := out.Write(pemStart[1:]); err != nil {
-		return err
-	}
-	if _, err := out.Write([]byte(b.Type + "-----\n")); err != nil {
-		return err
-	}
+	out.Write(pemStart[1:])!
+	out.Write([]byte(b.Type + "-----\n"))!
 
 	if len(b.Headers) > 0 {
 		const procType = "Proc-Type"
@@ -284,39 +280,25 @@ func Encode(out io.Writer, b *Block) error {
 		// The Proc-Type header must be written first.
 		// See RFC 1421, section 4.6.1.1
 		if hasProcType {
-			if err := writeHeader(out, procType, b.Headers[procType]); err != nil {
-				return err
-			}
+			writeHeader(out, procType, b.Headers[procType])!
 		}
 		// For consistency of output, write other headers sorted by key.
 		slices.Sort(h)
 		for _, k := range h {
-			if err := writeHeader(out, k, b.Headers[k]); err != nil {
-				return err
-			}
+			writeHeader(out, k, b.Headers[k])!
 		}
-		if _, err := out.Write(nl); err != nil {
-			return err
-		}
+		out.Write(nl)!
 	}
 
 	var breaker lineBreaker
 	breaker.out = out
 
 	b64 := base64.NewEncoder(base64.StdEncoding, &breaker)
-	if _, err := b64.Write(b.Bytes); err != nil {
-		return err
-	}
-	if err := b64.Close(); err != nil {
-		return err
-	}
-	if err := breaker.Close(); err != nil {
-		return err
-	}
+	b64.Write(b.Bytes)!
+	b64.Close()!
+	breaker.Close()!
 
-	if _, err := out.Write(pemEnd[1:]); err != nil {
-		return err
-	}
+	out.Write(pemEnd[1:])!
 	_, err := out.Write([]byte(b.Type + "-----\n"))
 	return err
 }

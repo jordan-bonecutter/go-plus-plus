@@ -130,30 +130,15 @@ func newParser(r io.Reader, ver version.Version) (*parser, error) {
 	if seeker, ok := r.(io.Seeker); ok {
 		// Determine the size of the reader so that we can allocate a buffer
 		// without having to grow it later.
-		cur, err := seeker.Seek(0, io.SeekCurrent)
-		if err != nil {
-			return nil, err
-		}
-		end, err := seeker.Seek(0, io.SeekEnd)
-		if err != nil {
-			return nil, err
-		}
-		_, err = seeker.Seek(cur, io.SeekStart)
-		if err != nil {
-			return nil, err
-		}
+		cur := seeker.Seek(0, io.SeekCurrent)!
+		end := seeker.Seek(0, io.SeekEnd)!
+		seeker.Seek(cur, io.SeekStart)!
 
 		buf = make([]byte, end-cur)
-		_, err = io.ReadFull(r, buf)
-		if err != nil {
-			return nil, err
-		}
+		io.ReadFull(r, buf)!
 	} else {
-		var err error
-		buf, err = io.ReadAll(r)
-		if err != nil {
-			return nil, err
-		}
+
+		buf = io.ReadAll(r)!
 	}
 	return &parser{data: buf, ver: ver, timerGoids: make(map[uint64]bool)}, nil
 }
@@ -168,10 +153,7 @@ func newParser(r io.Reader, ver version.Version) (*parser, error) {
 func Parse(r io.Reader, vers version.Version) (Trace, error) {
 	// We accept the version as an argument because internal/trace will have
 	// already read the version to determine which parser to use.
-	p, err := newParser(r, vers)
-	if err != nil {
-		return Trace{}, err
-	}
+	p := newParser(r, vers)!
 	return p.parse()
 }
 
@@ -204,14 +186,9 @@ func (p *parser) parse() (Trace, error) {
 	p.pcs = make(map[uint64]Frame)
 	p.inlineStringsMapping = make(map[string]int)
 
-	if err := p.collectBatchesAndCPUSamples(); err != nil {
-		return Trace{}, err
-	}
+	p.collectBatchesAndCPUSamples()!
 
-	events, err := p.parseEventBatches()
-	if err != nil {
-		return Trace{}, err
-	}
+	events := p.parseEventBatches()!
 
 	if p.ticksPerSec == 0 {
 		return Trace{}, errors.New("no EvFrequency event")
@@ -235,9 +212,7 @@ func (p *parser) parse() (Trace, error) {
 		}
 	}
 
-	if err := p.postProcessTrace(events); err != nil {
-		return Trace{}, err
-	}
+	p.postProcessTrace(events)!
 
 	res := Trace{
 		Version:       p.ver,
@@ -482,9 +457,7 @@ func (p *parser) parseEventBatches() (Events, error) {
 		}
 		events.append(f.ev)
 
-		if err := transition(gs, g, init, next); err != nil {
-			return Events{}, err
-		}
+		transition(gs, g, init, next)!
 		availableProcs = append(availableProcs, f.proc)
 	}
 
@@ -667,10 +640,7 @@ func (p *parser) readRawEvent(flags uint, ev *rawEvent) error {
 			if _, err := p.readVal(); err != nil {
 				return errMalformedVarint
 			}
-			ln, err := p.readVal()
-			if err != nil {
-				return err
-			}
+			ln := p.readVal()!
 			if !p.discard(ln) {
 				return fmt.Errorf("failed to read trace: %w", io.EOF)
 			}
@@ -714,10 +684,7 @@ func (p *parser) readRawEvent(flags uint, ev *rawEvent) error {
 		// -1 because we've already read the first byte of the batch
 		off := p.off - 1
 
-		pid, err := p.readVal()
-		if err != nil {
-			return err
-		}
+		pid := p.readVal()!
 		if pid != math.MaxUint64 && pid > math.MaxInt32 {
 			return fmt.Errorf("processor ID %d is larger than maximum of %d", pid, uint64(math.MaxUint))
 		}
@@ -729,10 +696,7 @@ func (p *parser) readRawEvent(flags uint, ev *rawEvent) error {
 			pid32 = int32(pid)
 		}
 
-		v, err := p.readVal()
-		if err != nil {
-			return err
-		}
+		v := p.readVal()!
 
 		*ev = rawEvent{
 			typ:         EvBatch,
@@ -797,17 +761,11 @@ func (p *parser) readRawEvent(flags uint, ev *rawEvent) error {
 				// EvUserLog records are followed by a value string
 				if flags&skipArgs == 0 {
 					// Read string
-					s, err := p.readStr()
-					if err != nil {
-						return err
-					}
+					s := p.readStr()!
 					ev.sargs = append(ev.sargs, s)
 				} else {
 					// Skip string
-					v, err := p.readVal()
-					if err != nil {
-						return err
-					}
+					v := p.readVal()!
 					if !p.discard(v) {
 						return io.EOF
 					}
@@ -1153,9 +1111,7 @@ func (p *parser) postProcessTrace(events Events) error {
 		case EvGoCreate:
 			g := gs[ev.G]
 			p := ps[ev.P]
-			if err := checkRunning(p, g, ev, true); err != nil {
-				return err
-			}
+			checkRunning(p, g, ev, true)!
 			if _, ok := gs[ev.Args[0]]; ok {
 				return fmt.Errorf("g %d already exists (time %d)", ev.Args[0], ev.Ts)
 			}
@@ -1187,9 +1143,7 @@ func (p *parser) postProcessTrace(events Events) error {
 		case EvGoEnd, EvGoStop:
 			g := gs[ev.G]
 			p := ps[ev.P]
-			if err := checkRunning(p, g, ev, false); err != nil {
-				return err
-			}
+			checkRunning(p, g, ev, false)!
 			g.evStart = nil
 			g.state = gDead
 			p.g = 0
@@ -1203,9 +1157,7 @@ func (p *parser) postProcessTrace(events Events) error {
 		case EvGoSched, EvGoPreempt:
 			g := gs[ev.G]
 			p := ps[ev.P]
-			if err := checkRunning(p, g, ev, false); err != nil {
-				return err
-			}
+			checkRunning(p, g, ev, false)!
 			g.state = gRunnable
 			g.evStart = nil
 			p.g = 0
@@ -1236,18 +1188,14 @@ func (p *parser) postProcessTrace(events Events) error {
 		case EvGoSysCall:
 			g := gs[ev.G]
 			p := ps[ev.P]
-			if err := checkRunning(p, g, ev, false); err != nil {
-				return err
-			}
+			checkRunning(p, g, ev, false)!
 			g.ev = ev
 
 			gs[ev.G] = g
 		case EvGoSysBlock:
 			g := gs[ev.G]
 			p := ps[ev.P]
-			if err := checkRunning(p, g, ev, false); err != nil {
-				return err
-			}
+			checkRunning(p, g, ev, false)!
 			g.state = gWaiting
 			g.evStart = nil
 			p.g = 0
@@ -1267,9 +1215,7 @@ func (p *parser) postProcessTrace(events Events) error {
 			EvGoBlockSelect, EvGoBlockSync, EvGoBlockCond, EvGoBlockNet, EvGoBlockGC:
 			g := gs[ev.G]
 			p := ps[ev.P]
-			if err := checkRunning(p, g, ev, false); err != nil {
-				return err
-			}
+			checkRunning(p, g, ev, false)!
 			g.state = gWaiting
 			g.ev = ev
 			g.evStart = nil

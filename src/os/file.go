@@ -349,10 +349,7 @@ func Mkdir(name string, perm FileMode) error {
 
 // setStickyBit adds ModeSticky to the permission bits of path, non atomic.
 func setStickyBit(name string) error {
-	fi, err := Stat(name)
-	if err != nil {
-		return err
-	}
+	fi := Stat(name)!
 	return Chmod(name, fi.Mode()|ModeSticky)
 }
 
@@ -409,10 +406,7 @@ func Create(name string) (*File, error) {
 // If there is an error, it will be of type [*PathError].
 func OpenFile(name string, flag int, perm FileMode) (*File, error) {
 	testlog.Open(name)
-	f, err := openFileNolog(name, flag, perm)
-	if err != nil {
-		return nil, err
-	}
+	f := openFileNolog(name, flag, perm)!
 	f.appendMode = flag&O_APPEND != 0
 
 	return f, nil
@@ -696,9 +690,7 @@ func (f *File) SetWriteDeadline(t time.Time) error {
 // SyscallConn returns a raw file.
 // This implements the syscall.Conn interface.
 func (f *File) SyscallConn() (syscall.RawConn, error) {
-	if err := f.checkValid("SyscallConn"); err != nil {
-		return nil, err
-	}
+	f.checkValid("SyscallConn")!
 	return newRawConn(f)
 }
 
@@ -869,10 +861,7 @@ func (dir dirFS) join(name string) (string, error) {
 // as an error to be reported.
 // If there is an error, it will be of type [*PathError].
 func ReadFile(name string) ([]byte, error) {
-	f, err := Open(name)
-	if err != nil {
-		return nil, err
-	}
+	f := Open(name)!
 	defer f.Close()
 
 	return readFileContents(statOrZero(f), f.Read)

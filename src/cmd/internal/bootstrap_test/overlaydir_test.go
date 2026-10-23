@@ -18,9 +18,7 @@ import (
 // factor this function out into a package to reduce duplication.
 func overlayDir(dstRoot, srcRoot string) error {
 	dstRoot = filepath.Clean(dstRoot)
-	if err := os.MkdirAll(dstRoot, 0777); err != nil {
-		return err
-	}
+	os.MkdirAll(dstRoot, 0777)!
 
 	srcRoot, err := filepath.Abs(srcRoot)
 	if err != nil {

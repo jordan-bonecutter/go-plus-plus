@@ -43,24 +43,15 @@ func (m *InterfaceMulticastAddrMessage) sockaddr() ([]Sockaddr, error) {
 		rsa := (*RawSockaddr)(unsafe.Pointer(&b[0]))
 		switch rsa.Family {
 		case AF_LINK:
-			sa, err := parseSockaddrLink(b)
-			if err != nil {
-				return nil, err
-			}
+			sa := parseSockaddrLink(b)!
 			sas[i] = sa
 			b = b[rsaAlignOf(int(rsa.Len)):]
 		case AF_INET, AF_INET6:
-			sa, err := parseSockaddrInet(b, rsa.Family)
-			if err != nil {
-				return nil, err
-			}
+			sa := parseSockaddrInet(b, rsa.Family)!
 			sas[i] = sa
 			b = b[rsaAlignOf(int(rsa.Len)):]
 		default:
-			sa, l, err := parseLinkLayerAddr(b)
-			if err != nil {
-				return nil, err
-			}
+			sa, l := parseLinkLayerAddr(b)!
 			sas[i] = sa
 			b = b[l:]
 		}

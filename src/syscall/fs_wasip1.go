@@ -741,9 +741,7 @@ func UtimesNano(path string, ts []Timespec) error {
 	mtime := TimespecToNsec(ts[1])
 	if ts[0].Nsec == UTIME_OMIT || ts[1].Nsec == UTIME_OMIT {
 		var st Stat_t
-		if err := Stat(path, &st); err != nil {
-			return err
-		}
+		Stat(path, &st)!
 		if ts[0].Nsec == UTIME_OMIT {
 			atime = int64(st.Atime)
 		}
@@ -784,10 +782,7 @@ func Truncate(path string, length int64) error {
 	if path == "" {
 		return EINVAL
 	}
-	fd, err := Open(path, O_WRONLY, 0)
-	if err != nil {
-		return err
-	}
+	fd := Open(path, O_WRONLY, 0)!
 	defer Close(fd)
 	return Ftruncate(fd, length)
 }

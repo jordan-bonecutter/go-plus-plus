@@ -212,17 +212,11 @@ type _REPARSE_DATA_BUFFER struct {
 }
 
 func createDirLink(link string, rdb *_REPARSE_DATA_BUFFER) error {
-	err := os.Mkdir(link, 0777)
-	if err != nil {
-		return err
-	}
+	os.Mkdir(link, 0777)!
 
 	linkp := syscall.StringToUTF16(link)
-	fd, err := syscall.CreateFile(&linkp[0], syscall.GENERIC_WRITE, 0, nil, syscall.OPEN_EXISTING,
-		syscall.FILE_FLAG_OPEN_REPARSE_POINT|syscall.FILE_FLAG_BACKUP_SEMANTICS, 0)
-	if err != nil {
-		return err
-	}
+	fd := syscall.CreateFile(&linkp[0], syscall.GENERIC_WRITE, 0, nil, syscall.OPEN_EXISTING,
+		syscall.FILE_FLAG_OPEN_REPARSE_POINT|syscall.FILE_FLAG_BACKUP_SEMANTICS, 0)!
 	defer syscall.CloseHandle(fd)
 
 	buflen := uint32(rdb.header.ReparseDataLength) + uint32(unsafe.Sizeof(rdb.header))
@@ -299,27 +293,15 @@ func TestDirectoryJunction(t *testing.T) {
 }
 
 func enableCurrentThreadPrivilege(privilegeName string) error {
-	ct, err := windows.GetCurrentThread()
-	if err != nil {
-		return err
-	}
+	ct := windows.GetCurrentThread()!
 	var t syscall.Token
-	err = windows.OpenThreadToken(ct, syscall.TOKEN_QUERY|windows.TOKEN_ADJUST_PRIVILEGES, false, &t)
-	if err != nil {
-		return err
-	}
+	windows.OpenThreadToken(ct, syscall.TOKEN_QUERY|windows.TOKEN_ADJUST_PRIVILEGES, false, &t)!
 	defer syscall.CloseHandle(syscall.Handle(t))
 
 	var tp windows.TOKEN_PRIVILEGES
 
-	privStr, err := syscall.UTF16PtrFromString(privilegeName)
-	if err != nil {
-		return err
-	}
-	err = windows.LookupPrivilegeValue(nil, privStr, &tp.Privileges[0].Luid)
-	if err != nil {
-		return err
-	}
+	privStr := syscall.UTF16PtrFromString(privilegeName)!
+	windows.LookupPrivilegeValue(nil, privStr, &tp.Privileges[0].Luid)!
 	tp.PrivilegeCount = 1
 	tp.Privileges[0].Attributes = windows.SE_PRIVILEGE_ENABLED
 	return windows.AdjustTokenPrivileges(t, false, &tp, 0, nil, nil)
@@ -790,10 +772,7 @@ func TestStatPagefile(t *testing.T) {
 // and converts returned result into []string.
 func syscallCommandLineToArgv(cmd string) ([]string, error) {
 	var argc int32
-	argv, err := syscall.CommandLineToArgv(&syscall.StringToUTF16(cmd)[0], &argc)
-	if err != nil {
-		return nil, err
-	}
+	argv := syscall.CommandLineToArgv(&syscall.StringToUTF16(cmd)[0], &argc)!
 	defer syscall.LocalFree(syscall.Handle(uintptr(unsafe.Pointer(argv))))
 
 	var args []string

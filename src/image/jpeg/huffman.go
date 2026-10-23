@@ -82,9 +82,7 @@ func (d *decoder) ensureNBits(n int32) error {
 //   - t == 15:   -32767, -32766, ..., -16384, +16384, ..., +32766, +32767
 func (d *decoder) receiveExtend(t uint8) (int32, error) {
 	if d.bits.n < int32(t) {
-		if err := d.ensureNBits(int32(t)); err != nil {
-			return 0, err
-		}
+		d.ensureNBits(int32(t))!
 	}
 	d.bits.n -= int32(t)
 	d.bits.m >>= t
@@ -112,9 +110,7 @@ func (d *decoder) processDHT(n int) error {
 		if n < 17 {
 			return FormatError("DHT has wrong length")
 		}
-		if err := d.readFull(d.tmp[:17]); err != nil {
-			return err
-		}
+		d.readFull(d.tmp[:17])!
 		tc := d.tmp[0] >> 4
 		if tc > maxTc {
 			return FormatError("bad Tc value")
@@ -145,9 +141,7 @@ func (d *decoder) processDHT(n int) error {
 		if n < 0 {
 			return FormatError("DHT has wrong length")
 		}
-		if err := d.readFull(h.vals[:h.nCodes]); err != nil {
-			return err
-		}
+		d.readFull(h.vals[:h.nCodes])!
 
 		// Derive the look-up table.
 		clear(h.lut[:])
@@ -221,9 +215,7 @@ func (d *decoder) decodeHuffman(h *huffman) (uint8, error) {
 slowPath:
 	for i, code := 0, int32(0); i < maxCodeLength; i++ {
 		if d.bits.n == 0 {
-			if err := d.ensureNBits(1); err != nil {
-				return 0, err
-			}
+			d.ensureNBits(1)!
 		}
 		if d.bits.a&d.bits.m != 0 {
 			code |= 1
@@ -240,9 +232,7 @@ slowPath:
 
 func (d *decoder) decodeBit() (bool, error) {
 	if d.bits.n == 0 {
-		if err := d.ensureNBits(1); err != nil {
-			return false, err
-		}
+		d.ensureNBits(1)!
 	}
 	ret := d.bits.a&d.bits.m != 0
 	d.bits.n--
@@ -252,9 +242,7 @@ func (d *decoder) decodeBit() (bool, error) {
 
 func (d *decoder) decodeBits(n int32) (uint32, error) {
 	if d.bits.n < n {
-		if err := d.ensureNBits(n); err != nil {
-			return 0, err
-		}
+		d.ensureNBits(n)!
 	}
 	ret := d.bits.a >> uint32(d.bits.n-n)
 	ret &= (1 << uint32(n)) - 1

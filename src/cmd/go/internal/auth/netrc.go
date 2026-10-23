@@ -74,10 +74,7 @@ func netrcPath() (string, error) {
 	if env := os.Getenv("NETRC"); env != "" {
 		return env, nil
 	}
-	dir, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
+	dir := os.UserHomeDir()!
 
 	// Prioritize _netrc on Windows for compatibility.
 	if runtime.GOOS == "windows" {

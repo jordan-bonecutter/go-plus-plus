@@ -95,10 +95,7 @@ func (l Level) MarshalJSON() ([]byte, error) {
 // It also accepts numeric offsets that would result in a different string on
 // output. For example, "Error-8" would marshal as "INFO".
 func (l *Level) UnmarshalJSON(data []byte) error {
-	s, err := strconv.Unquote(string(data))
-	if err != nil {
-		return err
-	}
+	s := strconv.Unquote(string(data))!
 	return l.parse(s)
 }
 
@@ -198,9 +195,7 @@ func (v *LevelVar) MarshalText() ([]byte, error) {
 // by calling [Level.UnmarshalText].
 func (v *LevelVar) UnmarshalText(data []byte) error {
 	var l Level
-	if err := l.UnmarshalText(data); err != nil {
-		return err
-	}
+	l.UnmarshalText(data)!
 	v.Set(l)
 	return nil
 }

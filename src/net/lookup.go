@@ -204,10 +204,7 @@ func (r *Resolver) LookupHost(ctx context.Context, host string) (addrs []string,
 // LookupIP looks up host using the local resolver.
 // It returns a slice of that host's IPv4 and IPv6 addresses.
 func LookupIP(host string) ([]IP, error) {
-	addrs, err := DefaultResolver.LookupIPAddr(context.Background(), host)
-	if err != nil {
-		return nil, err
-	}
+	addrs := DefaultResolver.LookupIPAddr(context.Background(), host)!
 	ips := make([]IP, len(addrs))
 	for i, ia := range addrs {
 		ips[i] = ia.IP
@@ -226,10 +223,7 @@ func (r *Resolver) LookupIPAddr(ctx context.Context, host string) ([]IPAddr, err
 // network.
 // network must be one of "ip", "ip4" or "ip6".
 func (r *Resolver) LookupIP(ctx context.Context, network, host string) ([]IP, error) {
-	afnet, _, err := parseNetwork(ctx, network, false)
-	if err != nil {
-		return nil, err
-	}
+	afnet, _ := parseNetwork(ctx, network, false)!
 	switch afnet {
 	case "ip", "ip4", "ip6":
 	default:
@@ -239,10 +233,7 @@ func (r *Resolver) LookupIP(ctx context.Context, network, host string) ([]IP, er
 	if host == "" {
 		return nil, newDNSError(errNoSuchHost, host, "")
 	}
-	addrs, err := r.internetAddrList(ctx, afnet, host)
-	if err != nil {
-		return nil, err
-	}
+	addrs := r.internetAddrList(ctx, afnet, host)!
 
 	ips := make([]IP, 0, len(addrs))
 	for _, addr := range addrs {
@@ -260,10 +251,7 @@ func (r *Resolver) LookupNetIP(ctx context.Context, network, host string) ([]net
 	// type throughout be netip.Addr and only converting to the net.IP slice
 	// version at the edge. But for now (2021-10-20), this is a wrapper around
 	// the old way.
-	ips, err := r.LookupIP(ctx, network, host)
-	if err != nil {
-		return nil, err
-	}
+	ips := r.LookupIP(ctx, network, host)!
 	ret := make([]netip.Addr, 0, len(ips))
 	for _, ip := range ips {
 		if a, ok := netip.AddrFromSlice(ip); ok {
@@ -467,10 +455,7 @@ func LookupCNAME(host string) (cname string, err error) {
 // The returned canonical name is validated to be a properly
 // formatted presentation-format domain name.
 func (r *Resolver) LookupCNAME(ctx context.Context, host string) (string, error) {
-	cname, err := r.lookupCNAME(ctx, host)
-	if err != nil {
-		return "", err
-	}
+	cname := r.lookupCNAME(ctx, host)!
 	if !isDomainName(cname) {
 		return "", &DNSError{Err: errMalformedDNSRecordsDetail, Name: host}
 	}
@@ -520,10 +505,7 @@ func LookupSRV(service, proto, name string) (cname string, addrs []*SRV, err err
 // invalid names, those records are filtered out and an error
 // will be returned alongside the remaining results, if any.
 func (r *Resolver) LookupSRV(ctx context.Context, service, proto, name string) (string, []*SRV, error) {
-	cname, addrs, err := r.lookupSRV(ctx, service, proto, name)
-	if err != nil {
-		return "", nil, err
-	}
+	cname, addrs := r.lookupSRV(ctx, service, proto, name)!
 	if cname != "" && !isDomainName(cname) {
 		return "", nil, &DNSError{Err: "SRV header name is invalid", Name: name}
 	}
@@ -563,10 +545,7 @@ func LookupMX(name string) ([]*MX, error) {
 // If the response contains invalid names, those records are filtered out
 // and an error will be returned alongside the remaining results, if any.
 func (r *Resolver) LookupMX(ctx context.Context, name string) ([]*MX, error) {
-	records, err := r.lookupMX(ctx, name)
-	if err != nil {
-		return nil, err
-	}
+	records := r.lookupMX(ctx, name)!
 	filteredMX := make([]*MX, 0, len(records))
 	for _, mx := range records {
 		if mx == nil {
@@ -608,10 +587,7 @@ func LookupNS(name string) ([]*NS, error) {
 // invalid names, those records are filtered out and an error
 // will be returned alongside the remaining results, if any.
 func (r *Resolver) LookupNS(ctx context.Context, name string) ([]*NS, error) {
-	records, err := r.lookupNS(ctx, name)
-	if err != nil {
-		return nil, err
-	}
+	records := r.lookupNS(ctx, name)!
 	filteredNS := make([]*NS, 0, len(records))
 	for _, ns := range records {
 		if ns == nil {
@@ -670,10 +646,7 @@ func LookupAddr(addr string) (names []string, err error) {
 // domain names. If the response contains invalid names, those records are filtered
 // out and an error will be returned alongside the remaining results, if any.
 func (r *Resolver) LookupAddr(ctx context.Context, addr string) ([]string, error) {
-	names, err := r.lookupAddr(ctx, addr)
-	if err != nil {
-		return nil, err
-	}
+	names := r.lookupAddr(ctx, addr)!
 	filteredNames := make([]string, 0, len(names))
 	for _, name := range names {
 		if isDomainName(name) {
@@ -775,10 +748,7 @@ func (r *Resolver) goLookupSRV(ctx context.Context, service, proto, name string)
 
 // goLookupMX returns the MX records for name.
 func (r *Resolver) goLookupMX(ctx context.Context, name string) ([]*MX, error) {
-	p, server, err := r.lookup(ctx, name, dnsmessage.TypeMX, nil)
-	if err != nil {
-		return nil, err
-	}
+	p, server := r.lookup(ctx, name, dnsmessage.TypeMX, nil)!
 	var mxs []*MX
 	for {
 		h, err := p.AnswerHeader()
@@ -819,10 +789,7 @@ func (r *Resolver) goLookupMX(ctx context.Context, name string) ([]*MX, error) {
 
 // goLookupNS returns the NS records for name.
 func (r *Resolver) goLookupNS(ctx context.Context, name string) ([]*NS, error) {
-	p, server, err := r.lookup(ctx, name, dnsmessage.TypeNS, nil)
-	if err != nil {
-		return nil, err
-	}
+	p, server := r.lookup(ctx, name, dnsmessage.TypeNS, nil)!
 	var nss []*NS
 	for {
 		h, err := p.AnswerHeader()
@@ -861,10 +828,7 @@ func (r *Resolver) goLookupNS(ctx context.Context, name string) ([]*NS, error) {
 
 // goLookupTXT returns the TXT records from name.
 func (r *Resolver) goLookupTXT(ctx context.Context, name string) ([]string, error) {
-	p, server, err := r.lookup(ctx, name, dnsmessage.TypeTXT, nil)
-	if err != nil {
-		return nil, err
-	}
+	p, server := r.lookup(ctx, name, dnsmessage.TypeTXT, nil)!
 	var txts []string
 	for {
 		h, err := p.AnswerHeader()

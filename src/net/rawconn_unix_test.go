@@ -78,9 +78,7 @@ func controlRawConn(c syscall.RawConn, addr Addr) error {
 			}
 		}
 	}
-	if err := c.Control(fn); err != nil {
-		return err
-	}
+	c.Control(fn)!
 	return operr
 }
 
@@ -108,8 +106,6 @@ func controlOnConnSetup(network string, address string, c syscall.RawConn) error
 			return errors.New("unknown network: " + network)
 		}
 	}
-	if err := c.Control(fn); err != nil {
-		return err
-	}
+	c.Control(fn)!
 	return operr
 }

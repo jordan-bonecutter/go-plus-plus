@@ -18,10 +18,7 @@ type NTUnicodeString struct {
 // do not use NTUnicodeString, and instead UTF16PtrFromString should be used for
 // the more common *uint16 string type.
 func NewNTUnicodeString(s string) (*NTUnicodeString, error) {
-	s16, err := syscall.UTF16FromString(s)
-	if err != nil {
-		return nil, err
-	}
+	s16 := syscall.UTF16FromString(s)!
 	n := len(s16) * 2
 	if n > (1<<16)-1 {
 		return nil, syscall.EINVAL

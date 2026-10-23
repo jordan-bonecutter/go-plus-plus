@@ -106,9 +106,7 @@ func validateResolvedAddr(net string, family int, sa sockaddr) error {
 				Addr: sa.String(),
 			}
 		}
-		if err := validateIP(sa.IP); err != nil {
-			return err
-		}
+		validateIP(sa.IP)!
 		if sa.Port <= 0 || sa.Port >= 1<<16 {
 			return &AddrError{
 				Err:  "port out of range",
@@ -125,9 +123,7 @@ func validateResolvedAddr(net string, family int, sa sockaddr) error {
 				Addr: sa.String(),
 			}
 		}
-		if err := validateIP(sa.IP); err != nil {
-			return err
-		}
+		validateIP(sa.IP)!
 		if sa.Port <= 0 || sa.Port >= 1<<16 {
 			return &AddrError{
 				Err:  "port out of range",
@@ -852,9 +848,7 @@ func fakeConnect(ctx context.Context, fd *netFD, laddr, raddr sockaddr) error {
 
 func (ffd *fakeNetFD) assignFakeAddr(addr sockaddr) error {
 	validate := func(sa sockaddr) error {
-		if err := validateResolvedAddr(ffd.fd.net, ffd.fd.family, sa); err != nil {
-			return err
-		}
+		validateResolvedAddr(ffd.fd.net, ffd.fd.family, sa)!
 		ffd.fd.laddr = sa
 		return nil
 	}
@@ -1022,10 +1016,7 @@ func (ffd *fakeNetFD) readFrom(p []byte) (n int, sa syscall.Sockaddr, err error)
 
 func (ffd *fakeNetFD) readFromInet4(p []byte, sa *syscall.SockaddrInet4) (n int, err error) {
 	n, _, err = ffd.queue.recvfrom(ffd.readDeadline.Load(), p, true, func(from sockaddr) error {
-		fromSA, err := from.sockaddr(syscall.AF_INET)
-		if err != nil {
-			return err
-		}
+		fromSA := from.sockaddr(syscall.AF_INET)!
 		if fromSA == nil {
 			return os.NewSyscallError("readFromInet4", syscall.EINVAL)
 		}
@@ -1037,10 +1028,7 @@ func (ffd *fakeNetFD) readFromInet4(p []byte, sa *syscall.SockaddrInet4) (n int,
 
 func (ffd *fakeNetFD) readFromInet6(p []byte, sa *syscall.SockaddrInet6) (n int, err error) {
 	n, _, err = ffd.queue.recvfrom(ffd.readDeadline.Load(), p, true, func(from sockaddr) error {
-		fromSA, err := from.sockaddr(syscall.AF_INET6)
-		if err != nil {
-			return err
-		}
+		fromSA := from.sockaddr(syscall.AF_INET6)!
 		if fromSA == nil {
 			return os.NewSyscallError("readFromInet6", syscall.EINVAL)
 		}

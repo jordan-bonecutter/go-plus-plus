@@ -89,19 +89,13 @@ func ResolveIPAddr(network, address string) (*IPAddr, error) {
 	if network == "" { // a hint wildcard for Go 1.0 undocumented behavior
 		network = "ip"
 	}
-	afnet, _, err := parseNetwork(context.Background(), network, false)
-	if err != nil {
-		return nil, err
-	}
+	afnet, _ := parseNetwork(context.Background(), network, false)!
 	switch afnet {
 	case "ip", "ip4", "ip6":
 	default:
 		return nil, UnknownNetworkError(network)
 	}
-	addrs, err := DefaultResolver.internetAddrList(context.Background(), afnet, address)
-	if err != nil {
-		return nil, err
-	}
+	addrs := DefaultResolver.internetAddrList(context.Background(), afnet, address)!
 	return addrs.forResolve(network, address).(*IPAddr), nil
 }
 

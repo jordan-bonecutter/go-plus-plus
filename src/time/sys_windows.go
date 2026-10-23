@@ -38,9 +38,7 @@ func preadn(fd uintptr, buf []byte, off int) error {
 	if off < 0 {
 		whence = seekEnd
 	}
-	if _, err := syscall.Seek(syscall.Handle(fd), int64(off), whence); err != nil {
-		return err
-	}
+	syscall.Seek(syscall.Handle(fd), int64(off), whence)!
 	for len(buf) > 0 {
 		m, err := syscall.Read(syscall.Handle(fd), buf)
 		if m <= 0 {

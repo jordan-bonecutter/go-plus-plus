@@ -91,9 +91,7 @@ type Reader struct {
 // The Reader.[Header] fields will be valid in the [Reader] returned.
 func NewReader(r io.Reader) (*Reader, error) {
 	z := new(Reader)
-	if err := z.Reset(r); err != nil {
-		return nil, err
-	}
+	z.Reset(r)!
 	return z, nil
 }
 

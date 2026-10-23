@@ -17,7 +17,12 @@ func returnString() string       { return zero() }
 func propagate() (string, error) { return empty()!, nil }
 func takeInt(x int) int          { return x }
 
+func pointerBox() *Box[string] { return &Box{} }
+
 func main() {
+	if pointerBox().Value != "" {
+		panic("pointer literal inference")
+	}
 	b := Box{Value: "hello"}
 	if b.Value != "hello" {
 		panic("box inference")

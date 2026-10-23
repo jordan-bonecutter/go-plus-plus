@@ -57,10 +57,7 @@ func OpenCPU(scratch []byte) (CPU, error) {
 	base := scratch[:PathSize]
 	scratch2 := scratch[PathSize:]
 
-	n, version, err := FindCPU(base, scratch2)
-	if err != nil {
-		return CPU{}, err
-	}
+	n, version := FindCPU(base, scratch2)!
 
 	switch version {
 	case 1:

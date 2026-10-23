@@ -105,7 +105,7 @@ func (rt http2ErringRoundTripper) RoundTrip(*Request) (*Response, error) { retur
 
 func http2RoundTrip(req *Request, rt func(*http2.ClientRequest) (*http2.ClientResponse, error)) (*Response, error) {
 	resp := &Response{}
-	cresp, err := rt(&http2.ClientRequest{
+	cresp := rt(&http2.ClientRequest{
 		Context:       req.Context(),
 		Method:        req.Method,
 		URL:           req.URL,
@@ -118,10 +118,7 @@ func http2RoundTrip(req *Request, rt func(*http2.ClientRequest) (*http2.ClientRe
 		Cancel:        req.Cancel,
 		Close:         req.Close,
 		ResTrailer:    (*http2.Header)(&resp.Trailer),
-	})
-	if err != nil {
-		return nil, err
-	}
+	})!
 	resp.Status = cresp.Status + " " + StatusText(cresp.StatusCode)
 	resp.StatusCode = cresp.StatusCode
 	resp.Proto = "HTTP/2.0"
@@ -142,10 +139,7 @@ func (t *Transport) http2AddConn(scheme, authority string, nc net.Conn) (RoundTr
 	if t.h2Transport == nil {
 		return nil, errors.ErrUnsupported
 	}
-	err := t.h2Transport.AddConn(scheme, authority, nc)
-	if err != nil {
-		return nil, err
-	}
+	t.h2Transport.AddConn(scheme, authority, nc)!
 	return http2RoundTripper{t.h2Transport, false}, nil
 }
 
@@ -155,10 +149,7 @@ func (t *Transport) http2NewClientConn(nc net.Conn, internalStateHook func()) (g
 	if t.h2Transport == nil {
 		return nil, errors.ErrUnsupported
 	}
-	cc, err := t.h2Transport.NewClientConn(nc, internalStateHook)
-	if err != nil {
-		return nil, err
-	}
+	cc := t.h2Transport.NewClientConn(nc, internalStateHook)!
 	return http2ClientConn{cc}, nil
 }
 
@@ -187,10 +178,7 @@ func (t *Transport) http2NewClientConnFromContext(ctx context.Context) (*ClientC
 		return nil, errors.New("http: Transport does not support HTTP/2")
 	}
 	cc := &ClientConn{}
-	gc, err := t.http2NewClientConn(nc, cc.maybeRunStateHook)
-	if err != nil {
-		return nil, err
-	}
+	gc := t.http2NewClientConn(nc, cc.maybeRunStateHook)!
 	cc.stateHookMu.Lock()
 	defer cc.stateHookMu.Unlock()
 	cc.cc = gc
@@ -209,10 +197,7 @@ func (t *Transport) http2ExternalDial(ctx context.Context, cm connectMethod) (Ro
 	if t.h2Config == nil {
 		return nil, errors.ErrUnsupported
 	}
-	nc, err := t.h2Config.DialFromContext(ctx, "tcp", cm.targetAddr)
-	if err != nil {
-		return nil, err
-	}
+	nc := t.h2Config.DialFromContext(ctx, "tcp", cm.targetAddr)!
 	return t.http2AddConn(cm.targetScheme, cm.targetAddr, nc)
 }
 

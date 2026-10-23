@@ -112,10 +112,7 @@ func loadZoneDataPlan9(s string) (l *Location, err error) {
 }
 
 func loadZoneFilePlan9(name string) (*Location, error) {
-	b, err := readFile(name)
-	if err != nil {
-		return nil, err
-	}
+	b := readFile(name)!
 	return loadZoneDataPlan9(string(b))
 }
 

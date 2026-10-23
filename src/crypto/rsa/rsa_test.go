@@ -963,10 +963,7 @@ func benchmarkPrimeReader(primes string) io.Reader {
 				return io.EOF
 			}
 		}
-		b, err := hex.DecodeString(line)
-		if err != nil {
-			return err
-		}
+		b := hex.DecodeString(line)!
 		if len(p) != len(b) {
 			return fmt.Errorf("unexpected read length: %d", len(p))
 		}

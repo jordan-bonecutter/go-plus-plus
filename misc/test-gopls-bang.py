@@ -11,9 +11,16 @@ import time
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SOURCE = '''package main
-import ("fmt"; "bangeditor/model")
+import ("fmt"; "net/http"; "bangeditor/model")
 type UnitOption[T any] union { Empty; Value T }
-func emptyUnit() UnitOption[int] { return UnitOption[int].Empty(unit{}) }
+func emptyUnit() UnitOption[int] { return UnitOption.Empty() }
+func readHTTP(client *http.Client) error {
+ resp := client.Get("http://localhost/")!
+ defer resp.Body.Close()
+ return nil
+}
+type InferredBox[T any] struct { Value T }
+func inferredPointer() *InferredBox[string] { return &InferredBox{} }
 type Item struct { Field int }
 func value() (Item, error) { return Item{7}, nil }
 func pair() (int, string, error) { return 7, "ok", nil }
@@ -210,9 +217,9 @@ def run(binary):
                 assert "error" in signature["signatures"][0]["label"], signature
                 rename = request("textDocument/rename", dict(at("item :=", 1), newName="renamed"))
                 assert "renamed" in json.dumps(rename), rename
-                unit_at = at("UnitOption[int].Empty", len("UnitOption[int]."))
+                unit_at = at("UnitOption.Empty", len("UnitOption."))
                 unit_hover = request("textDocument/hover", unit_at)
-                assert "unit" in unit_hover["contents"]["value"], unit_hover
+                assert "func Empty()" in unit_hover["contents"]["value"], unit_hover
                 assert request("textDocument/definition", unit_at), "missing implicit-unit variant definition"
                 variant_hover = request("textDocument/hover", at("Choice.First", len("Choice.")))
                 assert "func First" in variant_hover["contents"]["value"], variant_hover

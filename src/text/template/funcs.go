@@ -208,16 +208,10 @@ func index(item reflect.Value, indexes ...reflect.Value) (reflect.Value, error) 
 		}
 		switch item.Kind() {
 		case reflect.Array, reflect.Slice, reflect.String:
-			x, err := indexArg(index, item.Len())
-			if err != nil {
-				return reflect.Value{}, err
-			}
+			x := indexArg(index, item.Len())!
 			item = item.Index(x)
 		case reflect.Map:
-			index, err := prepareArg(index, item.Type().Key())
-			if err != nil {
-				return reflect.Value{}, err
-			}
+			index := prepareArg(index, item.Type().Key())!
 			if x := item.MapIndex(index); x.IsValid() {
 				item = x
 			} else {
@@ -266,10 +260,7 @@ func slice(item reflect.Value, indexes ...reflect.Value) (reflect.Value, error) 
 	// set default values for cases item[:], item[i:].
 	idx := [3]int{0, item.Len()}
 	for i, index := range indexes {
-		x, err := indexArg(index, cap)
-		if err != nil {
-			return reflect.Value{}, err
-		}
+		x := indexArg(index, cap)!
 		idx[i] = x
 	}
 	// given item[i:j], make sure i <= j.
@@ -319,9 +310,7 @@ func call(name string, fn reflect.Value, args ...reflect.Value) (reflect.Value, 
 		return reflect.Value{}, fmt.Errorf("non-function %s of type %s", name, typ)
 	}
 
-	if err := goodFunc(name, typ); err != nil {
-		return reflect.Value{}, err
-	}
+	goodFunc(name, typ)!
 	numIn := typ.NumIn()
 	var dddType reflect.Type
 	if typ.IsVariadic() {
@@ -581,15 +570,9 @@ func ne(arg1, arg2 reflect.Value) (bool, error) {
 // lt evaluates the comparison a < b.
 func lt(arg1, arg2 reflect.Value) (bool, error) {
 	arg1 = indirectInterface(arg1)
-	k1, err := basicKind(arg1)
-	if err != nil {
-		return false, err
-	}
+	k1 := basicKind(arg1)!
 	arg2 = indirectInterface(arg2)
-	k2, err := basicKind(arg2)
-	if err != nil {
-		return false, err
-	}
+	k2 := basicKind(arg2)!
 	truth := false
 	if k1 != k2 {
 		// Special case: Can compare integer values regardless of type's sign.
@@ -633,20 +616,14 @@ func le(arg1, arg2 reflect.Value) (bool, error) {
 // gt evaluates the comparison a > b.
 func gt(arg1, arg2 reflect.Value) (bool, error) {
 	// > is the inverse of <=.
-	lessOrEqual, err := le(arg1, arg2)
-	if err != nil {
-		return false, err
-	}
+	lessOrEqual := le(arg1, arg2)!
 	return !lessOrEqual, nil
 }
 
 // ge evaluates the comparison a >= b.
 func ge(arg1, arg2 reflect.Value) (bool, error) {
 	// >= is the inverse of <.
-	lessThan, err := lt(arg1, arg2)
-	if err != nil {
-		return false, err
-	}
+	lessThan := lt(arg1, arg2)!
 	return !lessThan, nil
 }
 

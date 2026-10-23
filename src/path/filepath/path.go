@@ -166,10 +166,7 @@ func unixAbs(path string) (string, error) {
 	if IsAbs(path) {
 		return Clean(path), nil
 	}
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
+	wd := os.Getwd()!
 	return Join(wd, path), nil
 }
 

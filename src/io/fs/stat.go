@@ -22,10 +22,7 @@ func Stat(fsys FS, name string) (FileInfo, error) {
 		return fsys.Stat(name)
 	}
 
-	file, err := fsys.Open(name)
-	if err != nil {
-		return nil, err
-	}
+	file := fsys.Open(name)!
 	defer file.Close()
 	return file.Stat()
 }

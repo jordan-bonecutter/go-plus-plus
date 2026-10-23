@@ -279,10 +279,7 @@ func parseIPv6(in string) (Addr, error) {
 			if len(zone) > 0 {
 				end -= len(zone) + 1
 			}
-			err := parseIPv4Fields(in, end-len(s), end, ip[i:i+4])
-			if err != nil {
-				return Addr{}, err
-			}
+			parseIPv4Fields(in, end-len(s), end, ip[i:i+4])!
 			s = ""
 			i += 4
 			break
@@ -1246,10 +1243,7 @@ func (p *AddrPort) UnmarshalText(text []byte) error {
 // It returns [Addr.AppendBinary] with an additional two bytes appended
 // containing the port in little-endian.
 func (p AddrPort) AppendBinary(b []byte) ([]byte, error) {
-	b, err := p.Addr().AppendBinary(b)
-	if err != nil {
-		return nil, err
-	}
+	b = p.Addr().AppendBinary(b)!
 	return byteorder.LEAppendUint16(b, p.Port()), nil
 }
 
@@ -1267,10 +1261,7 @@ func (p *AddrPort) UnmarshalBinary(b []byte) error {
 		return errors.New("unexpected slice size")
 	}
 	var addr Addr
-	err := addr.UnmarshalBinary(b[:len(b)-2])
-	if err != nil {
-		return err
-	}
+	addr.UnmarshalBinary(b[:len(b)-2])!
 	*p = AddrPortFrom(addr, byteorder.LEUint16(b[len(b)-2:]))
 	return nil
 }
@@ -1551,10 +1542,7 @@ func (p *Prefix) UnmarshalText(text []byte) error {
 // It returns [Addr.AppendBinary] with an additional byte appended
 // containing the prefix bits.
 func (p Prefix) AppendBinary(b []byte) ([]byte, error) {
-	b, err := p.Addr().withoutZone().AppendBinary(b)
-	if err != nil {
-		return nil, err
-	}
+	b = p.Addr().withoutZone().AppendBinary(b)!
 	return append(b, uint8(p.Bits())), nil
 }
 
@@ -1573,10 +1561,7 @@ func (p *Prefix) UnmarshalBinary(b []byte) error {
 		return errors.New("unexpected slice size")
 	}
 	var addr Addr
-	err := addr.UnmarshalBinary(b[:len(b)-1])
-	if err != nil {
-		return err
-	}
+	addr.UnmarshalBinary(b[:len(b)-1])!
 	*p = PrefixFrom(addr, int(b[len(b)-1]))
 	return nil
 }

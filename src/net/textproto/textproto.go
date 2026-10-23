@@ -81,10 +81,7 @@ func (c *Conn) Close() error {
 // Dial connects to the given address on the given network using [net.Dial]
 // and then returns a new [Conn] for the connection.
 func Dial(network, addr string) (*Conn, error) {
-	c, err := net.Dial(network, addr)
-	if err != nil {
-		return nil, err
-	}
+	c := net.Dial(network, addr)!
 	return NewConn(c), nil
 }
 

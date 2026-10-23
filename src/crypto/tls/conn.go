@@ -511,9 +511,7 @@ func (hc *halfConn) encrypt(record, payload []byte, rand io.Reader) ([]byte, err
 			// (see the Sweet32 attack).
 			copy(explicitNonce, hc.seq[:])
 		} else {
-			if _, err := io.ReadFull(rand, explicitNonce); err != nil {
-				return nil, err
-			}
+			io.ReadFull(rand, explicitNonce)!
 		}
 	}
 
@@ -1085,9 +1083,7 @@ func (c *Conn) writeRecordLocked(typ recordType, data []byte) (int, error) {
 		}
 		c.quicWriteCryptoData(c.out.level, data)
 		if !c.buffering {
-			if _, err := c.flush(); err != nil {
-				return 0, err
-			}
+			c.flush()!
 		}
 		return len(data), nil
 	}
@@ -1156,10 +1152,7 @@ func (c *Conn) writeHandshakeRecord(msg handshakeMessage, transcript transcriptH
 	c.out.Lock()
 	defer c.out.Unlock()
 
-	data, err := msg.marshal()
-	if err != nil {
-		return 0, err
-	}
+	data := msg.marshal()!
 	if transcript != nil {
 		transcript.Write(data)
 	}
@@ -1182,9 +1175,7 @@ func (c *Conn) readHandshakeBytes(n int) error {
 		return c.quicReadHandshakeBytes(n)
 	}
 	for c.handLen() < n {
-		if err := c.readRecord(); err != nil {
-			return err
-		}
+		c.readRecord()!
 	}
 	return nil
 }
@@ -1193,9 +1184,7 @@ func (c *Conn) readHandshakeBytes(n int) error {
 // the record layer. If transcript is non-nil, the message
 // is written to the passed transcriptHash.
 func (c *Conn) readHandshake(transcript transcriptHash) (any, error) {
-	if err := c.readHandshakeBytes(4); err != nil {
-		return nil, err
-	}
+	c.readHandshakeBytes(4)!
 	data := c.hand.Bytes()
 
 	maxHandshakeSize := maxHandshake
@@ -1214,9 +1203,7 @@ func (c *Conn) readHandshake(transcript transcriptHash) (any, error) {
 		c.sendAlertLocked(alertInternalError)
 		return nil, c.in.setErrorLocked(fmt.Errorf("tls: handshake message of length %d bytes exceeds maximum of %d bytes", n, maxHandshakeSize))
 	}
-	if err := c.readHandshakeBytes(4 + n); err != nil {
-		return nil, err
-	}
+	c.readHandshakeBytes(4 + n)!
 	data = c.hand.Next(4 + n)
 	return c.unmarshalHandshakeMessage(data, transcript)
 }
@@ -1313,9 +1300,7 @@ func (c *Conn) Write(b []byte) (int, error) {
 	}
 	defer c.activeCall.Add(-2)
 
-	if err := c.Handshake(); err != nil {
-		return 0, err
-	}
+	c.Handshake()!
 
 	c.out.Lock()
 	defer c.out.Unlock()
@@ -1362,10 +1347,7 @@ func (c *Conn) handleRenegotiation() error {
 		return errors.New("tls: internal error: unexpected renegotiation")
 	}
 
-	msg, err := c.readHandshake(nil)
-	if err != nil {
-		return err
-	}
+	msg := c.readHandshake(nil)!
 
 	helloReq, ok := msg.(*helloRequestMsg)
 	if !ok {
@@ -1408,10 +1390,7 @@ func (c *Conn) handlePostHandshakeMessage() error {
 		return c.handleRenegotiation()
 	}
 
-	msg, err := c.readHandshake(nil)
-	if err != nil {
-		return err
-	}
+	msg := c.readHandshake(nil)!
 	c.retryCount++
 	if c.retryCount > maxUselessRecords {
 		c.sendAlert(alertUnexpectedMessage)
@@ -1464,9 +1443,7 @@ func (c *Conn) handleKeyUpdate(keyUpdate *keyUpdateMsg) error {
 	}
 
 	newSecret := cipherSuite.nextTrafficSecret(c.in.trafficSecret)
-	if err := c.setReadTrafficSecret(cipherSuite, QUICEncryptionLevelInitial, newSecret, keyUpdate.updateRequested); err != nil {
-		return err
-	}
+	c.setReadTrafficSecret(cipherSuite, QUICEncryptionLevelInitial, newSecret, keyUpdate.updateRequested)!
 
 	return nil
 }
@@ -1478,9 +1455,7 @@ func (c *Conn) handleKeyUpdate(keyUpdate *keyUpdateMsg) error {
 // has not yet completed. See [Conn.SetDeadline], [Conn.SetReadDeadline], and
 // [Conn.SetWriteDeadline].
 func (c *Conn) Read(b []byte) (int, error) {
-	if err := c.Handshake(); err != nil {
-		return 0, err
-	}
+	c.Handshake()!
 	if len(b) == 0 {
 		// Put this after Handshake, in case people were calling
 		// Read(nil) for the side effect of the Handshake.
@@ -1491,13 +1466,9 @@ func (c *Conn) Read(b []byte) (int, error) {
 	defer c.in.Unlock()
 
 	for c.input.Len() == 0 {
-		if err := c.readRecord(); err != nil {
-			return 0, err
-		}
+		c.readRecord()!
 		for c.handLen() > 0 {
-			if err := c.handlePostHandshakeMessage(); err != nil {
-				return 0, err
-			}
+			c.handlePostHandshakeMessage()!
 		}
 		c.releaseHand()
 	}
@@ -1551,9 +1522,7 @@ func (c *Conn) Close() error {
 		}
 	}
 
-	if err := c.conn.Close(); err != nil {
-		return err
-	}
+	c.conn.Close()!
 	return alertErr
 }
 
@@ -1691,9 +1660,7 @@ func (c *Conn) handshakeContext(ctx context.Context) (ret error) {
 			// Provide the 1-RTT read secret now that the handshake is complete.
 			// The QUIC layer MUST NOT decrypt 1-RTT packets prior to completing
 			// the handshake (RFC 9001, Section 5.7).
-			if err := c.quicSetReadSecret(QUICEncryptionLevelApplication, c.cipherSuite, c.in.trafficSecret); err != nil {
-				return err
-			}
+			c.quicSetReadSecret(QUICEncryptionLevelApplication, c.cipherSuite, c.in.trafficSecret)!
 		} else {
 			c.out.Lock()
 			a, ok := errors.AsType[alert](c.out.err)

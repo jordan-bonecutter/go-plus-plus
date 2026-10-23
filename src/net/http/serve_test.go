@@ -1525,10 +1525,7 @@ type blockingRemoteAddrListener struct {
 }
 
 func (l *blockingRemoteAddrListener) Accept() (net.Conn, error) {
-	c, err := l.Listener.Accept()
-	if err != nil {
-		return nil, err
-	}
+	c := l.Listener.Accept()!
 	brac := &blockingRemoteAddrConn{
 		Conn:  c,
 		addrs: make(chan net.Addr, 1),
@@ -5512,10 +5509,7 @@ func BenchmarkServer(b *testing.B) {
 
 // getNoBody wraps Get but closes any Response.Body before returning the response.
 func getNoBody(urlStr string) (*Response, error) {
-	res, err := Get(urlStr)
-	if err != nil {
-		return nil, err
-	}
+	res := Get(urlStr)!
 	res.Body.Close()
 	return res, nil
 }
@@ -6882,9 +6876,7 @@ func fetchWireResponse(cst *clientServerTest, http1ReqBody []byte) ([]byte, erro
 	conn, _ := cst.dialNettest()
 	defer conn.Close()
 
-	if _, err := conn.Write(http1ReqBody); err != nil {
-		return nil, err
-	}
+	conn.Write(http1ReqBody)!
 	return io.ReadAll(conn)
 }
 
@@ -8276,10 +8268,7 @@ type bespokeTimeoutListener struct {
 }
 
 func (l bespokeTimeoutListener) Accept() (net.Conn, error) {
-	c, err := l.Listener.Accept()
-	if err != nil {
-		return nil, err
-	}
+	c := l.Listener.Accept()!
 	return bespokeTimeoutConn{c}, nil
 }
 

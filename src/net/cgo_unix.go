@@ -347,10 +347,7 @@ func cgoResSearch(hostname string, rtype, class int) ([]dnsmessage.Resource, err
 		_C_free(unsafe.Pointer(buf))
 	}()
 
-	s, err := syscall.BytePtrFromString(hostname)
-	if err != nil {
-		return nil, err
-	}
+	s := syscall.BytePtrFromString(hostname)!
 
 	var size int
 	for {
@@ -369,13 +366,7 @@ func cgoResSearch(hostname string, rtype, class int) ([]dnsmessage.Resource, err
 	}
 
 	var p dnsmessage.Parser
-	if _, err := p.Start(unsafe.Slice((*byte)(unsafe.Pointer(buf)), size)); err != nil {
-		return nil, err
-	}
+	p.Start(unsafe.Slice((*byte)(unsafe.Pointer(buf)), size))!
 	p.SkipAllQuestions()
-	resources, err := p.AllAnswers()
-	if err != nil {
-		return nil, err
-	}
-	return resources, nil
+	return p.AllAnswers()!, nil
 }

@@ -2090,22 +2090,14 @@ func makeConstraintsCACert(constraints constraintsSpec, name string, key *ecdsa.
 		IsCA:                  true,
 	}
 
-	if err := addConstraintsToTemplate(constraints, template); err != nil {
-		return nil, err
-	}
+	addConstraintsToTemplate(constraints, template)!
 
 	if parent == nil {
 		parent = template
 	}
-	derBytes, err := CreateCertificate(rand.Reader, template, parent, &key.PublicKey, parentKey)
-	if err != nil {
-		return nil, err
-	}
+	derBytes := CreateCertificate(rand.Reader, template, parent, &key.PublicKey, parentKey)!
 
-	caCert, err := ParseCertificate(derBytes)
-	if err != nil {
-		return nil, err
-	}
+	caCert := ParseCertificate(derBytes)!
 
 	return caCert, nil
 }

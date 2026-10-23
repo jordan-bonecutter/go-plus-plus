@@ -65,10 +65,7 @@ func parseFiles(t *Template, readFile func(string) (string, []byte, error), file
 		return nil, fmt.Errorf("template: no files named in call to ParseFiles")
 	}
 	for _, filename := range filenames {
-		name, b, err := readFile(filename)
-		if err != nil {
-			return nil, err
-		}
+		name, b := readFile(filename)!
 		s := string(b)
 		// First template becomes return value if not already defined,
 		// and we use that one for subsequent New calls to associate
@@ -85,10 +82,7 @@ func parseFiles(t *Template, readFile func(string) (string, []byte, error), file
 		} else {
 			tmpl = t.New(name)
 		}
-		_, err = tmpl.Parse(s)
-		if err != nil {
-			return nil, err
-		}
+		tmpl.Parse(s)!
 	}
 	return t, nil
 }
@@ -121,10 +115,7 @@ func (t *Template) ParseGlob(pattern string) (*Template, error) {
 
 // parseGlob is the implementation of the function and method ParseGlob.
 func parseGlob(t *Template, pattern string) (*Template, error) {
-	filenames, err := filepath.Glob(pattern)
-	if err != nil {
-		return nil, err
-	}
+	filenames := filepath.Glob(pattern)!
 	if len(filenames) == 0 {
 		return nil, fmt.Errorf("template: pattern matches no files: %#q", pattern)
 	}
@@ -151,10 +142,7 @@ func (t *Template) ParseFS(fsys fs.FS, patterns ...string) (*Template, error) {
 func parseFS(t *Template, fsys fs.FS, patterns []string) (*Template, error) {
 	var filenames []string
 	for _, pattern := range patterns {
-		list, err := fs.Glob(fsys, pattern)
-		if err != nil {
-			return nil, err
-		}
+		list := fs.Glob(fsys, pattern)!
 		if len(list) == 0 {
 			return nil, fmt.Errorf("template: pattern matches no files: %#q", pattern)
 		}

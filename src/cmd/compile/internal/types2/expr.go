@@ -127,8 +127,16 @@ var op2str2 = [...]string{
 	syntax.Shl: "shift",
 }
 
-func (check *Checker) unary(x *operand, e *syntax.Operation) {
-	check.expr(nil, x, e.X)
+func (check *Checker) unary(T *target, x *operand, e *syntax.Operation) {
+	var operandTarget *target
+	if e.Op == syntax.And && T != nil {
+		if literal, ok := e.X.(*syntax.CompositeLit); ok && literal.Type != nil {
+			if p, ok := T.typ.Underlying().(*Pointer); ok {
+				operandTarget = newTarget(p.base, "addressed value")
+			}
+		}
+	}
+	check.expr(operandTarget, x, e.X)
 	if !x.isValid() {
 		return
 	}
@@ -1276,7 +1284,7 @@ func (check *Checker) exprInternal(T *target, x *operand, e syntax.Expr) exprKin
 				break
 			}
 
-			check.unary(x, e)
+			check.unary(T, x, e)
 			if !x.isValid() {
 				goto Error
 			}

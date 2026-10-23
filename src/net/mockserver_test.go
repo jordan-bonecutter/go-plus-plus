@@ -136,9 +136,7 @@ func (ls *localServer) teardown() error {
 		address := ls.Listener.Addr().String()
 		ls.Listener.Close()
 		for _, c := range ls.cl {
-			if err := c.Close(); err != nil {
-				return err
-			}
+			c.Close()!
 		}
 		<-ls.done
 		ls.Listener = nil
@@ -540,10 +538,7 @@ func spawnTestSocketPair(t testing.TB, net string) (client, server Conn) {
 
 func startTestSocketPeer(t testing.TB, conn Conn, op string, chunkSize, totalSize int) (func(t testing.TB), error) {
 	t.Helper()
-	f, err := conn.(interface{ File() (*os.File, error) }).File()
-	if err != nil {
-		return nil, err
-	}
+	f := conn.(interface{ File() (*os.File, error) }).File()!
 
 	cmd := testenv.Command(t, testenv.Executable(t))
 	cmd.Env = []string{
@@ -564,9 +559,7 @@ func startTestSocketPeer(t testing.TB, conn Conn, op string, chunkSize, totalSiz
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	if err := cmd.Start(); err != nil {
-		return nil, err
-	}
+	cmd.Start()!
 
 	cmdCh := make(chan error, 1)
 	go func() {

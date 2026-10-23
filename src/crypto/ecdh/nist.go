@@ -28,14 +28,8 @@ func (c *nistCurve) String() string {
 
 func (c *nistCurve) GenerateKey(r io.Reader) (*PrivateKey, error) {
 	if boring.Enabled && rand.IsDefaultReader(r) {
-		key, bytes, err := boring.GenerateKeyECDH(c.name)
-		if err != nil {
-			return nil, err
-		}
-		pub, err := key.PublicKey()
-		if err != nil {
-			return nil, err
-		}
+		key, bytes := boring.GenerateKeyECDH(c.name)!
+		pub := key.PublicKey()!
 		k := &PrivateKey{
 			curve:      c,
 			privateKey: bytes,
@@ -51,10 +45,7 @@ func (c *nistCurve) GenerateKey(r io.Reader) (*PrivateKey, error) {
 		return nil, errors.New("crypto/ecdh: only crypto/rand.Reader is allowed in FIPS 140-only mode")
 	}
 
-	privateKey, err := c.generate(r)
-	if err != nil {
-		return nil, err
-	}
+	privateKey := c.generate(r)!
 
 	k := &PrivateKey{
 		curve:      c,
@@ -67,14 +58,8 @@ func (c *nistCurve) GenerateKey(r io.Reader) (*PrivateKey, error) {
 		},
 	}
 	if boring.Enabled {
-		bk, err := boring.NewPrivateKeyECDH(c.name, k.privateKey)
-		if err != nil {
-			return nil, err
-		}
-		pub, err := bk.PublicKey()
-		if err != nil {
-			return nil, err
-		}
+		bk := boring.NewPrivateKeyECDH(c.name, k.privateKey)!
+		pub := bk.PublicKey()!
 		k.boring = bk
 		k.publicKey.boring = pub
 	}
@@ -100,10 +85,7 @@ func (c *nistCurve) NewPrivateKey(key []byte) (*PrivateKey, error) {
 		return k, nil
 	}
 
-	fk, err := c.newPrivateKey(key)
-	if err != nil {
-		return nil, err
-	}
+	fk := c.newPrivateKey(key)!
 	k := &PrivateKey{
 		curve:      c,
 		privateKey: bytes.Clone(key),
@@ -134,10 +116,7 @@ func (c *nistCurve) NewPublicKey(key []byte) (*PublicKey, error) {
 		}
 		k.boring = bk
 	} else {
-		fk, err := c.newPublicKey(key)
-		if err != nil {
-			return nil, err
-		}
+		fk := c.newPublicKey(key)!
 		k.fips = fk
 	}
 	return k, nil

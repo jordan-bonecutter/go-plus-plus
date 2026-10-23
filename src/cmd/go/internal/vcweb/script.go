@@ -73,17 +73,13 @@ func newScriptEngine() *script.Engine {
 func (s *Server) loadScript(ctx context.Context, logger *log.Logger, scriptPath string, scriptContent []byte, workDir string) (http.Handler, error) {
 	ar := txtar.Parse(scriptContent)
 
-	if err := os.MkdirAll(workDir, 0755); err != nil {
-		return nil, err
-	}
+	os.MkdirAll(workDir, 0755)!
 
 	st, err := s.newState(ctx, workDir)
 	if err != nil {
 		return nil, err
 	}
-	if err := st.ExtractFiles(ar); err != nil {
-		return nil, err
-	}
+	st.ExtractFiles(ar)!
 
 	scriptName := filepath.Base(scriptPath)
 	scriptLog := new(strings.Builder)
@@ -96,7 +92,7 @@ func (s *Server) loadScript(ctx context.Context, logger *log.Logger, scriptPath 
 		return nil, err
 	}
 	if closeErr != nil {
-		return nil, err
+		return nil, closeErr
 	}
 
 	sc, err := getScriptCtx(st)
@@ -116,11 +112,7 @@ func (s *Server) newState(ctx context.Context, workDir string) (*script.State, e
 		server:  s,
 	}
 
-	st, err := script.NewState(ctx, workDir, s.env)
-	if err != nil {
-		return nil, err
-	}
-	return st, nil
+	return script.NewState(ctx, workDir, s.env)!, nil
 }
 
 // scriptEnviron returns a new environment that attempts to provide predictable
@@ -377,17 +369,11 @@ func scriptStatus() script.Cmd {
 			if len(args) != 1 {
 				return nil, script.ErrUsage
 			}
-			sc, err := getScriptCtx(st)
-			if err != nil {
-				return nil, err
-			}
+			sc := getScriptCtx(st)!
 			if sc.handler == nil {
 				return nil, errors.New("status command must be called after handle")
 			}
-			code, err := strconv.Atoi(args[0])
-			if err != nil {
-				return nil, err
-			}
+			code := strconv.Atoi(args[0])!
 			sc.handler = &statusCodeHandler{handler: sc.handler, statusCode: code}
 			return nil, nil
 		})
@@ -415,10 +401,7 @@ func scriptUnquote() script.Cmd {
 				return nil, script.ErrUsage
 			}
 
-			s, err := strconv.Unquote(`"` + args[0] + `"`)
-			if err != nil {
-				return nil, err
-			}
+			s := strconv.Unquote(`"` + args[0] + `"`)!
 
 			wait := func(*script.State) (stdout, stderr string, err error) {
 				return s, "", nil
@@ -443,10 +426,7 @@ func gitVersion() (string, error) {
 }
 
 func hasAtLeastGitVersion(minVers string) (bool, error) {
-	gitVers, gitVersErr := gitVersion()
-	if gitVersErr != nil {
-		return false, gitVersErr
-	}
+	gitVers := gitVersion()!
 	return semver.Compare(minVers, gitVers) <= 0, nil
 }
 

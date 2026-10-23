@@ -170,10 +170,7 @@ func TestCore(t *testing.T) {
 }
 
 func copyToDir(name string, dir string, replace func(string) string) error {
-	f, err := os.ReadFile(name)
-	if err != nil {
-		return err
-	}
+	f := os.ReadFile(name)!
 	if replace != nil {
 		f = []byte(replace(string(f)))
 	}

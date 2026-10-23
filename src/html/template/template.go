@@ -102,9 +102,7 @@ func (t *Template) escape() error {
 		if t.Tree == nil {
 			return fmt.Errorf("template: %q is an incomplete or empty template", t.Name())
 		}
-		if err := escapeTemplate(t, t.text.Root, t.Name()); err != nil {
-			return err
-		}
+		escapeTemplate(t, t.text.Root, t.Name())!
 	} else if t.escapeErr != escapeOK {
 		return t.escapeErr
 	}
@@ -119,9 +117,7 @@ func (t *Template) escape() error {
 // A template may be executed safely in parallel, although if parallel
 // executions share a Writer the output may be interleaved.
 func (t *Template) Execute(wr io.Writer, data any) error {
-	if err := t.escape(); err != nil {
-		return err
-	}
+	t.escape()!
 	return t.text.Execute(wr, data)
 }
 
@@ -133,10 +129,7 @@ func (t *Template) Execute(wr io.Writer, data any) error {
 // A template may be executed safely in parallel, although if parallel
 // executions share a Writer the output may be interleaved.
 func (t *Template) ExecuteTemplate(wr io.Writer, name string, data any) error {
-	tmpl, err := t.lookupAndEscapeTemplate(name)
-	if err != nil {
-		return err
-	}
+	tmpl := t.lookupAndEscapeTemplate(name)!
 	return tmpl.text.Execute(wr, data)
 }
 
@@ -185,14 +178,9 @@ func (t *Template) DefinedTemplates() string {
 // This allows using Parse to add new named template definitions without
 // overwriting the main template body.
 func (t *Template) Parse(text string) (*Template, error) {
-	if err := t.checkCanParse(); err != nil {
-		return nil, err
-	}
+	t.checkCanParse()!
 
-	ret, err := t.text.Parse(text)
-	if err != nil {
-		return nil, err
-	}
+	ret := t.text.Parse(text)!
 
 	// In general, all the named templates might have changed underfoot.
 	// Regardless, some new ones may have been defined.
@@ -216,16 +204,11 @@ func (t *Template) Parse(text string) (*Template, error) {
 //
 // It returns an error if t or any associated template has already been executed.
 func (t *Template) AddParseTree(name string, tree *parse.Tree) (*Template, error) {
-	if err := t.checkCanParse(); err != nil {
-		return nil, err
-	}
+	t.checkCanParse()!
 
 	t.nameSpace.mu.Lock()
 	defer t.nameSpace.mu.Unlock()
-	text, err := t.text.AddParseTree(name, tree)
-	if err != nil {
-		return nil, err
-	}
+	text := t.text.AddParseTree(name, tree)!
 	ret := &Template{
 		nil,
 		text,
@@ -250,10 +233,7 @@ func (t *Template) Clone() (*Template, error) {
 	if t.escapeErr != nil {
 		return nil, fmt.Errorf("html/template: cannot Clone %q after it has executed", t.Name())
 	}
-	textClone, err := t.text.Clone()
-	if err != nil {
-		return nil, err
-	}
+	textClone := t.text.Clone()!
 	ns := &nameSpace{set: make(map[string]*Template)}
 	ns.esc = makeEscaper(ns)
 	ret := &Template{
@@ -401,19 +381,14 @@ func (t *Template) ParseFiles(filenames ...string) (*Template, error) {
 // parseFiles is the helper for the method and function. If the argument
 // template is nil, it is created from the first file.
 func parseFiles(t *Template, readFile func(string) (string, []byte, error), filenames ...string) (*Template, error) {
-	if err := t.checkCanParse(); err != nil {
-		return nil, err
-	}
+	t.checkCanParse()!
 
 	if len(filenames) == 0 {
 		// Not really a problem, but be consistent.
 		return nil, fmt.Errorf("html/template: no files named in call to ParseFiles")
 	}
 	for _, filename := range filenames {
-		name, b, err := readFile(filename)
-		if err != nil {
-			return nil, err
-		}
+		name, b := readFile(filename)!
 		s := string(b)
 		// First template becomes return value if not already defined,
 		// and we use that one for subsequent New calls to associate
@@ -430,10 +405,7 @@ func parseFiles(t *Template, readFile func(string) (string, []byte, error), file
 		} else {
 			tmpl = t.New(name)
 		}
-		_, err = tmpl.Parse(s)
-		if err != nil {
-			return nil, err
-		}
+		tmpl.Parse(s)!
 	}
 	return t, nil
 }
@@ -467,13 +439,8 @@ func (t *Template) ParseGlob(pattern string) (*Template, error) {
 
 // parseGlob is the implementation of the function and method ParseGlob.
 func parseGlob(t *Template, pattern string) (*Template, error) {
-	if err := t.checkCanParse(); err != nil {
-		return nil, err
-	}
-	filenames, err := filepath.Glob(pattern)
-	if err != nil {
-		return nil, err
-	}
+	t.checkCanParse()!
+	filenames := filepath.Glob(pattern)!
 	if len(filenames) == 0 {
 		return nil, fmt.Errorf("html/template: pattern matches no files: %#q", pattern)
 	}
@@ -514,10 +481,7 @@ func (t *Template) ParseFS(fs fs.FS, patterns ...string) (*Template, error) {
 func parseFS(t *Template, fsys fs.FS, patterns []string) (*Template, error) {
 	var filenames []string
 	for _, pattern := range patterns {
-		list, err := fs.Glob(fsys, pattern)
-		if err != nil {
-			return nil, err
-		}
+		list := fs.Glob(fsys, pattern)!
 		if len(list) == 0 {
 			return nil, fmt.Errorf("template: pattern matches no files: %#q", pattern)
 		}

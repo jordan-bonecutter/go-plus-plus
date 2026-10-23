@@ -14,10 +14,7 @@ import (
 
 func (ti *testInterface) setBroadcast(suffix int) error {
 	ti.name = fmt.Sprintf("gotest%d", suffix)
-	xname, err := exec.LookPath("ip")
-	if err != nil {
-		return err
-	}
+	xname := exec.LookPath("ip")!
 	ti.setupCmds = append(ti.setupCmds, &exec.Cmd{
 		Path: xname,
 		Args: []string{"ip", "link", "add", ti.name, "type", "dummy"},
@@ -39,10 +36,7 @@ func (ti *testInterface) setBroadcast(suffix int) error {
 
 func (ti *testInterface) setLinkLocal(suffix int) error {
 	ti.name = fmt.Sprintf("gotest%d", suffix)
-	xname, err := exec.LookPath("ip")
-	if err != nil {
-		return err
-	}
+	xname := exec.LookPath("ip")!
 	ti.setupCmds = append(ti.setupCmds, &exec.Cmd{
 		Path: xname,
 		Args: []string{"ip", "link", "add", ti.name, "type", "dummy"},
@@ -64,10 +58,7 @@ func (ti *testInterface) setLinkLocal(suffix int) error {
 
 func (ti *testInterface) setPointToPoint(suffix int) error {
 	ti.name = fmt.Sprintf("gotest%d", suffix)
-	xname, err := exec.LookPath("ip")
-	if err != nil {
-		return err
-	}
+	xname := exec.LookPath("ip")!
 	ti.setupCmds = append(ti.setupCmds, &exec.Cmd{
 		Path: xname,
 		Args: []string{"ip", "tunnel", "add", ti.name, "mode", "gre", "local", ti.local, "remote", ti.remote},

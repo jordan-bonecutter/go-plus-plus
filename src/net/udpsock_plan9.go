@@ -14,10 +14,7 @@ import (
 
 func (c *UDPConn) readFrom(b []byte, addr *UDPAddr) (int, *UDPAddr, error) {
 	buf := make([]byte, udpHeaderSize+len(b))
-	m, err := c.fd.Read(buf)
-	if err != nil {
-		return 0, nil, err
-	}
+	m := c.fd.Read(buf)!
 	if m < udpHeaderSize {
 		return 0, nil, errors.New("short read reading UDP header")
 	}
@@ -32,10 +29,7 @@ func (c *UDPConn) readFrom(b []byte, addr *UDPAddr) (int, *UDPAddr, error) {
 func (c *UDPConn) readFromAddrPort(b []byte) (int, netip.AddrPort, error) {
 	// TODO: optimize. The equivalent code on posix is alloc-free.
 	buf := make([]byte, udpHeaderSize+len(b))
-	m, err := c.fd.Read(buf)
-	if err != nil {
-		return 0, netip.AddrPort{}, err
-	}
+	m := c.fd.Read(buf)!
 	if m < udpHeaderSize {
 		return 0, netip.AddrPort{}, errors.New("short read reading UDP header")
 	}
@@ -66,9 +60,7 @@ func (c *UDPConn) writeTo(b []byte, addr *UDPAddr) (int, error) {
 	buf := make([]byte, udpHeaderSize+len(b))
 	i := copy(buf, h.Bytes())
 	copy(buf[i:], b)
-	if _, err := c.fd.Write(buf); err != nil {
-		return 0, err
-	}
+	c.fd.Write(buf)!
 	return len(b), nil
 }
 
@@ -85,10 +77,7 @@ func (c *UDPConn) writeMsgAddrPort(b, oob []byte, addr netip.AddrPort) (n, oobn 
 }
 
 func (sd *sysDialer) dialUDP(ctx context.Context, laddr, raddr *UDPAddr) (*UDPConn, error) {
-	fd, err := dialPlan9(ctx, sd.network, laddr, raddr)
-	if err != nil {
-		return nil, err
-	}
+	fd := dialPlan9(ctx, sd.network, laddr, raddr)!
 	return newUDPConn(fd), nil
 }
 

@@ -65,10 +65,7 @@ func (pub *PublicKey) ECDH() (*ecdh.PublicKey, error) {
 	if c == nil {
 		return nil, errors.New("ecdsa: unsupported curve by crypto/ecdh")
 	}
-	k, err := pub.Bytes()
-	if err != nil {
-		return nil, err
-	}
+	k := pub.Bytes()!
 	return c.NewPublicKey(k)
 }
 
@@ -123,10 +120,7 @@ func ParseUncompressedPublicKey(curve elliptic.Curve, data []byte) (*PublicKey, 
 }
 
 func parseUncompressedPublicKey[P ecdsa.Point[P]](c *ecdsa.Curve[P], curve elliptic.Curve, data []byte) (*PublicKey, error) {
-	k, err := ecdsa.NewPublicKey(c, data)
-	if err != nil {
-		return nil, err
-	}
+	k := ecdsa.NewPublicKey(c, data)!
 	return publicKeyFromFIPS(curve, k)
 }
 
@@ -157,10 +151,7 @@ func (pub *PublicKey) Bytes() ([]byte, error) {
 }
 
 func publicKeyBytes[P ecdsa.Point[P]](c *ecdsa.Curve[P], pub *PublicKey) ([]byte, error) {
-	k, err := publicKeyToFIPS(c, pub)
-	if err != nil {
-		return nil, err
-	}
+	k := publicKeyToFIPS(c, pub)!
 	return k.Bytes(), nil
 }
 
@@ -187,10 +178,7 @@ func (priv *PrivateKey) ECDH() (*ecdh.PrivateKey, error) {
 	if c == nil {
 		return nil, errors.New("ecdsa: unsupported curve by crypto/ecdh")
 	}
-	k, err := priv.Bytes()
-	if err != nil {
-		return nil, err
-	}
+	k := priv.Bytes()!
 	return c.NewPrivateKey(k)
 }
 
@@ -259,14 +247,8 @@ func ParseRawPrivateKey(curve elliptic.Curve, data []byte) (*PrivateKey, error) 
 }
 
 func parseRawPrivateKey[P ecdsa.Point[P]](c *ecdsa.Curve[P], newPoint func() P, curve elliptic.Curve, data []byte) (*PrivateKey, error) {
-	q, err := newPoint().ScalarBaseMult(data)
-	if err != nil {
-		return nil, err
-	}
-	k, err := ecdsa.NewPrivateKey(c, data, q.Bytes())
-	if err != nil {
-		return nil, err
-	}
+	q := newPoint().ScalarBaseMult(data)!
+	k := ecdsa.NewPrivateKey(c, data, q.Bytes())!
 	return privateKeyFromFIPS(curve, k)
 }
 
@@ -298,10 +280,7 @@ func (priv *PrivateKey) Bytes() ([]byte, error) {
 }
 
 func privateKeyBytes[P ecdsa.Point[P]](c *ecdsa.Curve[P], priv *PrivateKey) ([]byte, error) {
-	k, err := privateKeyToFIPS(c, priv)
-	if err != nil {
-		return nil, err
-	}
+	k := privateKeyToFIPS(c, priv)!
 	return k.Bytes(), nil
 }
 
@@ -344,10 +323,7 @@ func (priv *PrivateKey) Sign(random io.Reader, digest []byte, opts crypto.Signer
 // in a future Go release. Instead, use [testing/cryptotest.SetGlobalRandom].
 func GenerateKey(c elliptic.Curve, r io.Reader) (*PrivateKey, error) {
 	if boring.Enabled && rand.IsDefaultReader(r) {
-		x, y, d, err := boring.GenerateKeyECDSA(c.Params().Name)
-		if err != nil {
-			return nil, err
-		}
+		x, y, d := boring.GenerateKeyECDSA(c.Params().Name)!
 		return &PrivateKey{PublicKey: PublicKey{Curve: c, X: bbig.Dec(x), Y: bbig.Dec(y)}, D: bbig.Dec(d)}, nil
 	}
 	boring.UnreachableExceptTests()
@@ -372,10 +348,7 @@ func generateFIPS[P ecdsa.Point[P]](curve elliptic.Curve, c *ecdsa.Curve[P], ran
 	if fips140only.Enforced() && !fips140only.ApprovedRandomReader(rand) {
 		return nil, errors.New("crypto/ecdsa: only crypto/rand.Reader is allowed in FIPS 140-only mode")
 	}
-	privateKey, err := ecdsa.GenerateKey(c, rand)
-	if err != nil {
-		return nil, err
-	}
+	privateKey := ecdsa.GenerateKey(c, rand)!
 	return privateKeyFromFIPS(curve, privateKey)
 }
 
@@ -394,10 +367,7 @@ func SignASN1(r io.Reader, priv *PrivateKey, hash []byte) ([]byte, error) {
 	}
 
 	if boring.Enabled && rand.IsDefaultReader(r) {
-		b, err := boringPrivateKey(priv)
-		if err != nil {
-			return nil, err
-		}
+		b := boringPrivateKey(priv)!
 		return boring.SignMarshalECDSA(b, hash)
 	}
 	boring.UnreachableExceptTests()
@@ -422,17 +392,11 @@ func signFIPS[P ecdsa.Point[P]](c *ecdsa.Curve[P], priv *PrivateKey, rand io.Rea
 	if fips140only.Enforced() && !fips140only.ApprovedRandomReader(rand) {
 		return nil, errors.New("crypto/ecdsa: only crypto/rand.Reader is allowed in FIPS 140-only mode")
 	}
-	k, err := privateKeyToFIPS(c, priv)
-	if err != nil {
-		return nil, err
-	}
+	k := privateKeyToFIPS(c, priv)!
 	// Always using SHA-512 instead of the hash that computed hash is
 	// technically a violation of draft-irtf-cfrg-det-sigs-with-noise-04 but in
 	// our API we don't get to know what it was, and this has no security impact.
-	sig, err := ecdsa.Sign(c, sha512.New, k, rand, hash)
-	if err != nil {
-		return nil, err
-	}
+	sig := ecdsa.Sign(c, sha512.New, k, rand, hash)!
 	return encodeSignature(sig.R, sig.S)
 }
 
@@ -456,10 +420,7 @@ func signRFC6979(priv *PrivateKey, hash []byte, opts crypto.SignerOpts) ([]byte,
 }
 
 func signFIPSDeterministic[P ecdsa.Point[P]](c *ecdsa.Curve[P], hashFunc crypto.Hash, priv *PrivateKey, hash []byte) ([]byte, error) {
-	k, err := privateKeyToFIPS(c, priv)
-	if err != nil {
-		return nil, err
-	}
+	k := privateKeyToFIPS(c, priv)!
 	if !hashFunc.Available() {
 		return nil, errors.New("ecdsa: requested hash function unavailable: " + hashFunc.String())
 	}
@@ -467,10 +428,7 @@ func signFIPSDeterministic[P ecdsa.Point[P]](c *ecdsa.Curve[P], hashFunc crypto.
 	if fips140only.Enforced() && !fips140only.ApprovedHash(h()) {
 		return nil, errors.New("crypto/ecdsa: use of hash functions other than SHA-2 or SHA-3 is not allowed in FIPS 140-only mode")
 	}
-	sig, err := ecdsa.SignDeterministic(c, h, k, hash)
-	if err != nil {
-		return nil, err
-	}
+	sig := ecdsa.SignDeterministic(c, h, k, hash)!
 	return encodeSignature(sig.R, sig.S)
 }
 
@@ -563,36 +521,24 @@ func parseSignature(sig []byte) (r, s []byte, err error) {
 }
 
 func publicKeyFromFIPS(curve elliptic.Curve, pub *ecdsa.PublicKey) (*PublicKey, error) {
-	x, y, err := pointToAffine(curve, pub.Bytes())
-	if err != nil {
-		return nil, err
-	}
+	x, y := pointToAffine(curve, pub.Bytes())!
 	return &PublicKey{Curve: curve, X: x, Y: y}, nil
 }
 
 func privateKeyFromFIPS(curve elliptic.Curve, priv *ecdsa.PrivateKey) (*PrivateKey, error) {
-	pub, err := publicKeyFromFIPS(curve, priv.PublicKey())
-	if err != nil {
-		return nil, err
-	}
+	pub := publicKeyFromFIPS(curve, priv.PublicKey())!
 	return &PrivateKey{PublicKey: *pub, D: new(big.Int).SetBytes(priv.Bytes())}, nil
 }
 
 func publicKeyToFIPS[P ecdsa.Point[P]](c *ecdsa.Curve[P], pub *PublicKey) (*ecdsa.PublicKey, error) {
-	Q, err := pointFromAffine(pub.Curve, pub.X, pub.Y)
-	if err != nil {
-		return nil, err
-	}
+	Q := pointFromAffine(pub.Curve, pub.X, pub.Y)!
 	return ecdsa.NewPublicKey(c, Q)
 }
 
 var privateKeyCache fips140cache.Cache[PrivateKey, ecdsa.PrivateKey]
 
 func privateKeyToFIPS[P ecdsa.Point[P]](c *ecdsa.Curve[P], priv *PrivateKey) (*ecdsa.PrivateKey, error) {
-	Q, err := pointFromAffine(priv.Curve, priv.X, priv.Y)
-	if err != nil {
-		return nil, err
-	}
+	Q := pointFromAffine(priv.Curve, priv.X, priv.Y)!
 
 	// Reject values that would not get correctly encoded.
 	if priv.D.BitLen() > priv.Curve.Params().N.BitLen() {

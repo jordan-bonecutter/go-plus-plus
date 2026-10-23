@@ -43,9 +43,6 @@ func (s *Server) serveHTTP3(conn net.PacketConn, certFile, keyFile string) error
 	}
 	baseCtx = context.WithValue(baseCtx, ServerContextKey, s)
 
-	tlsConfig, err := s.setupTLSConfig(certFile, keyFile, []string{"h3"})
-	if err != nil {
-		return err
-	}
+	tlsConfig := s.setupTLSConfig(certFile, keyFile, []string{"h3"})!
 	return s.h3Server.ServeHTTP3(baseCtx, conn, tlsConfig, serverHandler{s})
 }

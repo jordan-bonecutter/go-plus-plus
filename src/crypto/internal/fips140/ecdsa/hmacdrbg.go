@@ -49,6 +49,19 @@ type personalizationString interface {
 	isPersonalizationString()
 }
 
+func writePersonalization(h *hmac.HMAC, s personalizationString, written int) {
+	switch s := s.(type) {
+	case plainPersonalizationString:
+		h.Write(s)
+	case blockAlignedPersonalizationString:
+		for _, b := range s {
+			pad000(h, written)
+			h.Write(b)
+			written = len(b)
+		}
+	}
+}
+
 func newDRBG[H hash.Hash](hash func() H, entropy, nonce []byte, s personalizationString) *hmacDRBG {
 	// HMAC_DRBG_Instantiate_algorithm, per Section 10.1.2.3.
 	fips140.RecordApproved()
@@ -73,17 +86,7 @@ func newDRBG[H hash.Hash](hash func() H, entropy, nonce []byte, s personalizatio
 	h.Write([]byte{0x00})
 	h.Write(entropy)
 	h.Write(nonce)
-	switch s := s.(type) {
-	case plainPersonalizationString:
-		h.Write(s)
-	case blockAlignedPersonalizationString:
-		l := len(d.V) + 1 + len(entropy) + len(nonce)
-		for _, b := range s {
-			pad000(h, l)
-			h.Write(b)
-			l = len(b)
-		}
-	}
+	writePersonalization(h, s, len(d.V)+1+len(entropy)+len(nonce))
 	K = h.Sum(K[:0])
 	// V = HMAC (K, V)
 	h = hmac.New(hash, K)
@@ -95,17 +98,7 @@ func newDRBG[H hash.Hash](hash func() H, entropy, nonce []byte, s personalizatio
 	h.Write([]byte{0x01})
 	h.Write(entropy)
 	h.Write(nonce)
-	switch s := s.(type) {
-	case plainPersonalizationString:
-		h.Write(s)
-	case blockAlignedPersonalizationString:
-		l := len(d.V) + 1 + len(entropy) + len(nonce)
-		for _, b := range s {
-			pad000(h, l)
-			h.Write(b)
-			l = len(b)
-		}
-	}
+	writePersonalization(h, s, len(d.V)+1+len(entropy)+len(nonce))
 	K = h.Sum(K[:0])
 	// V = HMAC (K, V)
 	h = hmac.New(hash, K)

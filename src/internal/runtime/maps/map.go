@@ -885,9 +885,7 @@ func mapKeyError2(t *abi.Type, p unsafe.Pointer) error {
 	case abi.Array:
 		a := (*abi.ArrayType)(unsafe.Pointer(t))
 		for i := uintptr(0); i < a.Len; i++ {
-			if err := mapKeyError2(a.Elem, unsafe.Pointer(uintptr(p)+i*a.Elem.Size_)); err != nil {
-				return err
-			}
+			mapKeyError2(a.Elem, unsafe.Pointer(uintptr(p)+i*a.Elem.Size_))!
 		}
 		return nil
 	case abi.Union:
@@ -902,9 +900,7 @@ func mapKeyError2(t *abi.Type, p unsafe.Pointer) error {
 			if f.Name.IsBlank() {
 				continue
 			}
-			if err := mapKeyError2(f.Typ, unsafe.Pointer(uintptr(p)+f.Offset)); err != nil {
-				return err
-			}
+			mapKeyError2(f.Typ, unsafe.Pointer(uintptr(p)+f.Offset))!
 		}
 		return nil
 	default:

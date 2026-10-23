@@ -530,33 +530,25 @@ type chainConstraints struct {
 
 func (cc *chainConstraints) check(dns []string, uris []parsedURI, emails []rfc2821Mailbox, ips []net.IP) error {
 	for _, ip := range ips {
-		if err := checkConstraints(cc.ip, ip, ip); err != nil {
-			return err
-		}
+		checkConstraints(cc.ip, ip, ip)!
 	}
 	for _, d := range dns {
 		if !domainNameValid(d, false) {
 			return fmt.Errorf("x509: cannot parse dnsName %q", d)
 		}
-		if err := checkConstraints(cc.dns, d, d); err != nil {
-			return err
-		}
+		checkConstraints(cc.dns, d, d)!
 	}
 	for _, u := range uris {
 		if !domainNameValid(u.domain, false) {
 			return fmt.Errorf("x509: internal error: URI SAN %q failed to parse", u)
 		}
-		if err := checkConstraints(cc.uri, u.domain, u); err != nil {
-			return err
-		}
+		checkConstraints(cc.uri, u.domain, u)!
 	}
 	for _, e := range emails {
 		if !domainNameValid(e.domain, false) {
 			return fmt.Errorf("x509: cannot parse rfc822Name %q", e)
 		}
-		if err := checkConstraints(cc.email, e, e); err != nil {
-			return err
-		}
+		checkConstraints(cc.email, e, e)!
 	}
 	return nil
 }
@@ -600,19 +592,11 @@ func checkChainConstraints(chain []*Certificate) error {
 			}
 		}
 
-		uris, err := parseURIs(c.URIs)
-		if err != nil {
-			return err
-		}
-		emails, err := parseMailboxes(c.EmailAddresses)
-		if err != nil {
-			return err
-		}
+		uris := parseURIs(c.URIs)!
+		emails := parseMailboxes(c.EmailAddresses)!
 
 		for n := currentConstraints; n != nil; n = n.next {
-			if err := n.check(c.DNSNames, uris, emails, c.IPAddresses); err != nil {
-				return err
-			}
+			n.check(c.DNSNames, uris, emails, c.IPAddresses)!
 		}
 	}
 

@@ -161,17 +161,11 @@ var p521Order = []byte{0x01, 0xff,
 // and Q must be the compressed or uncompressed encoding of the public point.
 func NewPrivateKey[P Point[P]](c *Curve[P], D, Q []byte) (*PrivateKey, error) {
 	fips140.RecordApproved()
-	pub, err := NewPublicKey(c, Q)
-	if err != nil {
-		return nil, err
-	}
+	pub := NewPublicKey(c, Q)!
 	if len(D) != c.N.Size() {
 		return nil, errors.New("ecdsa: invalid private key length")
 	}
-	d, err := bigmod.NewNat().SetBytes(D, c.N)
-	if err != nil {
-		return nil, err
-	}
+	d := bigmod.NewNat().SetBytes(D, c.N)!
 	if d.IsZero() == 1 {
 		return nil, errors.New("ecdsa: private key is zero")
 	}
@@ -188,10 +182,7 @@ func NewPublicKey[P Point[P]](c *Curve[P], Q []byte) (*PublicKey, error) {
 	if len(Q) < 1 || Q[0] == 0 {
 		return nil, errors.New("ecdsa: invalid public key encoding")
 	}
-	_, err := c.newPoint().SetBytes(Q)
-	if err != nil {
-		return nil, err
-	}
+	c.newPoint().SetBytes(Q)!
 	return &PublicKey{curve: c.curve, q: Q}, nil
 }
 
@@ -294,9 +285,7 @@ func Sign[P Point[P], H hash.Hash](c *Curve[P], h func() H, priv *PrivateKey, ra
 	// advantage of closely resembling Deterministic ECDSA.
 
 	Z := make([]byte, len(priv.d))
-	if err := drbg.ReadWithReader(rand, Z); err != nil {
-		return nil, err
-	}
+	drbg.ReadWithReader(rand, Z)!
 
 	// See https://github.com/cfrg/draft-irtf-cfrg-det-sigs-with-noise/issues/6
 	// for the FIPS compliance of this method. In short Z is entropy from the
@@ -461,22 +450,13 @@ func Verify[P Point[P]](c *Curve[P], pub *PublicKey, hash []byte, sig *Signature
 func verifyGeneric[P Point[P]](c *Curve[P], pub *PublicKey, hash []byte, sig *Signature) error {
 	// FIPS 186-5, Section 6.4.2
 
-	Q, err := c.newPoint().SetBytes(pub.q)
-	if err != nil {
-		return err
-	}
+	Q := c.newPoint().SetBytes(pub.q)!
 
-	r, err := bigmod.NewNat().SetBytes(sig.R, c.N)
-	if err != nil {
-		return err
-	}
+	r := bigmod.NewNat().SetBytes(sig.R, c.N)!
 	if r.IsZero() == 1 {
 		return errors.New("ecdsa: invalid signature: r is zero")
 	}
-	s, err := bigmod.NewNat().SetBytes(sig.S, c.N)
-	if err != nil {
-		return err
-	}
+	s := bigmod.NewNat().SetBytes(sig.S, c.N)!
 	if s.IsZero() == 1 {
 		return errors.New("ecdsa: invalid signature: s is zero")
 	}
@@ -489,25 +469,13 @@ func verifyGeneric[P Point[P]](c *Curve[P], pub *PublicKey, hash []byte, sig *Si
 	inverse(c, w, s)
 
 	// p₁ = [e * s⁻¹]G
-	p1, err := c.newPoint().ScalarBaseMult(e.Mul(w, c.N).Bytes(c.N))
-	if err != nil {
-		return err
-	}
+	p1 := c.newPoint().ScalarBaseMult(e.Mul(w, c.N).Bytes(c.N))!
 	// p₂ = [r * s⁻¹]Q
-	p2, err := Q.ScalarMult(Q, w.Mul(r, c.N).Bytes(c.N))
-	if err != nil {
-		return err
-	}
+	p2 := Q.ScalarMult(Q, w.Mul(r, c.N).Bytes(c.N))!
 	// BytesX returns an error for the point at infinity.
-	Rx, err := p1.Add(p1, p2).BytesX()
-	if err != nil {
-		return err
-	}
+	Rx := p1.Add(p1, p2).BytesX()!
 
-	v, err := bigmod.NewNat().SetOverflowingBytes(Rx, c.N)
-	if err != nil {
-		return err
-	}
+	v := bigmod.NewNat().SetOverflowingBytes(Rx, c.N)!
 
 	if v.Equal(r) != 1 {
 		return errors.New("ecdsa: signature did not verify")

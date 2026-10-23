@@ -102,9 +102,7 @@ func runTestQUICConnection(ctx context.Context, cli, srv *testQUICConn, onEvent 
 	a, b := cli, srv
 	for _, c := range []*testQUICConn{a, b} {
 		if !c.conn.conn.quic.started {
-			if err := c.conn.Start(ctx); err != nil {
-				return err
-			}
+			c.conn.Start(ctx)!
 		}
 	}
 	idleCount := 0
@@ -131,9 +129,7 @@ func runTestQUICConnection(ctx context.Context, cli, srv *testQUICConn, onEvent 
 		case QUICSetWriteSecret:
 			a.setWriteSecret(e.Level, e.Suite, e.Data)
 		case QUICWriteData:
-			if err := b.conn.HandleData(e.Level, e.Data); err != nil {
-				return err
-			}
+			b.conn.HandleData(e.Level, e.Data)!
 		case QUICTransportParameters:
 			a.gotParams = e.Data
 			if a.gotParams == nil {
@@ -144,9 +140,7 @@ func runTestQUICConnection(ctx context.Context, cli, srv *testQUICConn, onEvent 
 		case QUICHandshakeDone:
 			a.complete = true
 			if a == srv {
-				if err := srv.conn.SendSessionTicket(srv.ticketOpts); err != nil {
-					return err
-				}
+				srv.conn.SendSessionTicket(srv.ticketOpts)!
 			}
 		case QUICStoreSession:
 			if a != cli {

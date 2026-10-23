@@ -205,20 +205,14 @@ func (rc *ReadCloser) Close() error {
 // Most callers should instead use [File.Open], which transparently
 // decompresses data and verifies checksums.
 func (f *File) DataOffset() (offset int64, err error) {
-	bodyOffset, err := f.findBodyOffset()
-	if err != nil {
-		return
-	}
+	bodyOffset := f.findBodyOffset()!
 	return f.headerOffset + bodyOffset, nil
 }
 
 // Open returns a [ReadCloser] that provides access to the [File]'s contents.
 // Multiple files may be read concurrently.
 func (f *File) Open() (io.ReadCloser, error) {
-	bodyOffset, err := f.findBodyOffset()
-	if err != nil {
-		return nil, err
-	}
+	bodyOffset := f.findBodyOffset()!
 	if strings.HasSuffix(f.Name, "/") {
 		// The ZIP specification (APPNOTE.TXT) specifies that directories, which
 		// are technically zero-byte files, must not have any associated file
@@ -258,10 +252,7 @@ func (f *File) Open() (io.ReadCloser, error) {
 // OpenRaw returns a [Reader] that provides access to the [File]'s contents without
 // decompression.
 func (f *File) OpenRaw() (io.Reader, error) {
-	bodyOffset, err := f.findBodyOffset()
-	if err != nil {
-		return nil, err
-	}
+	bodyOffset := f.findBodyOffset()!
 	r := io.NewSectionReader(f.zipr, f.headerOffset+bodyOffset, int64(f.CompressedSize64))
 	return r, nil
 }
@@ -337,9 +328,7 @@ func (r *checksumReader) Close() error { return r.rc.Close() }
 // and returns the file body offset.
 func (f *File) findBodyOffset() (int64, error) {
 	var buf [fileHeaderLen]byte
-	if _, err := f.zipr.ReadAt(buf[:], f.headerOffset); err != nil {
-		return 0, err
-	}
+	f.zipr.ReadAt(buf[:], f.headerOffset)!
 	b := readBuf(buf[:])
 	if sig := b.uint32(); sig != fileHeaderSignature {
 		return 0, ErrFormat
@@ -355,9 +344,7 @@ func (f *File) findBodyOffset() (int64, error) {
 // and ErrFormat if it doesn't find a valid header signature.
 func readDirectoryHeader(f *File, r io.Reader) error {
 	var buf [directoryHeaderLen]byte
-	if _, err := io.ReadFull(r, buf[:]); err != nil {
-		return err
-	}
+	io.ReadFull(r, buf[:])!
 	b := readBuf(buf[:])
 	if sig := b.uint32(); sig != directoryHeaderSignature {
 		return ErrFormat
@@ -380,9 +367,7 @@ func readDirectoryHeader(f *File, r io.Reader) error {
 	f.ExternalAttrs = b.uint32()
 	f.headerOffset = int64(b.uint32())
 	d := make([]byte, filenameLen+extraLen+commentLen)
-	if _, err := io.ReadFull(r, d); err != nil {
-		return err
-	}
+	io.ReadFull(r, d)!
 	f.Name = string(d[:filenameLen])
 	f.Extra = d[filenameLen : filenameLen+extraLen]
 	f.Comment = string(d[filenameLen+extraLen:])
@@ -514,9 +499,7 @@ func readDataDescriptor(r io.Reader, f *File) error {
 	//
 	// dataDescriptorLen includes the size of the signature but
 	// first read just those 4 bytes to see if it exists.
-	if _, err := io.ReadFull(r, buf[:4]); err != nil {
-		return err
-	}
+	io.ReadFull(r, buf[:4])!
 	off := 0
 	maybeSig := readBuf(buf[:4])
 	if maybeSig.uint32() != dataDescriptorSignature {
@@ -524,9 +507,7 @@ func readDataDescriptor(r io.Reader, f *File) error {
 		// bytes.
 		off += 4
 	}
-	if _, err := io.ReadFull(r, buf[off:12]); err != nil {
-		return err
-	}
+	io.ReadFull(r, buf[off:12])!
 	b := readBuf(buf[:12])
 	if b.uint32() != f.CRC32 {
 		return ErrChecksum
@@ -650,9 +631,7 @@ func findDirectory64End(r io.ReaderAt, directoryEndOffset int64) (int64, error) 
 // directory end with the zip64 directory end values.
 func readDirectory64End(r io.ReaderAt, offset int64, d *directoryEnd) (err error) {
 	buf := make([]byte, directory64EndLen)
-	if _, err := r.ReadAt(buf, offset); err != nil {
-		return err
-	}
+	r.ReadAt(buf, offset)!
 
 	b := readBuf(buf)
 	if sig := b.uint32(); sig != directory64EndSignature {
@@ -883,10 +862,7 @@ func (r *Reader) Open(name string) (fs.File, error) {
 	if e.isDir {
 		return &openDir{e, r.openReadDir(name), 0}, nil
 	}
-	rc, err := e.file.Open()
-	if err != nil {
-		return nil, err
-	}
+	rc := e.file.Open()!
 	return rc.(fs.File), nil
 }
 
@@ -971,10 +947,8 @@ func (d *openDir) ReadDir(count int) ([]fs.DirEntry, error) {
 	}
 	list := make([]fs.DirEntry, n)
 	for i := range list {
-		s, err := d.files[d.offset+i].stat()
-		if err != nil {
-			return nil, err
-		} else if s.Name() == "." || !fs.ValidPath(s.Name()) {
+		s := d.files[d.offset+i].stat()!
+		if s.Name() == "." || !fs.ValidPath(s.Name()) {
 			return nil, &fs.PathError{
 				Op:   "readdir",
 				Path: d.e.name,

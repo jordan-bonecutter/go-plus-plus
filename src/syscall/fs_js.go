@@ -69,9 +69,7 @@ func fdToFile(fd int) (*jsFile, error) {
 }
 
 func Open(path string, openmode int, perm uint32) (int, error) {
-	if err := checkPath(path); err != nil {
-		return 0, err
-	}
+	checkPath(path)!
 
 	flags := 0
 	if openmode&O_WRONLY != 0 {
@@ -103,18 +101,12 @@ func Open(path string, openmode int, perm uint32) (int, error) {
 		}
 	}
 
-	jsFD, err := fsCall("open", path, flags, perm)
-	if err != nil {
-		return 0, err
-	}
+	jsFD := fsCall("open", path, flags, perm)!
 	fd := jsFD.Int()
 
 	var entries []string
 	if stat, err := fsCall("fstat", fd); err == nil && stat.Call("isDirectory").Bool() {
-		dir, err := fsCall("readdir", path)
-		if err != nil {
-			return 0, err
-		}
+		dir := fsCall("readdir", path)!
 		entries = make([]string, dir.Length())
 		for i := range entries {
 			entries[i] = dir.Index(i).String()
@@ -146,18 +138,13 @@ func CloseOnExec(fd int) {
 }
 
 func Mkdir(path string, perm uint32) error {
-	if err := checkPath(path); err != nil {
-		return err
-	}
+	checkPath(path)!
 	_, err := fsCall("mkdir", path, perm)
 	return err
 }
 
 func ReadDirent(fd int, buf []byte) (int, error) {
-	f, err := fdToFile(fd)
-	if err != nil {
-		return 0, err
-	}
+	f := fdToFile(fd)!
 	if f.entries == nil {
 		return 0, EINVAL
 	}
@@ -203,58 +190,39 @@ func setStat(st *Stat_t, jsSt js.Value) {
 }
 
 func Stat(path string, st *Stat_t) error {
-	if err := checkPath(path); err != nil {
-		return err
-	}
-	jsSt, err := fsCall("stat", path)
-	if err != nil {
-		return err
-	}
+	checkPath(path)!
+	jsSt := fsCall("stat", path)!
 	setStat(st, jsSt)
 	return nil
 }
 
 func Lstat(path string, st *Stat_t) error {
-	if err := checkPath(path); err != nil {
-		return err
-	}
-	jsSt, err := fsCall("lstat", path)
-	if err != nil {
-		return err
-	}
+	checkPath(path)!
+	jsSt := fsCall("lstat", path)!
 	setStat(st, jsSt)
 	return nil
 }
 
 func Fstat(fd int, st *Stat_t) error {
-	jsSt, err := fsCall("fstat", fd)
-	if err != nil {
-		return err
-	}
+	jsSt := fsCall("fstat", fd)!
 	setStat(st, jsSt)
 	return nil
 }
 
 func Unlink(path string) error {
-	if err := checkPath(path); err != nil {
-		return err
-	}
+	checkPath(path)!
 	_, err := fsCall("unlink", path)
 	return err
 }
 
 func Rmdir(path string) error {
-	if err := checkPath(path); err != nil {
-		return err
-	}
+	checkPath(path)!
 	_, err := fsCall("rmdir", path)
 	return err
 }
 
 func Chmod(path string, mode uint32) error {
-	if err := checkPath(path); err != nil {
-		return err
-	}
+	checkPath(path)!
 	_, err := fsCall("chmod", path, mode)
 	return err
 }
@@ -265,9 +233,7 @@ func Fchmod(fd int, mode uint32) error {
 }
 
 func Chown(path string, uid, gid int) error {
-	if err := checkPath(path); err != nil {
-		return err
-	}
+	checkPath(path)!
 	_, err := fsCall("chown", path, uint32(uid), uint32(gid))
 	return err
 }
@@ -278,9 +244,7 @@ func Fchown(fd int, uid, gid int) error {
 }
 
 func Lchown(path string, uid, gid int) error {
-	if err := checkPath(path); err != nil {
-		return err
-	}
+	checkPath(path)!
 	if jsFS.Get("lchown").IsUndefined() {
 		// fs.lchown is unavailable on Linux until Node.js 10.6.0
 		// TODO(neelance): remove when we require at least this Node.js version
@@ -293,9 +257,7 @@ func Lchown(path string, uid, gid int) error {
 func UtimesNano(path string, ts []Timespec) error {
 	// UTIME_OMIT value must match internal/syscall/unix/at_js.go
 	const UTIME_OMIT = -0x2
-	if err := checkPath(path); err != nil {
-		return err
-	}
+	checkPath(path)!
 	if len(ts) != 2 {
 		return EINVAL
 	}
@@ -303,9 +265,7 @@ func UtimesNano(path string, ts []Timespec) error {
 	mtime := ts[1].Sec
 	if atime == UTIME_OMIT || mtime == UTIME_OMIT {
 		var st Stat_t
-		if err := Stat(path, &st); err != nil {
-			return err
-		}
+		Stat(path, &st)!
 		if atime == UTIME_OMIT {
 			atime = st.Atime
 		}
@@ -318,20 +278,14 @@ func UtimesNano(path string, ts []Timespec) error {
 }
 
 func Rename(from, to string) error {
-	if err := checkPath(from); err != nil {
-		return err
-	}
-	if err := checkPath(to); err != nil {
-		return err
-	}
+	checkPath(from)!
+	checkPath(to)!
 	_, err := fsCall("rename", from, to)
 	return err
 }
 
 func Truncate(path string, length int64) error {
-	if err := checkPath(path); err != nil {
-		return err
-	}
+	checkPath(path)!
 	_, err := fsCall("truncate", path, length)
 	return err
 }
@@ -349,19 +303,14 @@ func Getcwd(buf []byte) (n int, err error) {
 }
 
 func Chdir(path string) (err error) {
-	if err := checkPath(path); err != nil {
-		return err
-	}
+	checkPath(path)!
 	defer recoverErr(&err)
 	jsProcess.Call("chdir", path)
 	return
 }
 
 func Fchdir(fd int) error {
-	f, err := fdToFile(fd)
-	if err != nil {
-		return err
-	}
+	f := fdToFile(fd)!
 	return Chdir(f.path)
 }
 
@@ -378,23 +327,15 @@ func Readlink(path string, buf []byte) (n int, err error) {
 }
 
 func Link(path, link string) error {
-	if err := checkPath(path); err != nil {
-		return err
-	}
-	if err := checkPath(link); err != nil {
-		return err
-	}
+	checkPath(path)!
+	checkPath(link)!
 	_, err := fsCall("link", path, link)
 	return err
 }
 
 func Symlink(path, link string) error {
-	if err := checkPath(path); err != nil {
-		return err
-	}
-	if err := checkPath(link); err != nil {
-		return err
-	}
+	checkPath(path)!
+	checkPath(link)!
 	_, err := fsCall("symlink", path, link)
 	return err
 }
@@ -405,10 +346,7 @@ func Fsync(fd int) error {
 }
 
 func Read(fd int, b []byte) (int, error) {
-	f, err := fdToFile(fd)
-	if err != nil {
-		return 0, err
-	}
+	f := fdToFile(fd)!
 
 	if f.seeked {
 		n, err := Pread(fd, b, f.pos)
@@ -417,24 +355,18 @@ func Read(fd int, b []byte) (int, error) {
 	}
 
 	buf := uint8Array.New(len(b))
-	n, err := fsCall("read", fd, buf, 0, len(b), nil)
-	if err != nil {
-		return 0, err
-	}
+	n := fsCall("read", fd, buf, 0, len(b), nil)!
 	n2 := n.Int()
 	if n2 > 0 {
 		js.CopyBytesToGo(b[:n2], buf)
 	}
 
 	f.pos += int64(n2)
-	return n2, err
+	return n2, nil
 }
 
 func Write(fd int, b []byte) (int, error) {
-	f, err := fdToFile(fd)
-	if err != nil {
-		return 0, err
-	}
+	f := fdToFile(fd)!
 
 	if f.seeked {
 		n, err := Pwrite(fd, b, f.pos)
@@ -452,21 +384,15 @@ func Write(fd int, b []byte) (int, error) {
 
 	buf := uint8Array.New(len(b))
 	js.CopyBytesToJS(buf, b)
-	n, err := fsCall("write", fd, buf, 0, len(b), nil)
-	if err != nil {
-		return 0, err
-	}
+	n := fsCall("write", fd, buf, 0, len(b), nil)!
 	n2 := n.Int()
 	f.pos += int64(n2)
-	return n2, err
+	return n2, nil
 }
 
 func Pread(fd int, b []byte, offset int64) (int, error) {
 	buf := uint8Array.New(len(b))
-	n, err := fsCall("read", fd, buf, 0, len(b), offset)
-	if err != nil {
-		return 0, err
-	}
+	n := fsCall("read", fd, buf, 0, len(b), offset)!
 	n2 := n.Int()
 	if n2 > 0 {
 		js.CopyBytesToGo(b[:n2], buf)
@@ -477,18 +403,12 @@ func Pread(fd int, b []byte, offset int64) (int, error) {
 func Pwrite(fd int, b []byte, offset int64) (int, error) {
 	buf := uint8Array.New(len(b))
 	js.CopyBytesToJS(buf, b)
-	n, err := fsCall("write", fd, buf, 0, len(b), offset)
-	if err != nil {
-		return 0, err
-	}
+	n := fsCall("write", fd, buf, 0, len(b), offset)!
 	return n.Int(), nil
 }
 
 func Seek(fd int, offset int64, whence int) (int64, error) {
-	f, err := fdToFile(fd)
-	if err != nil {
-		return 0, err
-	}
+	f := fdToFile(fd)!
 
 	var newPos int64
 	switch whence {
@@ -498,9 +418,7 @@ func Seek(fd int, offset int64, whence int) (int64, error) {
 		newPos = f.pos + offset
 	case 2:
 		var st Stat_t
-		if err := Fstat(fd, &st); err != nil {
-			return 0, err
-		}
+		Fstat(fd, &st)!
 		newPos = st.Size + offset
 	default:
 		return 0, errnoErr(EINVAL)

@@ -116,10 +116,7 @@ func (o *OBJECT_ATTRIBUTES) init(root syscall.Handle, name string) error {
 	if name == "." {
 		name = ""
 	}
-	objectName, err := NewNTUnicodeString(name)
-	if err != nil {
-		return err
-	}
+	objectName := NewNTUnicodeString(name)!
 	o.ObjectName = objectName
 	if root != syscall.InvalidHandle {
 		o.RootDirectory = root

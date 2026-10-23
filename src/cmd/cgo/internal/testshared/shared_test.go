@@ -158,9 +158,7 @@ func testMain(m *testing.M) (int, error) {
 	// TODO(golang.org/issue/28553): Rework -buildmode=shared so that it does not
 	// need to write to GOROOT.
 	goroot := filepath.Join(workDir, "goroot")
-	if err := cloneGOROOTDeps(goroot); err != nil {
-		return 0, err
-	}
+	cloneGOROOTDeps(goroot)!
 	if testing.Verbose() {
 		fmt.Fprintf(os.Stderr, "+ export GOROOT=%s\n", goroot)
 	}
@@ -208,12 +206,8 @@ func TestMain(m *testing.M) {
 // It returns the directory within gopath at which the module root is located.
 func cloneTestdataModule(gopath string) (string, error) {
 	modRoot := filepath.Join(gopath, "src", "testshared")
-	if err := cgotest.OverlayDir(modRoot, "testdata"); err != nil {
-		return "", err
-	}
-	if err := os.WriteFile(filepath.Join(modRoot, "go.mod"), []byte("module testshared\n"), 0644); err != nil {
-		return "", err
-	}
+	cgotest.OverlayDir(modRoot, "testdata")!
+	os.WriteFile(filepath.Join(modRoot, "go.mod"), []byte("module testshared\n"), 0644)!
 	return modRoot, nil
 }
 
@@ -260,9 +254,7 @@ func cloneGOROOTDeps(goroot string) error {
 		if testing.Verbose() {
 			fmt.Fprintf(os.Stderr, "+ cp -r %s %s\n", filepath.Join(oldGOROOT, dir), filepath.Join(goroot, dir))
 		}
-		if err := cgotest.OverlayDir(filepath.Join(goroot, dir), filepath.Join(oldGOROOT, dir)); err != nil {
-			return err
-		}
+		cgotest.OverlayDir(filepath.Join(goroot, dir), filepath.Join(oldGOROOT, dir))!
 	}
 
 	return nil
@@ -390,10 +382,7 @@ func rnd(v int32, r int32) int32 {
 
 func readwithpad(r io.Reader, sz int32) ([]byte, error) {
 	data := make([]byte, rnd(sz, 4))
-	_, err := io.ReadFull(r, data)
-	if err != nil {
-		return nil, err
-	}
+	io.ReadFull(r, data)!
 	data = data[:sz]
 	return data, nil
 }

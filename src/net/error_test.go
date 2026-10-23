@@ -77,9 +77,7 @@ func parseDialError(nestedErr error) error {
 
 	switch err := nestedErr.(type) {
 	case *OpError:
-		if err := err.isValid(); err != nil {
-			return err
-		}
+		err.isValid()!
 		nestedErr = err.Err
 		goto second
 	}
@@ -423,9 +421,7 @@ func parseReadError(nestedErr error) error {
 
 	switch err := nestedErr.(type) {
 	case *OpError:
-		if err := err.isValid(); err != nil {
-			return err
-		}
+		err.isValid()!
 		nestedErr = err.Err
 		goto second
 	}
@@ -466,9 +462,7 @@ func parseWriteError(nestedErr error) error {
 
 	switch err := nestedErr.(type) {
 	case *OpError:
-		if err := err.isValid(); err != nil {
-			return err
-		}
+		err.isValid()!
 		nestedErr = err.Err
 		goto second
 	}
@@ -524,9 +518,7 @@ func parseCloseError(nestedErr error, isShutdown bool) error {
 
 	switch err := nestedErr.(type) {
 	case *OpError:
-		if err := err.isValid(); err != nil {
-			return err
-		}
+		err.isValid()!
 		nestedErr = err.Err
 		goto second
 	}
@@ -625,9 +617,7 @@ func parseAcceptError(nestedErr error) error {
 
 	switch err := nestedErr.(type) {
 	case *OpError:
-		if err := err.isValid(); err != nil {
-			return err
-		}
+		err.isValid()!
 		nestedErr = err.Err
 		goto second
 	}
@@ -698,9 +688,7 @@ func parseCommonError(nestedErr error) error {
 
 	switch err := nestedErr.(type) {
 	case *OpError:
-		if err := err.isValid(); err != nil {
-			return err
-		}
+		err.isValid()!
 		nestedErr = err.Err
 		goto second
 	}

@@ -41,10 +41,7 @@ type serverHandshakeState struct {
 
 // serverHandshake performs a TLS handshake as a server.
 func (c *Conn) serverHandshake(ctx context.Context) error {
-	clientHello, ech, err := c.readClientHello(ctx)
-	if err != nil {
-		return err
-	}
+	clientHello, ech := c.readClientHello(ctx)!
 
 	if c.vers == VersionTLS13 {
 		hs := serverHandshakeStateTLS13{
@@ -67,62 +64,32 @@ func (c *Conn) serverHandshake(ctx context.Context) error {
 func (hs *serverHandshakeState) handshake() error {
 	c := hs.c
 
-	if err := hs.processClientHello(); err != nil {
-		return err
-	}
+	hs.processClientHello()!
 
 	// For an overview of TLS handshaking, see RFC 5246, Section 7.3.
 	c.buffering = true
-	if err := hs.checkForResumption(); err != nil {
-		return err
-	}
+	hs.checkForResumption()!
 	if hs.sessionState != nil {
 		// The client has included a session ticket and so we do an abbreviated handshake.
-		if err := hs.doResumeHandshake(); err != nil {
-			return err
-		}
-		if err := hs.establishKeys(); err != nil {
-			return err
-		}
-		if err := hs.sendSessionTicket(); err != nil {
-			return err
-		}
-		if err := hs.sendFinished(c.serverFinished[:]); err != nil {
-			return err
-		}
-		if _, err := c.flush(); err != nil {
-			return err
-		}
+		hs.doResumeHandshake()!
+		hs.establishKeys()!
+		hs.sendSessionTicket()!
+		hs.sendFinished(c.serverFinished[:])!
+		c.flush()!
 		c.clientFinishedIsFirst = false
-		if err := hs.readFinished(nil); err != nil {
-			return err
-		}
+		hs.readFinished(nil)!
 	} else {
 		// The client didn't include a session ticket, or it wasn't
 		// valid so we do a full handshake.
-		if err := hs.pickCipherSuite(); err != nil {
-			return err
-		}
-		if err := hs.doFullHandshake(); err != nil {
-			return err
-		}
-		if err := hs.establishKeys(); err != nil {
-			return err
-		}
-		if err := hs.readFinished(c.clientFinished[:]); err != nil {
-			return err
-		}
+		hs.pickCipherSuite()!
+		hs.doFullHandshake()!
+		hs.establishKeys()!
+		hs.readFinished(c.clientFinished[:])!
 		c.clientFinishedIsFirst = true
 		c.buffering = true
-		if err := hs.sendSessionTicket(); err != nil {
-			return err
-		}
-		if err := hs.sendFinished(nil); err != nil {
-			return err
-		}
-		if _, err := c.flush(); err != nil {
-			return err
-		}
+		hs.sendSessionTicket()!
+		hs.sendFinished(nil)!
+		c.flush()!
 	}
 
 	c.ekm = ekmFromMasterSecret(c.vers, hs.suite, hs.masterSecret, hs.clientHello.random, hs.hello.random)
@@ -453,10 +420,7 @@ func (hs *serverHandshakeState) checkForResumption() error {
 
 	var sessionState *SessionState
 	if c.config.UnwrapSession != nil {
-		ss, err := c.config.UnwrapSession(hs.clientHello.sessionTicket, c.connectionStateLocked())
-		if err != nil {
-			return err
-		}
+		ss := c.config.UnwrapSession(hs.clientHello.sessionTicket, c.connectionStateLocked())!
 		if ss == nil {
 			return nil
 		}
@@ -569,12 +533,8 @@ func (hs *serverHandshakeState) doResumeHandshake() error {
 	hs.hello.ticketSupported = true
 	hs.finishedHash = newFinishedHash(c.vers, hs.suite)
 	hs.finishedHash.discardHandshakeBuffer()
-	if err := transcriptMsg(hs.clientHello, &hs.finishedHash); err != nil {
-		return err
-	}
-	if _, err := hs.c.writeHandshakeRecord(hs.hello, &hs.finishedHash); err != nil {
-		return err
-	}
+	transcriptMsg(hs.clientHello, &hs.finishedHash)!
+	hs.c.writeHandshakeRecord(hs.hello, &hs.finishedHash)!
 
 	if c.config.VerifyConnection != nil {
 		if err := c.config.VerifyConnection(c.connectionStateLocked()); err != nil {
@@ -608,12 +568,8 @@ func (hs *serverHandshakeState) doFullHandshake() error {
 		// certificates won't be used.
 		hs.finishedHash.discardHandshakeBuffer()
 	}
-	if err := transcriptMsg(hs.clientHello, &hs.finishedHash); err != nil {
-		return err
-	}
-	if _, err := hs.c.writeHandshakeRecord(hs.hello, &hs.finishedHash); err != nil {
-		return err
-	}
+	transcriptMsg(hs.clientHello, &hs.finishedHash)!
+	hs.c.writeHandshakeRecord(hs.hello, &hs.finishedHash)!
 
 	certMsg := new(certificateMsg)
 	certMsg.certificates = hs.cert.Certificate
@@ -621,16 +577,12 @@ func (hs *serverHandshakeState) doFullHandshake() error {
 	// that it is only populated when a certificate is actually presented to the
 	// peer, and not on resumed connections.
 	c.localCertificate = hs.cert.Certificate
-	if _, err := hs.c.writeHandshakeRecord(certMsg, &hs.finishedHash); err != nil {
-		return err
-	}
+	hs.c.writeHandshakeRecord(certMsg, &hs.finishedHash)!
 
 	if hs.hello.ocspStapling {
 		certStatus := new(certificateStatusMsg)
 		certStatus.response = hs.cert.OCSPStaple
-		if _, err := hs.c.writeHandshakeRecord(certStatus, &hs.finishedHash); err != nil {
-			return err
-		}
+		hs.c.writeHandshakeRecord(certStatus, &hs.finishedHash)!
 	}
 
 	keyAgreement := hs.suite.ka(c.vers)
@@ -644,9 +596,7 @@ func (hs *serverHandshakeState) doFullHandshake() error {
 			c.curveID = keyAgreement.curveID
 			c.peerSigAlg = keyAgreement.signatureAlgorithm
 		}
-		if _, err := hs.c.writeHandshakeRecord(skx, &hs.finishedHash); err != nil {
-			return err
-		}
+		hs.c.writeHandshakeRecord(skx, &hs.finishedHash)!
 	}
 
 	var certReq *certificateRequestMsg
@@ -670,19 +620,13 @@ func (hs *serverHandshakeState) doFullHandshake() error {
 		if c.config.ClientCAs != nil {
 			certReq.certificateAuthorities = c.config.ClientCAs.Subjects()
 		}
-		if _, err := hs.c.writeHandshakeRecord(certReq, &hs.finishedHash); err != nil {
-			return err
-		}
+		hs.c.writeHandshakeRecord(certReq, &hs.finishedHash)!
 	}
 
 	helloDone := new(serverHelloDoneMsg)
-	if _, err := hs.c.writeHandshakeRecord(helloDone, &hs.finishedHash); err != nil {
-		return err
-	}
+	hs.c.writeHandshakeRecord(helloDone, &hs.finishedHash)!
 
-	if _, err := c.flush(); err != nil {
-		return err
-	}
+	c.flush()!
 
 	var pub crypto.PublicKey // public key for client auth, if any
 
@@ -700,11 +644,9 @@ func (hs *serverHandshakeState) doFullHandshake() error {
 			return unexpectedMessageError(certMsg, msg)
 		}
 
-		if err := c.processCertsFromClient(Certificate{
+		c.processCertsFromClient(Certificate{
 			Certificate: certMsg.certificates,
-		}); err != nil {
-			return err
-		}
+		})!
 		if len(certMsg.certificates) != 0 {
 			pub = c.peerCertificates[0].PublicKey
 		}
@@ -811,9 +753,7 @@ func (hs *serverHandshakeState) doFullHandshake() error {
 
 		c.peerSigAlg = certVerify.signatureAlgorithm
 
-		if err := transcriptMsg(certVerify, &hs.finishedHash); err != nil {
-			return err
-		}
+		transcriptMsg(certVerify, &hs.finishedHash)!
 	}
 
 	hs.finishedHash.discardHandshakeBuffer()
@@ -849,17 +789,12 @@ func (hs *serverHandshakeState) establishKeys() error {
 func (hs *serverHandshakeState) readFinished(out []byte) error {
 	c := hs.c
 
-	if err := c.readChangeCipherSpec(); err != nil {
-		return err
-	}
+	c.readChangeCipherSpec()!
 
 	// finishedMsg is included in the transcript, but not until after we
 	// check the client version, since the state before this message was
 	// sent is used during verification.
-	msg, err := c.readHandshake(nil)
-	if err != nil {
-		return err
-	}
+	msg := c.readHandshake(nil)!
 	clientFinished, ok := msg.(*finishedMsg)
 	if !ok {
 		c.sendAlert(alertUnexpectedMessage)
@@ -873,9 +808,7 @@ func (hs *serverHandshakeState) readFinished(out []byte) error {
 		return errors.New("tls: client's Finished message is incorrect")
 	}
 
-	if err := transcriptMsg(clientFinished, &hs.finishedHash); err != nil {
-		return err
-	}
+	transcriptMsg(clientFinished, &hs.finishedHash)!
 
 	copy(out, verify)
 	return nil
@@ -913,9 +846,7 @@ func (hs *serverHandshakeState) sendSessionTicket() error {
 		}
 	}
 
-	if _, err := hs.c.writeHandshakeRecord(m, &hs.finishedHash); err != nil {
-		return err
-	}
+	hs.c.writeHandshakeRecord(m, &hs.finishedHash)!
 
 	return nil
 }
@@ -923,15 +854,11 @@ func (hs *serverHandshakeState) sendSessionTicket() error {
 func (hs *serverHandshakeState) sendFinished(out []byte) error {
 	c := hs.c
 
-	if err := c.writeChangeCipherRecord(); err != nil {
-		return err
-	}
+	c.writeChangeCipherRecord()!
 
 	finished := new(finishedMsg)
 	finished.verifyData = hs.finishedHash.serverSum(hs.masterSecret)
-	if _, err := hs.c.writeHandshakeRecord(finished, &hs.finishedHash); err != nil {
-		return err
-	}
+	hs.c.writeHandshakeRecord(finished, &hs.finishedHash)!
 
 	copy(out, finished.verifyData)
 

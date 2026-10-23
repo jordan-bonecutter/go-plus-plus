@@ -12,9 +12,6 @@ import (
 )
 
 func newAESGCM(key []byte) (cipher.AEAD, error) {
-	b, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
+	b := aes.NewCipher(key)!
 	return cipher.NewGCM(b)
 }

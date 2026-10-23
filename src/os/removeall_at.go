@@ -173,9 +173,6 @@ func removeAllFrom(parentFd sysfdType, base string) error {
 // we are going to (try to) remove the file.
 // The contents of this file are not relevant for test caching.
 func openDirAt(dirfd sysfdType, name string) (*File, error) {
-	fd, err := rootOpenDir(dirfd, name)
-	if err != nil {
-		return nil, err
-	}
+	fd := rootOpenDir(dirfd, name)!
 	return newDirFile(fd, name)
 }

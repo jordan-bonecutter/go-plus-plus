@@ -107,9 +107,7 @@ func checkResponse(reqID uint16, reqQues dnsmessage.Question, respHdr dnsmessage
 }
 
 func dnsPacketRoundTrip(c Conn, id uint16, query dnsmessage.Question, b []byte) (dnsmessage.Parser, dnsmessage.Header, error) {
-	if _, err := c.Write(b); err != nil {
-		return dnsmessage.Parser{}, dnsmessage.Header{}, err
-	}
+	c.Write(b)!
 
 	b = make([]byte, maxDNSPacketSize)
 	for {
@@ -134,14 +132,10 @@ func dnsPacketRoundTrip(c Conn, id uint16, query dnsmessage.Question, b []byte) 
 }
 
 func dnsStreamRoundTrip(c Conn, id uint16, query dnsmessage.Question, b []byte) (dnsmessage.Parser, dnsmessage.Header, error) {
-	if _, err := c.Write(b); err != nil {
-		return dnsmessage.Parser{}, dnsmessage.Header{}, err
-	}
+	c.Write(b)!
 
 	b = make([]byte, 1280) // 1280 is a reasonable initial size for IP over Ethernet, see RFC 4035
-	if _, err := io.ReadFull(c, b[:2]); err != nil {
-		return dnsmessage.Parser{}, dnsmessage.Header{}, err
-	}
+	io.ReadFull(c, b[:2])!
 	l := int(b[0])<<8 | int(b[1])
 	if l > len(b) {
 		b = make([]byte, l)
@@ -622,10 +616,7 @@ func (r *Resolver) goLookupHostOrder(ctx context.Context, name string, order hos
 			return nil, newDNSError(errNoSuchHost, name, "")
 		}
 	}
-	ips, _, err := r.goLookupIPCNAMEOrder(ctx, "ip", name, order, conf)
-	if err != nil {
-		return
-	}
+	ips, _ := r.goLookupIPCNAMEOrder(ctx, "ip", name, order, conf)!
 	addrs = make([]string, 0, len(ips))
 	for _, ip := range ips {
 		addrs = append(addrs, ip.String())

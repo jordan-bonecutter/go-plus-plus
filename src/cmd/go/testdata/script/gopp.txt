@@ -26,7 +26,7 @@ import "fmt"
 type Option[T any] union { Empty; Value T }
 func number() (int,error) { return Answer(),nil }
 func read() (int,error) { return number()!,nil }
-func main() { n,e:=read();if e!=nil{panic(e)};fmt.Println(n);_ = Option[int].Empty(unit{}) }
+func main() { n,e:=read();if e!=nil{panic(e)};fmt.Println(n);_ = Option[int].Empty() }
 -- helper.go --
 package main
 func Answer() int { return 42 }

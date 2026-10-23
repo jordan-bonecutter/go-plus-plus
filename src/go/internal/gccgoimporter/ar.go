@@ -51,14 +51,10 @@ const arfmag = "`\n"
 // what gccgo does; gccgo concatenates together all the export data
 // for all the objects in the file.  In practice that case does not arise.
 func arExportData(archive io.ReadSeeker) (io.ReadSeeker, error) {
-	if _, err := archive.Seek(0, io.SeekStart); err != nil {
-		return nil, err
-	}
+	archive.Seek(0, io.SeekStart)!
 
 	var buf [len(armag)]byte
-	if _, err := archive.Read(buf[:]); err != nil {
-		return nil, err
-	}
+	archive.Read(buf[:])!
 
 	switch string(buf[:]) {
 	case armag:
@@ -77,9 +73,7 @@ func standardArExportData(archive io.ReadSeeker) (io.ReadSeeker, error) {
 	off := int64(len(armag))
 	for {
 		var hdrBuf [arHdrSize]byte
-		if _, err := archive.Read(hdrBuf[:]); err != nil {
-			return nil, err
-		}
+		archive.Read(hdrBuf[:])!
 		off += arHdrSize
 
 		if !bytes.Equal(hdrBuf[arFmagOff:arFmagOff+arFmagSize], []byte(arfmag)) {
@@ -107,19 +101,14 @@ func standardArExportData(archive io.ReadSeeker) (io.ReadSeeker, error) {
 			size++
 		}
 		off += size
-		if _, err := archive.Seek(off, io.SeekStart); err != nil {
-			return nil, err
-		}
+		archive.Seek(off, io.SeekStart)!
 	}
 }
 
 // elfFromAr tries to get export data from an archive member as an ELF file.
 // If there is no export data, this returns nil, nil.
 func elfFromAr(member *io.SectionReader) (io.ReadSeeker, error) {
-	ef, err := elf.NewFile(member)
-	if err != nil {
-		return nil, err
-	}
+	ef := elf.NewFile(member)!
 	sec := ef.Section(".go_export")
 	if sec == nil {
 		return nil, nil
@@ -130,16 +119,10 @@ func elfFromAr(member *io.SectionReader) (io.ReadSeeker, error) {
 // aixBigArExportData returns export data from an AIX big archive.
 func aixBigArExportData(archive io.ReadSeeker) (io.ReadSeeker, error) {
 	archiveAt := readerAtFromSeeker(archive)
-	arch, err := xcoff.NewArchive(archiveAt)
-	if err != nil {
-		return nil, err
-	}
+	arch := xcoff.NewArchive(archiveAt)!
 
 	for _, mem := range arch.Members {
-		f, err := arch.GetFile(mem.Name)
-		if err != nil {
-			return nil, err
-		}
+		f := arch.GetFile(mem.Name)!
 		sdat := f.CSect(".go_export")
 		if sdat != nil {
 			return bytes.NewReader(sdat), nil
@@ -164,8 +147,6 @@ type seekerReadAt struct {
 }
 
 func (sra seekerReadAt) ReadAt(p []byte, off int64) (int, error) {
-	if _, err := sra.seeker.Seek(off, io.SeekStart); err != nil {
-		return 0, err
-	}
+	sra.seeker.Seek(off, io.SeekStart)!
 	return sra.seeker.Read(p)
 }

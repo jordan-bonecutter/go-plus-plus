@@ -93,29 +93,18 @@ func NewServer(scriptDir, workDir string, logger *log.Logger) (*Server, error) {
 	if scriptDir == "" {
 		panic("vcweb.NewServer: scriptDir is required")
 	}
-	var err error
-	scriptDir, err = filepath.Abs(scriptDir)
-	if err != nil {
-		return nil, err
-	}
+
+	scriptDir = filepath.Abs(scriptDir)!
 
 	if workDir == "" {
-		workDir, err = os.MkdirTemp("", "vcweb-*")
-		if err != nil {
-			return nil, err
-		}
+		workDir = os.MkdirTemp("", "vcweb-*")!
 		logger.Printf("vcweb work directory: %s", workDir)
 	} else {
-		workDir, err = filepath.Abs(workDir)
-		if err != nil {
-			return nil, err
-		}
+		workDir = filepath.Abs(workDir)!
 	}
 
 	homeDir := filepath.Join(workDir, "home")
-	if err := os.MkdirAll(homeDir, 0755); err != nil {
-		return nil, err
-	}
+	os.MkdirAll(homeDir, 0755)!
 
 	env := scriptEnviron(homeDir)
 
@@ -137,20 +126,12 @@ func NewServer(scriptDir, workDir string, logger *log.Logger) (*Server, error) {
 		},
 	}
 
-	if err := os.WriteFile(filepath.Join(s.homeDir, ".gitconfig"), []byte(gitConfig), 0644); err != nil {
-		return nil, err
-	}
+	os.WriteFile(filepath.Join(s.homeDir, ".gitconfig"), []byte(gitConfig), 0644)!
 	gitConfigDir := filepath.Join(s.homeDir, ".config", "git")
-	if err := os.MkdirAll(gitConfigDir, 0755); err != nil {
-		return nil, err
-	}
-	if err := os.WriteFile(filepath.Join(gitConfigDir, "ignore"), []byte(""), 0644); err != nil {
-		return nil, err
-	}
+	os.MkdirAll(gitConfigDir, 0755)!
+	os.WriteFile(filepath.Join(gitConfigDir, "ignore"), []byte(""), 0644)!
 
-	if err := os.WriteFile(filepath.Join(s.homeDir, ".hgrc"), []byte(hgrc), 0644); err != nil {
-		return nil, err
-	}
+	os.WriteFile(filepath.Join(s.homeDir, ".hgrc"), []byte(hgrc), 0644)!
 
 	return s, nil
 }

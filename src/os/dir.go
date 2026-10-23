@@ -158,25 +158,13 @@ func CopyFS(dir string, fsys fs.FS) error {
 		case ModeDir:
 			return MkdirAll(newPath, 0777)
 		case ModeSymlink:
-			target, err := fs.ReadLink(fsys, path)
-			if err != nil {
-				return err
-			}
+			target := fs.ReadLink(fsys, path)!
 			return Symlink(target, newPath)
 		case 0:
-			r, err := fsys.Open(path)
-			if err != nil {
-				return err
-			}
+			r := fsys.Open(path)!
 			defer r.Close()
-			info, err := r.Stat()
-			if err != nil {
-				return err
-			}
-			w, err := OpenFile(newPath, O_CREATE|O_EXCL|O_WRONLY, 0666|info.Mode()&0777)
-			if err != nil {
-				return err
-			}
+			info := r.Stat()!
+			w := OpenFile(newPath, O_CREATE|O_EXCL|O_WRONLY, 0666|info.Mode()&0777)!
 
 			if _, err := io.Copy(w, r); err != nil {
 				w.Close()

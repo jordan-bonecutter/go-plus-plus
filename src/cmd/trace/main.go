@@ -264,10 +264,7 @@ func logAndDie(err error) {
 // only on localhost rather than all addresses. To listen on all addresses,
 // explicitly set the unspecified address (e.g., "0.0.0.0:8080").
 func listenAddr(addr string) (string, error) {
-	host, port, err := net.SplitHostPort(addr)
-	if err != nil {
-		return "", err
-	}
+	host, port := net.SplitHostPort(addr)!
 	if host == "" {
 		host = "localhost"
 	}
@@ -405,17 +402,12 @@ func splitTrace(parsed *parsedTrace) ([]traceviewer.Range, error) {
 	// TODO(mknyszek): Split traces by generation by doing a quick first pass over the
 	// trace to identify all the generation boundaries.
 	s, c := traceviewer.SplittingTraceConsumer(100 << 20) // 100 MiB
-	if err := generateTrace(parsed, defaultGenOpts(), c); err != nil {
-		return nil, err
-	}
+	generateTrace(parsed, defaultGenOpts(), c)!
 	return s.Ranges, nil
 }
 
 func debugProcessedEvents(trc io.Reader) error {
-	tr, err := trace.NewReader(trc)
-	if err != nil {
-		return err
-	}
+	tr := trace.NewReader(trc)!
 	for {
 		ev, err := tr.ReadEvent()
 		if err == io.EOF {
@@ -428,10 +420,7 @@ func debugProcessedEvents(trc io.Reader) error {
 }
 
 func debugRawEvents(trc io.Reader) error {
-	rr, err := raw.NewReader(trc)
-	if err != nil {
-		return err
-	}
+	rr := raw.NewReader(trc)!
 	for {
 		ev, err := rr.ReadEvent()
 		if err == io.EOF {
@@ -445,10 +434,7 @@ func debugRawEvents(trc io.Reader) error {
 
 func debugEventsFootprint(trc io.Reader) error {
 	cr := countingReader{r: trc}
-	tr, err := raw.NewReader(&cr)
-	if err != nil {
-		return err
-	}
+	tr := raw.NewReader(&cr)!
 	type eventStats struct {
 		typ   tracev2.EventType
 		count int

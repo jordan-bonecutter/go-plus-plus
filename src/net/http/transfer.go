@@ -285,9 +285,7 @@ func (t *transferWriter) shouldSendContentLength() bool {
 
 func (t *transferWriter) writeHeader(w io.Writer, trace *httptrace.ClientTrace) error {
 	if t.Close && !hasToken(t.Header.get("Connection"), "close") {
-		if _, err := io.WriteString(w, "Connection: close\r\n"); err != nil {
-			return err
-		}
+		io.WriteString(w, "Connection: close\r\n")!
 		if trace != nil && trace.WroteHeaderField != nil {
 			trace.WroteHeaderField("Connection", []string{"close"})
 		}
@@ -297,19 +295,13 @@ func (t *transferWriter) writeHeader(w io.Writer, trace *httptrace.ClientTrace) 
 	// function of the sanitized field triple (Body, ContentLength,
 	// TransferEncoding)
 	if t.shouldSendContentLength() {
-		if _, err := io.WriteString(w, "Content-Length: "); err != nil {
-			return err
-		}
-		if _, err := io.WriteString(w, strconv.FormatInt(t.ContentLength, 10)+"\r\n"); err != nil {
-			return err
-		}
+		io.WriteString(w, "Content-Length: ")!
+		io.WriteString(w, strconv.FormatInt(t.ContentLength, 10)+"\r\n")!
 		if trace != nil && trace.WroteHeaderField != nil {
 			trace.WroteHeaderField("Content-Length", []string{strconv.FormatInt(t.ContentLength, 10)})
 		}
 	} else if chunked(t.TransferEncoding) {
-		if _, err := io.WriteString(w, "Transfer-Encoding: chunked\r\n"); err != nil {
-			return err
-		}
+		io.WriteString(w, "Transfer-Encoding: chunked\r\n")!
 		if trace != nil && trace.WroteHeaderField != nil {
 			trace.WroteHeaderField("Transfer-Encoding", []string{"chunked"})
 		}
@@ -330,9 +322,7 @@ func (t *transferWriter) writeHeader(w io.Writer, trace *httptrace.ClientTrace) 
 			slices.Sort(keys)
 			// TODO: could do better allocation-wise here, but trailers are rare,
 			// so being lazy for now.
-			if _, err := io.WriteString(w, "Trailer: "+strings.Join(keys, ",")+"\r\n"); err != nil {
-				return err
-			}
+			io.WriteString(w, "Trailer: "+strings.Join(keys, ",")+"\r\n")!
 			if trace != nil && trace.WroteHeaderField != nil {
 				trace.WroteHeaderField("Trailer", keys)
 			}
@@ -391,9 +381,7 @@ func (t *transferWriter) writeBody(w io.Writer) (err error) {
 	}
 	if t.BodyCloser != nil {
 		closed = true
-		if err := t.BodyCloser.Close(); err != nil {
-			return err
-		}
+		t.BodyCloser.Close()!
 	}
 
 	if !t.ResponseToHEAD && t.ContentLength != -1 && t.ContentLength != ncopy {
@@ -404,9 +392,7 @@ func (t *transferWriter) writeBody(w io.Writer) (err error) {
 	if !t.ResponseToHEAD && chunked(t.TransferEncoding) {
 		// Write Trailer header
 		if t.Trailer != nil {
-			if err := t.Trailer.Write(w); err != nil {
-				return err
-			}
+			t.Trailer.Write(w)!
 		}
 		// Last chunk, empty trailer
 		_, err = io.WriteString(w, "\r\n")
@@ -532,9 +518,7 @@ func readTransfer(msg any, r *bufio.Reader, maxTrailerHeaders int64) (err error)
 	}
 
 	// Content-Length and Transfer-Encoding.
-	if err := t.determineBodyLength(isResponse); err != nil {
-		return err
-	}
+	t.determineBodyLength(isResponse)!
 
 	// Trailer
 	t.Trailer, err = fixTrailer(t.Header, t.Chunked, maxTrailerHeaders)
@@ -653,10 +637,7 @@ func (t *transferReader) determineBodyLength(isResponse bool) error {
 	}
 	// parsedContentLength >= 0 indicates a valid Content-Length header,
 	// parsedContentLength < 0 is either no Content-Length or an empty one we're ignoring.
-	contentLengthStr, parsedContentLength, err := parseContentLength(contentLength)
-	if err != nil {
-		return err
-	}
+	contentLengthStr, parsedContentLength := parseContentLength(contentLength)!
 	if parsedContentLength >= 0 {
 		contentLength = contentLength[:1]   // Handle duplicate Content-Length headers.
 		contentLength[0] = contentLengthStr // Reuse existing slice to avoid extra alloc.
@@ -1020,9 +1001,7 @@ func (b *body) readTrailer() error {
 	// this bufio.Reader. Instead, a hack: we iteratively Peek up
 	// to the bufio.Reader's max size, looking for a double CRLF.
 	// This limits the trailer to the underlying buffer size, typically 4kB.
-	if err := seeUpcomingDoubleCRLF(b.r); err != nil {
-		return err
-	}
+	seeUpcomingDoubleCRLF(b.r)!
 
 	hdr, err := readMIMEHeader(textproto.NewReader(b.r), math.MaxInt64, b.maxTrailerHeaders)
 	if err != nil {

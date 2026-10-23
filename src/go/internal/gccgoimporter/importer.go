@@ -251,11 +251,7 @@ func GetImporter(searchpaths []string, initmap map[*types.Package]InitData) Impo
 // returns them as a string.
 func readMagic(reader io.ReadSeeker) (string, error) {
 	var magic [4]byte
-	if _, err := reader.Read(magic[:]); err != nil {
-		return "", err
-	}
-	if _, err := reader.Seek(0, io.SeekStart); err != nil {
-		return "", err
-	}
+	reader.Read(magic[:])!
+	reader.Seek(0, io.SeekStart)!
 	return string(magic[:]), nil
 }

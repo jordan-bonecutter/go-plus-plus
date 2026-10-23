@@ -771,13 +771,8 @@ func TestConnCloseWrite(t *testing.T) {
 		defer close(clientDoneChan)
 
 		clientConfig := testConfigClient()
-		conn, err := Dial("tcp", ln.Addr().String(), clientConfig)
-		if err != nil {
-			return err
-		}
-		if err := conn.Handshake(); err != nil {
-			return err
-		}
+		conn := Dial("tcp", ln.Addr().String(), clientConfig)!
+		conn.Handshake()!
 		defer conn.Close()
 
 		if err := conn.CloseWrite(); err != nil {
@@ -788,10 +783,7 @@ func TestConnCloseWrite(t *testing.T) {
 			return fmt.Errorf("CloseWrite error = %v; want errShutdown", err)
 		}
 
-		data, err := io.ReadAll(conn)
-		if err != nil {
-			return err
-		}
+		data := io.ReadAll(conn)!
 		if len(data) > 0 {
 			return fmt.Errorf("Read data = %q; want nothing", data)
 		}
@@ -2838,10 +2830,7 @@ func (s bitFlippingSigner) Public() crypto.PublicKey {
 }
 
 func (s bitFlippingSigner) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
-	sig, err := s.Signer.Sign(rand, digest, opts)
-	if err != nil {
-		return nil, err
-	}
+	sig := s.Signer.Sign(rand, digest, opts)!
 	sig[0] ^= 1
 	return sig, nil
 }

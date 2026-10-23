@@ -43,19 +43,13 @@ var imageTests = []imageTest{
 }
 
 func decode(filename string) (image.Image, string, error) {
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, "", err
-	}
+	f := os.Open(filename)!
 	defer f.Close()
 	return image.Decode(bufio.NewReader(f))
 }
 
 func decodeConfig(filename string) (image.Config, string, error) {
-	f, err := os.Open(filename)
-	if err != nil {
-		return image.Config{}, "", err
-	}
+	f := os.Open(filename)!
 	defer f.Close()
 	return image.DecodeConfig(bufio.NewReader(f))
 }

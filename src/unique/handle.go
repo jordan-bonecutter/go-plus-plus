@@ -34,11 +34,11 @@ func Make[T comparable](value T) Handle[T] {
 	// Find the map for type T.
 	typ := abi.TypeFor[T]()
 	if typ.Size() == 0 {
-		return Handle[T]{(*T)(unsafe.Pointer(&zero))}
+		return Handle{(*T)(unsafe.Pointer(&zero))}
 	}
 	ma, ok := uniqueMaps.Load(typ)
 	if !ok {
-		m := &uniqueMap[T]{canonMap: newCanonMap[T](), cloneSeq: makeCloneSeq(typ)}
+		m := &uniqueMap{canonMap: newCanonMap[T](), cloneSeq: makeCloneSeq(typ)}
 		ma, _ = uniqueMaps.LoadOrStore(typ, m)
 	}
 	m := ma.(*uniqueMap[T])
@@ -49,7 +49,7 @@ func Make[T comparable](value T) Handle[T] {
 		// Insert a new value into the map.
 		ptr = m.LoadOrStore(clone(value, &m.cloneSeq))
 	}
-	return Handle[T]{ptr}
+	return Handle{ptr}
 }
 
 // uniqueMaps is an index of type-specific concurrent maps used for unique.Make.

@@ -199,10 +199,7 @@ func (p *Importer) parseFiles(dir string, filenames []string) ([]*ast.File, erro
 }
 
 func (p *Importer) cgo(bp *build.Package) (*ast.File, error) {
-	tmpdir, err := os.MkdirTemp("", "srcimporter")
-	if err != nil {
-		return nil, err
-	}
+	tmpdir := os.MkdirTemp("", "srcimporter")!
 	defer os.RemoveAll(tmpdir)
 
 	goCmd := "go"

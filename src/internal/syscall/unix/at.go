@@ -12,10 +12,7 @@ import (
 )
 
 func Unlinkat(dirfd int, path string, flags int) error {
-	p, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return err
-	}
+	p := syscall.BytePtrFromString(path)!
 
 	_, _, errno := syscall.Syscall(unlinkatTrap, uintptr(dirfd), uintptr(unsafe.Pointer(p)), uintptr(flags))
 	if errno != 0 {
@@ -26,10 +23,7 @@ func Unlinkat(dirfd int, path string, flags int) error {
 }
 
 func Openat(dirfd int, path string, flags int, perm uint32) (int, error) {
-	p, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return 0, err
-	}
+	p := syscall.BytePtrFromString(path)!
 
 	fd, _, errno := syscall.Syscall6(openatTrap, uintptr(dirfd), uintptr(unsafe.Pointer(p)), uintptr(flags), uintptr(perm), 0, 0)
 	if errno != 0 {
@@ -40,10 +34,7 @@ func Openat(dirfd int, path string, flags int, perm uint32) (int, error) {
 }
 
 func Readlinkat(dirfd int, path string, buf []byte) (int, error) {
-	p0, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return 0, err
-	}
+	p0 := syscall.BytePtrFromString(path)!
 	var p1 unsafe.Pointer
 	if len(buf) > 0 {
 		p1 = unsafe.Pointer(&buf[0])
@@ -64,10 +55,7 @@ func Readlinkat(dirfd int, path string, buf []byte) (int, error) {
 }
 
 func Mkdirat(dirfd int, path string, mode uint32) error {
-	p, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return err
-	}
+	p := syscall.BytePtrFromString(path)!
 
 	_, _, errno := syscall.Syscall6(mkdiratTrap,
 		uintptr(dirfd),
@@ -81,10 +69,7 @@ func Mkdirat(dirfd int, path string, mode uint32) error {
 }
 
 func Fchownat(dirfd int, path string, uid, gid int, flags int) error {
-	p, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return err
-	}
+	p := syscall.BytePtrFromString(path)!
 	_, _, errno := syscall.Syscall6(fchownatTrap,
 		uintptr(dirfd),
 		uintptr(unsafe.Pointer(p)),
@@ -99,14 +84,8 @@ func Fchownat(dirfd int, path string, uid, gid int, flags int) error {
 }
 
 func Renameat(olddirfd int, oldpath string, newdirfd int, newpath string) error {
-	oldp, err := syscall.BytePtrFromString(oldpath)
-	if err != nil {
-		return err
-	}
-	newp, err := syscall.BytePtrFromString(newpath)
-	if err != nil {
-		return err
-	}
+	oldp := syscall.BytePtrFromString(oldpath)!
+	newp := syscall.BytePtrFromString(newpath)!
 	_, _, errno := syscall.Syscall6(renameatTrap,
 		uintptr(olddirfd),
 		uintptr(unsafe.Pointer(oldp)),
@@ -121,14 +100,8 @@ func Renameat(olddirfd int, oldpath string, newdirfd int, newpath string) error 
 }
 
 func Linkat(olddirfd int, oldpath string, newdirfd int, newpath string, flag int) error {
-	oldp, err := syscall.BytePtrFromString(oldpath)
-	if err != nil {
-		return err
-	}
-	newp, err := syscall.BytePtrFromString(newpath)
-	if err != nil {
-		return err
-	}
+	oldp := syscall.BytePtrFromString(oldpath)!
+	newp := syscall.BytePtrFromString(newpath)!
 	_, _, errno := syscall.Syscall6(linkatTrap,
 		uintptr(olddirfd),
 		uintptr(unsafe.Pointer(oldp)),
@@ -143,14 +116,8 @@ func Linkat(olddirfd int, oldpath string, newdirfd int, newpath string, flag int
 }
 
 func Symlinkat(oldpath string, newdirfd int, newpath string) error {
-	oldp, err := syscall.BytePtrFromString(oldpath)
-	if err != nil {
-		return err
-	}
-	newp, err := syscall.BytePtrFromString(newpath)
-	if err != nil {
-		return err
-	}
+	oldp := syscall.BytePtrFromString(oldpath)!
+	newp := syscall.BytePtrFromString(newpath)!
 	_, _, errno := syscall.Syscall(symlinkatTrap,
 		uintptr(unsafe.Pointer(oldp)),
 		uintptr(newdirfd),

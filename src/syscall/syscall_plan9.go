@@ -158,17 +158,10 @@ func errstr() string {
 func readnum(path string) (uint, error) {
 	var b [12]byte
 
-	fd, e := Open(path, O_RDONLY)
-	if e != nil {
-		return 0, e
-	}
+	fd := Open(path, O_RDONLY)!
 	defer Close(fd)
 
-	n, e := Pread(fd, b[:], 0)
-
-	if e != nil {
-		return 0, e
-	}
+	n := Pread(fd, b[:], 0)!
 
 	m := 0
 	for ; m < n && b[m] == ' '; m++ {
@@ -346,10 +339,7 @@ func Unmount(name, old string) (err error) {
 	if name == "" {
 		r0, _, e = Syscall(SYS_UNMOUNT, _zero, oldptr, 0)
 	} else {
-		namep, err := BytePtrFromString(name)
-		if err != nil {
-			return err
-		}
+		namep := BytePtrFromString(name)!
 		r0, _, e = Syscall(SYS_UNMOUNT, uintptr(unsafe.Pointer(namep)), oldptr, 0)
 	}
 
@@ -360,11 +350,7 @@ func Unmount(name, old string) (err error) {
 }
 
 func Fchdir(fd int) (err error) {
-	path, err := Fd2path(fd)
-
-	if err != nil {
-		return
-	}
+	path := Fd2path(fd)!
 
 	return Chdir(path)
 }

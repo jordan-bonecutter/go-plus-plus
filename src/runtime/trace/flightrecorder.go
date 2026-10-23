@@ -76,9 +76,7 @@ func (fr *FlightRecorder) Start() error {
 
 	// Start tracing, data is sent to a recorder which forwards it to our own
 	// storage.
-	if err := tracing.subscribeFlightRecorder(&recorder{r: fr}); err != nil {
-		return err
-	}
+	tracing.subscribeFlightRecorder(&recorder{r: fr})!
 
 	fr.enabled = true
 	return nil

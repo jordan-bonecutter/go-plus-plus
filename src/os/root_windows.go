@@ -56,10 +56,7 @@ func rootCleanPath(s string, prefix, suffix []string) (string, error) {
 	}
 	s = string(buf)
 
-	s, err := syscall.FullPath(s)
-	if err != nil {
-		return "", err
-	}
+	s = syscall.FullPath(s)!
 
 	s, ok := stringslite.CutPrefix(s, fixedPrefix)
 	if !ok {
@@ -154,10 +151,7 @@ func openat(dirfd syscall.Handle, name string, flag uint64, perm FileMode) (sysc
 }
 
 func readReparseLinkAt(dirfd syscall.Handle, name string) (string, error) {
-	objectName, err := windows.NewNTUnicodeString(name)
-	if err != nil {
-		return "", err
-	}
+	objectName := windows.NewNTUnicodeString(name)!
 	objAttrs := &windows.OBJECT_ATTRIBUTES{
 		ObjectName: objectName,
 	}
@@ -166,7 +160,7 @@ func readReparseLinkAt(dirfd syscall.Handle, name string) (string, error) {
 	}
 	objAttrs.Length = uint32(unsafe.Sizeof(*objAttrs))
 	var h syscall.Handle
-	err = windows.NtCreateFile(
+	windows.NtCreateFile(
 		&h,
 		windows.FILE_GENERIC_READ,
 		objAttrs,
@@ -178,10 +172,7 @@ func readReparseLinkAt(dirfd syscall.Handle, name string) (string, error) {
 		windows.FILE_SYNCHRONOUS_IO_NONALERT|windows.FILE_OPEN_REPARSE_POINT,
 		nil,
 		0,
-	)
-	if err != nil {
-		return "", err
-	}
+	)!
 	defer syscall.CloseHandle(h)
 	return readReparseLinkHandle(h)
 }
@@ -219,20 +210,11 @@ func rootStat(r *Root, name string, lstat bool) (FileInfo, error) {
 		flags = doInRootAlwaysResolveTerminalSlash
 	}
 	fi, err := doInRoot(r, name, flags, nil, func(parent syscall.Handle, n string, endsInSlash bool) (FileInfo, error) {
-		fd, err := openat(parent, n, windows.O_FILE_FLAG_OPEN_REPARSE_POINT, 0)
-		if err != nil {
-			return nil, err
-		}
+		fd := openat(parent, n, windows.O_FILE_FLAG_OPEN_REPARSE_POINT, 0)!
 		defer syscall.CloseHandle(fd)
-		fi, err := statHandle(name, fd)
-		if err != nil {
-			return nil, err
-		}
+		fi := statHandle(name, fd)!
 		if !lstat && fi.(*fileStat).isReparseTagNameSurrogate() {
-			link, err := readReparseLinkHandle(fd)
-			if err != nil {
-				return nil, err
-			}
+			link := readReparseLinkHandle(fd)!
 			return nil, errSymlink(link)
 		}
 		return fi, nil
@@ -311,16 +293,11 @@ func chmodat(parent syscall.Handle, name string, mode FileMode) error {
 	//                 return errSymlink(link)
 	//         }
 	//     }
-	h, err := windows.Openat(parent, name, syscall.O_CLOEXEC|windows.O_FILE_FLAG_OPEN_REPARSE_POINT|windows.O_WRITE_ATTRS, 0)
-	if err != nil {
-		return err
-	}
+	h := windows.Openat(parent, name, syscall.O_CLOEXEC|windows.O_FILE_FLAG_OPEN_REPARSE_POINT|windows.O_WRITE_ATTRS, 0)!
 	defer syscall.CloseHandle(h)
 
 	var d syscall.ByHandleFileInformation
-	if err := syscall.GetFileInformationByHandle(h, &d); err != nil {
-		return err
-	}
+	syscall.GetFileInformationByHandle(h, &d)!
 	attrs := d.FileAttributes
 
 	if mode&syscall.S_IWRITE != 0 {
@@ -404,25 +381,15 @@ func checkSymlink(parent syscall.Handle, name string, origError error) error {
 }
 
 func readlinkat(dirfd syscall.Handle, name string) (string, error) {
-	fd, err := openat(dirfd, name, windows.O_FILE_FLAG_OPEN_REPARSE_POINT, 0)
-	if err != nil {
-		return "", err
-	}
+	fd := openat(dirfd, name, windows.O_FILE_FLAG_OPEN_REPARSE_POINT, 0)!
 	defer syscall.CloseHandle(fd)
 	return readReparseLinkHandle(fd)
 }
 
 func lstatat(parent syscall.Handle, name string) (FileInfo, error) {
-	fd, err := openat(parent, name, windows.O_FILE_FLAG_OPEN_REPARSE_POINT, 0)
-	if err != nil {
-		return nil, err
-	}
+	fd := openat(parent, name, windows.O_FILE_FLAG_OPEN_REPARSE_POINT, 0)!
 	defer syscall.CloseHandle(fd)
-	fi, err := statHandle(name, fd)
-	if err != nil {
-		return nil, err
-	}
-	return fi, nil
+	return statHandle(name, fd)!, nil
 }
 
 // isLink reports whether fi is a symlink or other surrogate reparse point (such as a junction).

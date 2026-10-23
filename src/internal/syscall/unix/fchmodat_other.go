@@ -12,10 +12,7 @@ import (
 )
 
 func Fchmodat(dirfd int, path string, mode uint32, flags int) error {
-	p, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return err
-	}
+	p := syscall.BytePtrFromString(path)!
 	_, _, errno := syscall.Syscall6(fchmodatTrap,
 		uintptr(dirfd),
 		uintptr(unsafe.Pointer(p)),

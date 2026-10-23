@@ -180,9 +180,7 @@ func Faccessat(dirfd int, path string, mode uint32, flags int) (err error) {
 	}
 
 	var st Stat_t
-	if err := fstatat(dirfd, path, &st, flags&_AT_SYMLINK_NOFOLLOW); err != nil {
-		return err
-	}
+	fstatat(dirfd, path, &st, flags&_AT_SYMLINK_NOFOLLOW)!
 
 	mode &= 7
 	if mode == 0 {
@@ -709,9 +707,7 @@ func Accept4(fd int, flags int) (nfd int, sa Sockaddr, err error) {
 func Getsockname(fd int) (sa Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	var len _Socklen = SizeofSockaddrAny
-	if err = getsockname(fd, &rsa, &len); err != nil {
-		return
-	}
+	getsockname(fd, &rsa, &len)!
 	return anyToSockaddr(&rsa)
 }
 
@@ -1032,10 +1028,7 @@ func Mount(source string, target string, fstype string, flags uintptr, data stri
 	if data == "" {
 		return mount(source, target, fstype, flags, nil)
 	}
-	datap, err := BytePtrFromString(data)
-	if err != nil {
-		return err
-	}
+	datap := BytePtrFromString(data)!
 	return mount(source, target, fstype, flags, datap)
 }
 

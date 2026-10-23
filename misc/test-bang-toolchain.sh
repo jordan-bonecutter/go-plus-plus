@@ -12,8 +12,13 @@ go 1.26
 EOF
 cat > "$bang_test_dir/main.go" <<'EOF'
 package bangtooling
-import "errors"
+import ("errors"; "net/http")
 var boom = errors.New("boom")
+func ReadHTTP(client *http.Client) error {
+ resp := client.Get("http://localhost/")!
+ defer resp.Body.Close()
+ return nil
+}
 func value(fail bool) (int, error) {
  if fail { return 99, boom }
  return 7, nil
@@ -41,3 +46,20 @@ cd "$bang_test_dir"
 "$bang_root/bin/go" test -coverprofile=coverage.out ./...
 "$bang_root/bin/go" tool cover -func=coverage.out
 "$bang_root/bin/go" test -race ./...
+
+# Propagation counts as an error check; an unchecked response must still warn.
+cat > unchecked.go <<'EOF'
+package bangtooling
+import "net/http"
+func UncheckedHTTP(client *http.Client) error {
+ resp, err := client.Get("http://localhost/")
+ defer resp.Body.Close()
+ return err
+}
+EOF
+if "$bang_root/bin/go" vet ./... >vet.out 2>&1; then
+ cat vet.out
+ echo 'vet missed unchecked HTTP response' >&2
+ exit 1
+fi
+grep -q 'using resp before checking for errors' vet.out

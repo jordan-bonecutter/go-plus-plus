@@ -1023,10 +1023,7 @@ func TestAddressParser(t *testing.T) {
 
 	ap := AddressParser{WordDecoder: &mime.WordDecoder{
 		CharsetReader: func(charset string, input io.Reader) (io.Reader, error) {
-			in, err := io.ReadAll(input)
-			if err != nil {
-				return nil, err
-			}
+			in := io.ReadAll(input)!
 
 			switch charset {
 			case "iso-8859-15":

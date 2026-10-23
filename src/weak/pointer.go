@@ -74,7 +74,7 @@ func Make[T any](ptr *T) Pointer[T] {
 		u = runtime_registerWeakPointer(unsafe.Pointer(ptr))
 	}
 	runtime.KeepAlive(ptr)
-	return Pointer[T]{u: u}
+	return Pointer{u: u}
 }
 
 // Value returns the original pointer used to create the weak pointer.

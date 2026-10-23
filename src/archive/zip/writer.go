@@ -81,9 +81,7 @@ func (w *Writer) SetComment(comment string) error {
 // It does not close the underlying writer.
 func (w *Writer) Close() error {
 	if w.last != nil && !w.last.closed {
-		if err := w.last.close(); err != nil {
-			return err
-		}
+		w.last.close()!
 		w.last = nil
 	}
 	if w.closed {
@@ -152,18 +150,10 @@ func (w *Writer) Close() error {
 		b = b[4:] // skip disk number start and internal file attr (2x uint16)
 		b.uint32(h.ExternalAttrs)
 		b.uint32(uint32(min(h.offset, uint32max)))
-		if _, err := w.cw.Write(buf[:]); err != nil {
-			return err
-		}
-		if _, err := io.WriteString(w.cw, h.Name); err != nil {
-			return err
-		}
-		if _, err := w.cw.Write(h.Extra); err != nil {
-			return err
-		}
-		if _, err := io.WriteString(w.cw, h.Comment); err != nil {
-			return err
-		}
+		w.cw.Write(buf[:])!
+		io.WriteString(w.cw, h.Name)!
+		w.cw.Write(h.Extra)!
+		io.WriteString(w.cw, h.Comment)!
 	}
 	end := w.cw.count
 
@@ -201,9 +191,7 @@ func (w *Writer) Close() error {
 		b.uint64(uint64(end)) // relative offset of the zip64 end of central directory record
 		b.uint32(1)           // total number of disks
 
-		if _, err := w.cw.Write(buf[:]); err != nil {
-			return err
-		}
+		w.cw.Write(buf[:])!
 	}
 
 	// write end record
@@ -216,12 +204,8 @@ func (w *Writer) Close() error {
 	b.uint32(uint32(min(uint32max, size)))    // size of directory
 	b.uint32(uint32(min(uint32max, offset)))  // start of directory
 	b.uint16(uint16(len(w.comment)))          // byte size of EOCD comment
-	if _, err := w.cw.Write(buf[:]); err != nil {
-		return err
-	}
-	if _, err := io.WriteString(w.cw, w.comment); err != nil {
-		return err
-	}
+	w.cw.Write(buf[:])!
+	io.WriteString(w.cw, w.comment)!
 
 	return w.cw.w.(*bufio.Writer).Flush()
 }
@@ -271,9 +255,7 @@ func detectUTF8(s string) (valid, require bool) {
 // CreateHeader and CreateRaw.
 func (w *Writer) prepare(fh *FileHeader) error {
 	if w.last != nil && !w.last.closed {
-		if err := w.last.close(); err != nil {
-			return err
-		}
+		w.last.close()!
 	}
 	if len(w.dir) > 0 && w.dir[len(w.dir)-1].FileHeader == fh {
 		// See https://golang.org/issue/11144 confusion.
@@ -290,9 +272,7 @@ func (w *Writer) prepare(fh *FileHeader) error {
 // The file's contents must be written to the io.Writer before the next
 // call to [Writer.Create], [Writer.CreateHeader], [Writer.CreateRaw], or [Writer.Close].
 func (w *Writer) CreateHeader(fh *FileHeader) (io.Writer, error) {
-	if err := w.prepare(fh); err != nil {
-		return nil, err
-	}
+	w.prepare(fh)!
 
 	// The ZIP format has a sad state of affairs regarding character encoding.
 	// Officially, the name and comment fields are supposed to be encoded
@@ -396,9 +376,7 @@ func (w *Writer) CreateHeader(fh *FileHeader) (io.Writer, error) {
 		ow = fw
 	}
 	w.dir = append(w.dir, h)
-	if err := writeHeader(w.cw, h); err != nil {
-		return nil, err
-	}
+	writeHeader(w.cw, h)!
 	// If we're creating a directory, fw is nil.
 	w.last = fw
 	return ow, nil
@@ -473,18 +451,10 @@ func writeHeader(w io.Writer, h *header) error {
 	}
 	b.uint16(uint16(len(h.Name)))
 	b.uint16(uint16(len(h.Extra) + len(zip64ExtraInfo)))
-	if _, err := w.Write(buf[:]); err != nil {
-		return err
-	}
-	if _, err := io.WriteString(w, h.Name); err != nil {
-		return err
-	}
-	if _, err := w.Write(h.Extra); err != nil {
-		return err
-	}
-	if _, err := w.Write(zip64ExtraInfo); err != nil {
-		return err
-	}
+	w.Write(buf[:])!
+	io.WriteString(w, h.Name)!
+	w.Write(h.Extra)!
+	w.Write(zip64ExtraInfo)!
 	return nil
 }
 
@@ -499,9 +469,7 @@ func writeHeader(w io.Writer, h *header) error {
 // [FileHeader] in a [File] obtained from a [Reader] created from in-memory data,
 // then w will refer to all of that memory.
 func (w *Writer) CreateRaw(fh *FileHeader) (io.Writer, error) {
-	if err := w.prepare(fh); err != nil {
-		return nil, err
-	}
+	w.prepare(fh)!
 
 	fh.CompressedSize = uint32(min(fh.CompressedSize64, uint32max))
 	fh.UncompressedSize = uint32(min(fh.UncompressedSize64, uint32max))
@@ -512,9 +480,7 @@ func (w *Writer) CreateRaw(fh *FileHeader) (io.Writer, error) {
 		raw:        true,
 	}
 	w.dir = append(w.dir, h)
-	if err := writeHeader(w.cw, h); err != nil {
-		return nil, err
-	}
+	writeHeader(w.cw, h)!
 
 	if strings.HasSuffix(fh.Name, "/") {
 		w.last = nil
@@ -647,9 +613,7 @@ func (w *fileWriter) close() error {
 	if w.raw {
 		return w.writeDataDescriptor()
 	}
-	if err := w.comp.Close(); err != nil {
-		return err
-	}
+	w.comp.Close()!
 
 	// update FileHeader
 	fh := w.header.FileHeader

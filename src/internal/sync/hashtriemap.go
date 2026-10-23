@@ -547,7 +547,7 @@ type indirect[K comparable, V any] struct {
 }
 
 func newIndirectNode[K comparable, V any](parent *indirect[K, V]) *indirect[K, V] {
-	return &indirect[K, V]{node: node[K, V]{isEntry: false}, parent: parent}
+	return &indirect{node: node{isEntry: false}, parent: parent}
 }
 
 func (i *indirect[K, V]) empty() bool {
@@ -569,8 +569,8 @@ type entry[K comparable, V any] struct {
 }
 
 func newEntryNode[K comparable, V any](key K, value V) *entry[K, V] {
-	return &entry[K, V]{
-		node:  node[K, V]{isEntry: true},
+	return &entry{
+		node:  node{isEntry: true},
 		key:   key,
 		value: value,
 	}

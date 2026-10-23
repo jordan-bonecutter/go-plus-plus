@@ -30,10 +30,7 @@ func ctxDriverExec(ctx context.Context, execerCtx driver.ExecerContext, execer d
 	if execerCtx != nil {
 		return execerCtx.ExecContext(ctx, query, nvdargs)
 	}
-	dargs, err := namedValueToValue(nvdargs)
-	if err != nil {
-		return nil, err
-	}
+	dargs := namedValueToValue(nvdargs)!
 
 	select {
 	default:
@@ -47,10 +44,7 @@ func ctxDriverQuery(ctx context.Context, queryerCtx driver.QueryerContext, query
 	if queryerCtx != nil {
 		return queryerCtx.QueryContext(ctx, query, nvdargs)
 	}
-	dargs, err := namedValueToValue(nvdargs)
-	if err != nil {
-		return nil, err
-	}
+	dargs := namedValueToValue(nvdargs)!
 
 	select {
 	default:
@@ -64,10 +58,7 @@ func ctxDriverStmtExec(ctx context.Context, si driver.Stmt, nvdargs []driver.Nam
 	if siCtx, is := si.(driver.StmtExecContext); is {
 		return siCtx.ExecContext(ctx, nvdargs)
 	}
-	dargs, err := namedValueToValue(nvdargs)
-	if err != nil {
-		return nil, err
-	}
+	dargs := namedValueToValue(nvdargs)!
 
 	select {
 	default:
@@ -81,10 +72,7 @@ func ctxDriverStmtQuery(ctx context.Context, si driver.Stmt, nvdargs []driver.Na
 	if siCtx, is := si.(driver.StmtQueryContext); is {
 		return siCtx.QueryContext(ctx, nvdargs)
 	}
-	dargs, err := namedValueToValue(nvdargs)
-	if err != nil {
-		return nil, err
-	}
+	dargs := namedValueToValue(nvdargs)!
 
 	select {
 	default:

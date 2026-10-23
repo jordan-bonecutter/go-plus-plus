@@ -297,10 +297,7 @@ func (fs *fileStat) loadFileId() error {
 	} else {
 		path = fs.path
 	}
-	pathp, err := syscall.UTF16PtrFromString(path)
-	if err != nil {
-		return err
-	}
+	pathp := syscall.UTF16PtrFromString(path)!
 
 	// Per https://learn.microsoft.com/en-us/windows/win32/fileio/reparse-points-and-file-operations,
 	// “Applications that use the CreateFile function should specify the
@@ -318,16 +315,10 @@ func (fs *fileStat) loadFileId() error {
 	// resolving symlink reparse points again here.
 	attrs := uint32(syscall.FILE_FLAG_BACKUP_SEMANTICS | syscall.FILE_FLAG_OPEN_REPARSE_POINT)
 
-	h, err := syscall.CreateFile(pathp, 0, 0, nil, syscall.OPEN_EXISTING, attrs, 0)
-	if err != nil {
-		return err
-	}
+	h := syscall.CreateFile(pathp, 0, 0, nil, syscall.OPEN_EXISTING, attrs, 0)!
 	defer syscall.CloseHandle(h)
 	var i syscall.ByHandleFileInformation
-	err = syscall.GetFileInformationByHandle(h, &i)
-	if err != nil {
-		return err
-	}
+	syscall.GetFileInformationByHandle(h, &i)!
 	fs.path = ""
 	fs.vol = i.VolumeSerialNumber
 	fs.idxhi = i.FileIndexHigh

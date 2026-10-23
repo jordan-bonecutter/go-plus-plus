@@ -53,10 +53,7 @@ func CollectPods(dirs []string, warn bool) ([]Pod, error) {
 	files := []string{}
 	dirIndices := []int{}
 	for k, dir := range dirs {
-		dents, err := os.ReadDir(dir)
-		if err != nil {
-			return nil, err
-		}
+		dents := os.ReadDir(dir)!
 		for _, e := range dents {
 			if e.IsDir() {
 				continue

@@ -100,10 +100,7 @@ func hasGoexperiment(s *script.State, value string) (bool, error) {
 	GOOS, _ := s.LookupEnv("GOOS")
 	GOARCH, _ := s.LookupEnv("GOARCH")
 	goexp, _ := s.LookupEnv("GOEXPERIMENT")
-	flags, err := buildcfg.ParseGOEXPERIMENT(GOOS, GOARCH, goexp)
-	if err != nil {
-		return false, err
-	}
+	flags := buildcfg.ParseGOEXPERIMENT(GOOS, GOARCH, goexp)!
 	for _, exp := range flags.All() {
 		if value == exp {
 			return true, nil

@@ -112,14 +112,8 @@ func TestRootConsistencyChown(t *testing.T) {
 				chown = r.Chown
 				lstat = r.Lstat
 			}
-			err := chown(path, -1, gid)
-			if err != nil {
-				return "", err
-			}
-			fi, err := lstat(path)
-			if err != nil {
-				return "", err
-			}
+			chown(path, -1, gid)!
+			fi := lstat(path)!
 			sys := fi.Sys().(*syscall.Stat_t)
 			return fmt.Sprintf("%v %v", sys.Uid, sys.Gid), nil
 		})
@@ -148,14 +142,8 @@ func TestRootConsistencyLchown(t *testing.T) {
 				lchown = r.Lchown
 				lstat = r.Lstat
 			}
-			err := lchown(path, -1, gid)
-			if err != nil {
-				return "", err
-			}
-			fi, err := lstat(path)
-			if err != nil {
-				return "", err
-			}
+			lchown(path, -1, gid)!
+			fi := lstat(path)!
 			sys := fi.Sys().(*syscall.Stat_t)
 			return fmt.Sprintf("%v %v", sys.Uid, sys.Gid), nil
 		})

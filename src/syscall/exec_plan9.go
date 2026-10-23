@@ -562,14 +562,8 @@ func Exec(argv0 string, argv []string, envv []string) (err error) {
 		}
 	}
 
-	argv0p, err := BytePtrFromString(argv0)
-	if err != nil {
-		return err
-	}
-	argvp, err := SlicePtrFromStrings(argv)
-	if err != nil {
-		return err
-	}
+	argv0p := BytePtrFromString(argv0)!
+	argvp := SlicePtrFromStrings(argv)!
 	_, _, e1 := Syscall(SYS_EXEC,
 		uintptr(unsafe.Pointer(argv0p)),
 		uintptr(unsafe.Pointer(&argvp[0])),

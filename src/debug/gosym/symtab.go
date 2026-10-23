@@ -580,10 +580,7 @@ func (t *Table) LineToPC(file string, line int) (pc uint64, fn *Func, err error)
 		return pc, t.PCToFunc(pc), nil
 	}
 
-	abs, err := obj.alineFromLine(file, line)
-	if err != nil {
-		return
-	}
+	abs := obj.alineFromLine(file, line)!
 	for i := range obj.Funcs {
 		f := &obj.Funcs[i]
 		pc := f.LineTable.LineToPC(abs, f.End)

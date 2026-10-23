@@ -16,10 +16,7 @@ func interfaceMessages(ifindex int) ([]routebsd.Message, error) {
 // interfaceMulticastAddrTable returns addresses for a specific
 // interface.
 func interfaceMulticastAddrTable(ifi *Interface) ([]Addr, error) {
-	msgs, err := routebsd.FetchRIBMessages(syscall.NET_RT_IFMALIST, ifi.Index)
-	if err != nil {
-		return nil, err
-	}
+	msgs := routebsd.FetchRIBMessages(syscall.NET_RT_IFMALIST, ifi.Index)!
 	ifmat := make([]Addr, 0, len(msgs))
 	for _, m := range msgs {
 		switch m := m.(type) {

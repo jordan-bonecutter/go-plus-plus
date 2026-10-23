@@ -40,12 +40,8 @@ func ProcessCoverTestDir(dir string, cfile string, cm string, cpkg string, w io.
 		// contains test code but no functions (which is fine). In this
 		// case there is no need to emit anything.
 	} else {
-		if err := emitMetaDataToDirectory(dir, ml); err != nil {
-			return err
-		}
-		if err := emitCounterDataToDirectory(dir); err != nil {
-			return err
-		}
+		emitMetaDataToDirectory(dir, ml)!
+		emitCounterDataToDirectory(dir)!
 	}
 
 	// Collect pods from test run. For the majority of cases we would
@@ -90,28 +86,20 @@ func ProcessCoverTestDir(dir string, cfile string, cm string, cpkg string, w io.
 		if !strings.Contains(p.MetaFile, hashstring) {
 			continue
 		}
-		if err := ts.processPod(p, importpaths); err != nil {
-			return err
-		}
+		ts.processPod(p, importpaths)!
 	}
 
 	metafilespath := filepath.Join(dir, coverage.MetaFilesFileName)
 	if _, err := os.Stat(metafilespath); err == nil {
-		if err := ts.readAuxMetaFiles(metafilespath, importpaths); err != nil {
-			return err
-		}
+		ts.readAuxMetaFiles(metafilespath, importpaths)!
 	}
 
 	// Emit percent.
-	if err := ts.cf.EmitPercent(w, selpkgs, cpkg, true, true); err != nil {
-		return err
-	}
+	ts.cf.EmitPercent(w, selpkgs, cpkg, true, true)!
 
 	// Emit text output.
 	if tf != nil {
-		if err := ts.cf.EmitTextual(selpkgs, tf); err != nil {
-			return err
-		}
+		ts.cf.EmitTextual(selpkgs, tf)!
 		tfClosed = true
 		if err := tf.Close(); err != nil {
 			return fmt.Errorf("closing %s: %v", cfile, err)
@@ -148,9 +136,7 @@ func (ts *tstate) processPod(p pods.Pod, importpaths map[string]struct{}) error 
 		return fmt.Errorf("internal error: counter mode clash: %q from test harness, %q from data file %s", ts.cmode.String(), newmode.String(), p.MetaFile)
 	}
 	newgran := mfr.CounterGranularity()
-	if err := ts.cm.SetModeAndGranularity(p.MetaFile, cmode, newgran); err != nil {
-		return err
-	}
+	ts.cm.SetModeAndGranularity(p.MetaFile, cmode, newgran)!
 
 	// A map to store counter data, indexed by pkgid/fnid tuple.
 	pmm := make(map[pkfunc][]uint32)
@@ -194,9 +180,7 @@ func (ts *tstate) processPod(p pods.Pod, importpaths map[string]struct{}) error 
 
 	// Read counter data files.
 	for _, cdf := range p.CounterDataFiles {
-		if err := readcdf(cdf); err != nil {
-			return err
-		}
+		readcdf(cdf)!
 	}
 
 	// Visit meta-data file.
@@ -265,9 +249,7 @@ func (ts *tstate) readAuxMetaFiles(metafiles string, importpaths map[string]stru
 		}
 		var pod pods.Pod
 		pod.MetaFile = mfc.MetaFileFragments[i]
-		if err := ts.processPod(pod, importpaths); err != nil {
-			return err
-		}
+		ts.processPod(pod, importpaths)!
 	}
 	return nil
 }

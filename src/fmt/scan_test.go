@@ -106,14 +106,9 @@ type IntString struct {
 }
 
 func (s *IntString) Scan(state ScanState, verb rune) error {
-	if _, err := Fscan(state, &s.i); err != nil {
-		return err
-	}
+	Fscan(state, &s.i)!
 
-	tok, err := state.Token(true, nil)
-	if err != nil {
-		return err
-	}
+	tok := state.Token(true, nil)!
 	s.s = string(tok)
 	return nil
 }
@@ -900,10 +895,7 @@ type TwoLines string
 func (t *TwoLines) Scan(state ScanState, verb rune) error {
 	chars := make([]rune, 0, 100)
 	for nlCount := 0; nlCount < 2; {
-		c, _, err := state.ReadRune()
-		if err != nil {
-			return err
-		}
+		c, _ := state.ReadRune()!
 		chars = append(chars, c)
 		if c == '\n' {
 			nlCount++

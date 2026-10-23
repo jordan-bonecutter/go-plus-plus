@@ -67,17 +67,9 @@ func (p *P256Point) SetBytes(b []byte) (*P256Point, error) {
 
 	// Uncompressed form.
 	case len(b) == p256UncompressedLength && b[0] == 4:
-		x, err := new(fiat.P256Element).SetBytes(b[1 : 1+p256ElementLength])
-		if err != nil {
-			return nil, err
-		}
-		y, err := new(fiat.P256Element).SetBytes(b[1+p256ElementLength:])
-		if err != nil {
-			return nil, err
-		}
-		if err := p256CheckOnCurve(x, y); err != nil {
-			return nil, err
-		}
+		x := new(fiat.P256Element).SetBytes(b[1 : 1+p256ElementLength])!
+		y := new(fiat.P256Element).SetBytes(b[1+p256ElementLength:])!
+		p256CheckOnCurve(x, y)!
 		p.x.Set(x)
 		p.y.Set(y)
 		p.z.One()
@@ -85,10 +77,7 @@ func (p *P256Point) SetBytes(b []byte) (*P256Point, error) {
 
 	// Compressed form.
 	case len(b) == p256CompressedLength && (b[0] == 2 || b[0] == 3):
-		x, err := new(fiat.P256Element).SetBytes(b[1:])
-		if err != nil {
-			return nil, err
-		}
+		x := new(fiat.P256Element).SetBytes(b[1:])!
 
 		// y² = x³ - 3x + b
 		y := p256Polynomial(new(fiat.P256Element), x)
@@ -487,10 +476,7 @@ func boothW5(in uint64) (uint8, int) {
 // and returns r. If scalar is not 32 bytes long, ScalarMult returns an error
 // and the receiver is unchanged.
 func (p *P256Point) ScalarMult(q *P256Point, scalar []byte) (*P256Point, error) {
-	s, err := new(p256OrdElement).SetBytes(scalar)
-	if err != nil {
-		return nil, err
-	}
+	s := new(p256OrdElement).SetBytes(scalar)!
 
 	// Start scanning the window from the most significant bits. We move by
 	// 5 bits at a time and need to finish at -1, so -1 + 5 * 51 = 254.
@@ -596,10 +582,7 @@ func (p *P256Point) ScalarBaseMult(scalar []byte) (*P256Point, error) {
 	// "pre-doubled" for each iteration, so instead of doubling we move to the
 	// next table at each iteration.
 
-	s, err := new(p256OrdElement).SetBytes(scalar)
-	if err != nil {
-		return nil, err
-	}
+	s := new(p256OrdElement).SetBytes(scalar)!
 
 	// Start scanning the window from the most significant bits. We move by
 	// 6 bits at a time and need to finish at -1, so -1 + 6 * 42 = 251.

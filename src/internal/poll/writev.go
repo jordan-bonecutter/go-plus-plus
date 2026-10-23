@@ -14,13 +14,9 @@ import (
 
 // Writev wraps the writev system call.
 func (fd *FD) Writev(v *[][]byte) (int64, error) {
-	if err := fd.writeLock(); err != nil {
-		return 0, err
-	}
+	fd.writeLock()!
 	defer fd.writeUnlock()
-	if err := fd.pd.prepareWrite(fd.isFile); err != nil {
-		return 0, err
-	}
+	fd.pd.prepareWrite(fd.isFile)!
 
 	var iovecs []syscall.Iovec
 	if fd.iovecs != nil {

@@ -15,9 +15,7 @@ func read(b []byte) error {
 		if size > 256 {
 			size = 256
 		}
-		if err := unix.Arandom(b[:size]); err != nil {
-			return err
-		}
+		unix.Arandom(b[:size])!
 		b = b[size:]
 	}
 	return nil

@@ -587,9 +587,7 @@ func (e *Engine) runCommand(s *State, cmd *command, impl Cmd) error {
 	if stderr != "" {
 		s.Logf("[stderr]\n%s", stderr)
 	}
-	if cmdErr := checkStatus(cmd, waitErr); cmdErr != nil {
-		return cmdErr
-	}
+	checkStatus(cmd, waitErr)!
 	if waitErr != nil {
 		// waitErr was expected (by cmd.want), so log it instead of returning it.
 		s.Logf("[%v]\n", waitErr)
@@ -660,23 +658,14 @@ func (e *Engine) ListCmds(w io.Writer, verbose bool, names ...string) error {
 			suffix = " [&]"
 		}
 
-		_, err := fmt.Fprintf(w, "%s %s%s\n\t%s\n", name, usage.Args, suffix, usage.Summary)
-		if err != nil {
-			return err
-		}
+		fmt.Fprintf(w, "%s %s%s\n\t%s\n", name, usage.Args, suffix, usage.Summary)!
 
 		if verbose {
-			if _, err := io.WriteString(w, "\n"); err != nil {
-				return err
-			}
+			io.WriteString(w, "\n")!
 			for _, line := range usage.Detail {
-				if err := wrapLine(w, line, 60, "\t"); err != nil {
-					return err
-				}
+				wrapLine(w, line, 60, "\t")!
 			}
-			if _, err := io.WriteString(w, "\n"); err != nil {
-				return err
-			}
+			io.WriteString(w, "\n")!
 		}
 	}
 
@@ -701,9 +690,7 @@ func wrapLine(w io.Writer, line string, cols int, indent string) error {
 			break
 		}
 
-		if _, err := fmt.Fprintf(w, "%s%s\n", indent, line[:bestSpace]); err != nil {
-			return err
-		}
+		fmt.Fprintf(w, "%s%s\n", indent, line[:bestSpace])!
 		line = line[bestSpace+1:]
 	}
 
@@ -745,10 +732,7 @@ func (e *Engine) ListConds(w io.Writer, s *State, tags ...string) error {
 					activeStr = " (active)"
 				}
 			}
-			_, err := fmt.Fprintf(w, "[%s]%s\n\t%s\n", tag, activeStr, usage.Summary)
-			if err != nil {
-				return err
-			}
+			fmt.Fprintf(w, "[%s]%s\n\t%s\n", tag, activeStr, usage.Summary)!
 			continue
 		}
 

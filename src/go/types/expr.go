@@ -126,8 +126,16 @@ var op2str2 = [...]string{
 }
 
 // The unary expression e may be nil. It's passed in for better error messages only.
-func (check *Checker) unary(x *operand, e *ast.UnaryExpr) {
-	check.expr(nil, x, e.X)
+func (check *Checker) unary(T *target, x *operand, e *ast.UnaryExpr) {
+	var operandTarget *target
+	if e.Op == token.AND && T != nil {
+		if literal, ok := e.X.(*ast.CompositeLit); ok && literal.Type != nil {
+			if p, ok := T.typ.Underlying().(*Pointer); ok {
+				operandTarget = newTarget(p.base, "addressed value")
+			}
+		}
+	}
+	check.expr(operandTarget, x, e.X)
 	if !x.isValid() {
 		return
 	}
@@ -1226,7 +1234,7 @@ func (check *Checker) exprInternal(T *target, x *operand, e ast.Expr) exprKind {
 		}
 
 	case *ast.UnaryExpr:
-		check.unary(x, e)
+		check.unary(T, x, e)
 		if !x.isValid() {
 			goto Error
 		}

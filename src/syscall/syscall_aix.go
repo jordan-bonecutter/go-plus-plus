@@ -319,9 +319,7 @@ func (sa *SockaddrUnix) sockaddr() (unsafe.Pointer, _Socklen, error) {
 func Getsockname(fd int) (sa Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	var len _Socklen = SizeofSockaddrAny
-	if err = getsockname(fd, &rsa, &len); err != nil {
-		return
-	}
+	getsockname(fd, &rsa, &len)!
 	return anyToSockaddr(&rsa)
 }
 
@@ -429,10 +427,7 @@ func anyToSockaddr(rsa *RawSockaddrAny) (Sockaddr, error) {
 	case AF_UNIX:
 		pp := (*RawSockaddrUnix)(unsafe.Pointer(rsa))
 		sa := new(SockaddrUnix)
-		n, err := pp.getLen()
-		if err != nil {
-			return nil, err
-		}
+		n := pp.getLen()!
 		sa.Name = string(unsafe.Slice((*byte)(unsafe.Pointer(&pp.Path[0])), n))
 		return sa, nil
 

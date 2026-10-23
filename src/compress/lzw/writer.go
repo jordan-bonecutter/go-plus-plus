@@ -66,9 +66,7 @@ func (w *Writer) writeLSB(c uint32) error {
 	w.bits |= c << w.nBits
 	w.nBits += w.width
 	for w.nBits >= 8 {
-		if err := w.w.WriteByte(uint8(w.bits)); err != nil {
-			return err
-		}
+		w.w.WriteByte(uint8(w.bits))!
 		w.bits >>= 8
 		w.nBits -= 8
 	}
@@ -80,9 +78,7 @@ func (w *Writer) writeMSB(c uint32) error {
 	w.bits |= c << (32 - w.width - w.nBits)
 	w.nBits += w.width
 	for w.nBits >= 8 {
-		if err := w.w.WriteByte(uint8(w.bits >> 24)); err != nil {
-			return err
-		}
+		w.w.WriteByte(uint8(w.bits >> 24))!
 		w.bits <<= 8
 		w.nBits -= 8
 	}
@@ -104,9 +100,7 @@ func (w *Writer) incHi() error {
 	}
 	if w.hi == maxCode {
 		clear := uint32(1) << w.litWidth
-		if err := w.write(w, clear); err != nil {
-			return err
-		}
+		w.write(w, clear)!
 		w.width = w.litWidth + 1
 		w.hi = clear + 1
 		w.overflow = clear << 1
@@ -208,32 +202,24 @@ func (w *Writer) Close() error {
 	w.err = errClosed
 	// Write the savedCode if valid.
 	if w.savedCode != invalidCode {
-		if err := w.write(w, w.savedCode); err != nil {
-			return err
-		}
+		w.write(w, w.savedCode)!
 		if err := w.incHi(); err != nil && err != errOutOfCodes {
 			return err
 		}
 	} else {
 		// Write the starting clear code, as w.Write did not.
 		clear := uint32(1) << w.litWidth
-		if err := w.write(w, clear); err != nil {
-			return err
-		}
+		w.write(w, clear)!
 	}
 	// Write the eof code.
 	eof := uint32(1)<<w.litWidth + 1
-	if err := w.write(w, eof); err != nil {
-		return err
-	}
+	w.write(w, eof)!
 	// Write the final bits.
 	if w.nBits > 0 {
 		if w.order == MSB {
 			w.bits >>= 24
 		}
-		if err := w.w.WriteByte(uint8(w.bits)); err != nil {
-			return err
-		}
+		w.w.WriteByte(uint8(w.bits))!
 	}
 	err := w.w.Flush()
 	w.w = nil

@@ -25,10 +25,7 @@ type Reader struct {
 // NewReader creates a new reader for the trace wire format.
 func NewReader(r io.Reader) (*Reader, error) {
 	br := bufio.NewReader(r)
-	v, err := version.ReadHeader(br)
-	if err != nil {
-		return nil, err
-	}
+	v := version.ReadHeader(br)!
 	return &Reader{r: br, v: v, specs: v.Specs()}, nil
 }
 
@@ -59,10 +56,7 @@ func (r *Reader) ReadEvent() (Event, error) {
 		len := int(args[1])
 		for i := 0; i < len; i++ {
 			// Each stack frame has four args: pc, func ID, file ID, line number.
-			frame, err := r.readArgs(4)
-			if err != nil {
-				return Event{}, err
-			}
+			frame := r.readArgs(4)!
 			args = append(args, frame...)
 		}
 	}
@@ -84,26 +78,17 @@ func (r *Reader) ReadEvent() (Event, error) {
 func (r *Reader) readArgs(n int) ([]uint64, error) {
 	var args []uint64
 	for i := 0; i < n; i++ {
-		val, err := binary.ReadUvarint(r.r)
-		if err != nil {
-			return nil, err
-		}
+		val := binary.ReadUvarint(r.r)!
 		args = append(args, val)
 	}
 	return args, nil
 }
 
 func (r *Reader) readData() ([]byte, error) {
-	len, err := binary.ReadUvarint(r.r)
-	if err != nil {
-		return nil, err
-	}
+	len := binary.ReadUvarint(r.r)!
 	var data []byte
 	for i := 0; i < int(len); i++ {
-		b, err := r.r.ReadByte()
-		if err != nil {
-			return nil, err
-		}
+		b := r.r.ReadByte()!
 		data = append(data, b)
 	}
 	return data, nil

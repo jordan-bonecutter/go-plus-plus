@@ -23,10 +23,7 @@ func (wcc *weakCertCache) newCert(der []byte) (*x509.Certificate, error) {
 		}
 	}
 
-	cert, err := x509.ParseCertificate(der)
-	if err != nil {
-		return nil, err
-	}
+	cert := x509.ParseCertificate(der)!
 
 	wp := weak.Make(cert)
 	if entry, loaded := wcc.LoadOrStore(string(der), wp); !loaded {

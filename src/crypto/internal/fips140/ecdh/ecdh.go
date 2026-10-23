@@ -69,7 +69,7 @@ type Point[P any] interface {
 }
 
 func P224() *Curve[*nistec.P224Point] {
-	return &Curve[*nistec.P224Point]{
+	return &Curve{
 		curve:    p224,
 		newPoint: nistec.NewP224Point,
 		N:        p224Order,
@@ -84,7 +84,7 @@ var p224Order = []byte{
 }
 
 func P256() *Curve[*nistec.P256Point] {
-	return &Curve[*nistec.P256Point]{
+	return &Curve{
 		curve:    p256,
 		newPoint: nistec.NewP256Point,
 		N:        p256Order,
@@ -99,7 +99,7 @@ var p256Order = []byte{
 }
 
 func P384() *Curve[*nistec.P384Point] {
-	return &Curve[*nistec.P384Point]{
+	return &Curve{
 		curve:    p384,
 		newPoint: nistec.NewP384Point,
 		N:        p384Order,
@@ -116,7 +116,7 @@ var p384Order = []byte{
 }
 
 func P521() *Curve[*nistec.P521Point] {
-	return &Curve[*nistec.P521Point]{
+	return &Curve{
 		curve:    p521,
 		newPoint: nistec.NewP521Point,
 		N:        p521Order,
@@ -142,9 +142,7 @@ func GenerateKey[P Point[P]](c *Curve[P], rand io.Reader) (*PrivateKey, error) {
 
 	for {
 		key := make([]byte, len(c.N))
-		if err := drbg.ReadWithReader(rand, key); err != nil {
-			return nil, err
-		}
+		drbg.ReadWithReader(rand, key)!
 		// In tests, rand will return all zeros and NewPrivateKey will reject
 		// the zero key as it generates the identity as a public key. This also
 		// makes this function consistent with crypto/elliptic.GenerateKey.
@@ -171,10 +169,7 @@ func GenerateKey[P Point[P]](c *Curve[P], rand io.Reader) (*PrivateKey, error) {
 		// consistent [...], even if the underlying standard does not require a
 		// PCT". So we do it. And make ECDH nearly 50% slower (only) in FIPS mode.
 		fips140.PCT("ECDH PCT", func() error {
-			p1, err := c.newPoint().ScalarBaseMult(privateKey.d)
-			if err != nil {
-				return err
-			}
+			p1 := c.newPoint().ScalarBaseMult(privateKey.d)!
 			if !bytes.Equal(p1.Bytes(), privateKey.pub.q) {
 				return errors.New("crypto/ecdh: public key does not match private key")
 			}
@@ -222,9 +217,7 @@ func NewPublicKey[P Point[P]](c *Curve[P], key []byte) (*PublicKey, error) {
 	// the point is on the curve. Along with the rejection of the point at
 	// infinity (the identity element) above, this fulfills the requirements
 	// of NIST SP 800-56A Rev. 3, Section 5.6.2.3.4.
-	if _, err := c.newPoint().SetBytes(key); err != nil {
-		return nil, err
-	}
+	c.newPoint().SetBytes(key)!
 
 	return &PublicKey{curve: c.curve, q: bytes.Clone(key)}, nil
 }
@@ -253,15 +246,10 @@ func ecdh[P Point[P]](c *Curve[P], k *PrivateKey, peer *PublicKey) ([]byte, erro
 
 	// SetBytes checks that (x, y) are reduced modulo p, and that they are on
 	// the curve, performing Steps 2-3 of Section 5.6.2.3.4.
-	p, err := c.newPoint().SetBytes(peer.q)
-	if err != nil {
-		return nil, err
-	}
+	p := c.newPoint().SetBytes(peer.q)!
 
 	// Compute P according to Section 5.7.1.2.
-	if _, err := p.ScalarMult(p, k.d); err != nil {
-		return nil, err
-	}
+	p.ScalarMult(p, k.d)!
 
 	// BytesX checks that the result is not the identity element, and returns the
 	// x-coordinate of the result, performing Steps 2-5 of Section 5.7.1.2.

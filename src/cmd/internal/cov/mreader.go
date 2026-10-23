@@ -25,10 +25,7 @@ type MReader struct {
 
 func NewMreader(f *os.File) (*MReader, error) {
 	rdr := bio.NewReader(f)
-	fi, err := f.Stat()
-	if err != nil {
-		return nil, err
-	}
+	fi := f.Stat()!
 	r := MReader{
 		f:        f,
 		rdr:      rdr,

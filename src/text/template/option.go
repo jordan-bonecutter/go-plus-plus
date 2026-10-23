@@ -9,13 +9,11 @@ package template
 import "strings"
 
 // missingKeyAction defines how to respond to indexing a map with a key that is not present.
-type missingKeyAction int
-
-const (
-	mapInvalid   missingKeyAction = iota // Return an invalid reflect.Value.
-	mapZeroValue                         // Return the zero value for the map element.
-	mapError                             // Error out
-)
+type missingKeyAction union {
+	Invalid   // Return an invalid reflect.Value.
+	ZeroValue // Return the zero value for the map element.
+	Error     // Error out.
+}
 
 type option struct {
 	missingKey missingKeyAction
@@ -57,13 +55,13 @@ func (t *Template) setOption(opt string) {
 		case "missingkey":
 			switch value {
 			case "invalid", "default":
-				t.option.missingKey = mapInvalid
+				t.option.missingKey = missingKeyAction.Invalid()
 				return
 			case "zero":
-				t.option.missingKey = mapZeroValue
+				t.option.missingKey = missingKeyAction.ZeroValue()
 				return
 			case "error":
-				t.option.missingKey = mapError
+				t.option.missingKey = missingKeyAction.Error()
 				return
 			}
 		}

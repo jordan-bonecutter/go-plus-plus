@@ -38,9 +38,7 @@ func (h *fossilHandler) Handler(dir string, env []string, logger *log.Logger) (h
 
 	cgiPath := db + ".cgi"
 	cgiScript := fmt.Sprintf("#!%s\nrepository: %s\n", h.fossilPath, db)
-	if err := os.WriteFile(cgiPath, []byte(cgiScript), 0755); err != nil {
-		return nil, err
-	}
+	os.WriteFile(cgiPath, []byte(cgiScript), 0755)!
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		if _, err := os.Stat(db); err != nil {

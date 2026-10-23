@@ -21,10 +21,7 @@ const ImplementsGetwd = true
 
 func Getwd() (string, error) {
 	var buf [pathMax]byte
-	_, err := getcwd(buf[:])
-	if err != nil {
-		return "", err
-	}
+	getcwd(buf[:])!
 	n := clen(buf[:])
 	if n < 1 {
 		return "", EINVAL
@@ -298,9 +295,7 @@ func Accept(fd int) (nfd int, sa Sockaddr, err error) {
 func Getsockname(fd int) (sa Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	var len _Socklen = SizeofSockaddrAny
-	if err = getsockname(fd, &rsa, &len); err != nil {
-		return
-	}
+	getsockname(fd, &rsa, &len)!
 	// TODO(jsing): DragonFly has a "bug" (see issue 3349), which should be
 	// reported upstream.
 	if runtime.GOOS == "dragonfly" && rsa.Addr.Family == AF_UNSPEC && rsa.Addr.Len == 0 {

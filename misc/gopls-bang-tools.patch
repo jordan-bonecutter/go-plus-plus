@@ -214,3 +214,8 @@
 @@ -1060 +1060 @@
 -		if strings.HasSuffix(f, ".go") {
 +		if (strings.HasSuffix(f, ".go") || strings.HasSuffix(f, ".go++")) {
+--- a/go/analysis/passes/httpresponse/httpresponse.go
++++ b/go/analysis/passes/httpresponse/httpresponse.go
+@@ -61 +61 @@
+-		if !isHTTPFuncOrMethodOnClient(pass.TypesInfo, call) {
++		if call.Bang.IsValid() || !isHTTPFuncOrMethodOnClient(pass.TypesInfo, call) {

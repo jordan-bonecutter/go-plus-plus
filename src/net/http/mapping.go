@@ -24,7 +24,7 @@ var maxSlice int = 8
 // add adds a key-value pair to the mapping.
 func (h *mapping[K, V]) add(k K, v V) {
 	if h.m == nil && len(h.s) < maxSlice {
-		h.s = append(h.s, entry[K, V]{k, v})
+		h.s = append(h.s, entry{k, v})
 	} else {
 		if h.m == nil {
 			h.m = map[K]V{}

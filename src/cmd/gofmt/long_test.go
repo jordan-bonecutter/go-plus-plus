@@ -34,10 +34,7 @@ var (
 )
 
 func gofmt(fset *token.FileSet, filename string, src *bytes.Buffer) error {
-	f, _, _, err := parse(fset, filename, src.Bytes(), false)
-	if err != nil {
-		return err
-	}
+	f, _, _ := parse(fset, filename, src.Bytes(), false)!
 	ast.SortImports(fset, f)
 	src.Reset()
 	return (&printer.Config{Mode: printerMode, Tabwidth: tabWidth}).Fprint(src, fset, f)

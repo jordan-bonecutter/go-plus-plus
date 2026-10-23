@@ -13,28 +13,16 @@ import (
 
 // Version returns the OS version name/number.
 func Version() (string, error) {
-	sysname, err := syscall.Sysctl("kern.ostype")
-	if err != nil {
-		return "", err
-	}
-	release, err := syscall.Sysctl("kern.osrelease")
-	if err != nil {
-		return "", err
-	}
-	version, err := syscall.Sysctl("kern.version")
-	if err != nil {
-		return "", err
-	}
+	sysname := syscall.Sysctl("kern.ostype")!
+	release := syscall.Sysctl("kern.osrelease")!
+	version := syscall.Sysctl("kern.version")!
 
 	// The version might have newlines or tabs; convert to spaces.
 	version = strings.ReplaceAll(version, "\n", " ")
 	version = strings.ReplaceAll(version, "\t", " ")
 	version = strings.TrimSpace(version)
 
-	machine, err := syscall.Sysctl("hw.machine")
-	if err != nil {
-		return "", err
-	}
+	machine := syscall.Sysctl("hw.machine")!
 
 	ret := sysname + " " + release + " " + version + " " + machine
 	return ret, nil

@@ -102,9 +102,7 @@ func GenerateParameters(params *Parameters, rand io.Reader, sizes ParameterSizes
 
 GeneratePrimes:
 	for {
-		if _, err := io.ReadFull(rand, qBytes); err != nil {
-			return err
-		}
+		io.ReadFull(rand, qBytes)!
 
 		qBytes[len(qBytes)-1] |= 1
 		qBytes[0] |= 0x80
@@ -115,9 +113,7 @@ GeneratePrimes:
 		}
 
 		for i := 0; i < 4*L; i++ {
-			if _, err := io.ReadFull(rand, pBytes); err != nil {
-				return err
-			}
+			io.ReadFull(rand, pBytes)!
 
 			pBytes[len(pBytes)-1] |= 1
 			pBytes[0] |= 0x80
@@ -174,10 +170,7 @@ func GenerateKey(priv *PrivateKey, rand io.Reader) error {
 	xBytes := make([]byte, priv.Q.BitLen()/8)
 
 	for {
-		_, err := io.ReadFull(rand, xBytes)
-		if err != nil {
-			return err
-		}
+		io.ReadFull(rand, xBytes)!
 		x.SetBytes(xBytes)
 		if x.Sign() != 0 && x.Cmp(priv.Q) < 0 {
 			break

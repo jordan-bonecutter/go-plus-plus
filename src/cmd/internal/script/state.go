@@ -51,10 +51,7 @@ type backgroundCmd struct {
 // ${/} and ${:} (for the platform's path and list separators respectively),
 // but does not pass those to subprocesses.
 func NewState(ctx context.Context, workdir string, initialEnv []string) (*State, error) {
-	absWork, err := filepath.Abs(workdir)
-	if err != nil {
-		return nil, err
-	}
+	absWork := filepath.Abs(workdir)!
 
 	ctx, cancel := context.WithCancel(ctx)
 
@@ -165,12 +162,8 @@ func (s *State) ExtractFiles(ar *txtar.Archive) error {
 			return fmt.Errorf("file %#q is outside working directory", f.Name)
 		}
 
-		if err := os.MkdirAll(filepath.Dir(name), 0777); err != nil {
-			return err
-		}
-		if err := os.WriteFile(name, f.Data, 0666); err != nil {
-			return err
-		}
+		os.MkdirAll(filepath.Dir(name), 0777)!
+		os.WriteFile(name, f.Data, 0666)!
 	}
 
 	return nil

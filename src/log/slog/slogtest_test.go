@@ -58,9 +58,7 @@ func parseLines(src []byte, parse func([]byte) (map[string]any, error)) ([]map[s
 
 func parseJSON(bs []byte) (map[string]any, error) {
 	var m map[string]any
-	if err := json.Unmarshal(bs, &m); err != nil {
-		return nil, err
-	}
+	json.Unmarshal(bs, &m)!
 	return m, nil
 }
 

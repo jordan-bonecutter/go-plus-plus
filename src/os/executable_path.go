@@ -34,9 +34,7 @@ func executable() (string, error) {
 		}
 	}
 	if exePath != "" {
-		if err := isExecutable(exePath); err != nil {
-			return "", err
-		}
+		isExecutable(exePath)!
 		return exePath, nil
 	}
 	// Search for executable in $PATH.
@@ -63,10 +61,7 @@ func executable() (string, error) {
 
 // isExecutable returns an error if a given file is not an executable.
 func isExecutable(path string) error {
-	stat, err := Stat(path)
-	if err != nil {
-		return err
-	}
+	stat := Stat(path)!
 	mode := stat.Mode()
 	if !mode.IsRegular() {
 		return ErrPermission

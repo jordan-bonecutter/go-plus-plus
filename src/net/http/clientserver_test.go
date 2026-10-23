@@ -2009,10 +2009,7 @@ func TestClientServerTLSConnWrapper(t *testing.T) {
 		defer server.Close()
 		go server.Serve(&testListener{
 			accept: func() (net.Conn, error) {
-				conn, err := li.Accept()
-				if err != nil {
-					return nil, err
-				}
+				conn := li.Accept()!
 				return &testTLSConn{
 					Conn: conn,
 					state: tls.ConnectionState{

@@ -40,24 +40,15 @@ import (
 //	total:		(statements)			91.9%
 
 func funcOutput(profile, outputFile string) error {
-	profiles, err := cover.ParseProfiles(profile)
-	if err != nil {
-		return err
-	}
+	profiles := cover.ParseProfiles(profile)!
 
-	dirs, err := findPkgs(profiles)
-	if err != nil {
-		return err
-	}
+	dirs := findPkgs(profiles)!
 
 	var out *bufio.Writer
 	if outputFile == "" {
 		out = bufio.NewWriter(os.Stdout)
 	} else {
-		fd, err := os.Create(outputFile)
-		if err != nil {
-			return err
-		}
+		fd := os.Create(outputFile)!
 		defer fd.Close()
 		out = bufio.NewWriter(fd)
 	}
@@ -69,14 +60,8 @@ func funcOutput(profile, outputFile string) error {
 	var total, covered int64
 	for _, profile := range profiles {
 		fn := profile.FileName
-		file, err := findFile(dirs, fn)
-		if err != nil {
-			return err
-		}
-		funcs, err := findFuncs(file)
-		if err != nil {
-			return err
-		}
+		file := findFile(dirs, fn)!
+		funcs := findFuncs(file)!
 		// Now match up functions and profile blocks.
 		for _, f := range funcs {
 			c, t := f.coverage(profile)
@@ -93,10 +78,7 @@ func funcOutput(profile, outputFile string) error {
 // findFuncs parses the file and returns a slice of FuncExtent descriptors.
 func findFuncs(name string) ([]*FuncExtent, error) {
 	fset := token.NewFileSet()
-	parsedFile, err := parser.ParseFile(fset, name, nil, parser.SkipObjectResolution)
-	if err != nil {
-		return nil, err
-	}
+	parsedFile := parser.ParseFile(fset, name, nil, parser.SkipObjectResolution)!
 	visitor := &FuncVisitor{
 		fset:    fset,
 		name:    name,

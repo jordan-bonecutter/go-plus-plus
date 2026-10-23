@@ -83,9 +83,7 @@ type CoordinateFuzzingOpts struct {
 // If a crash occurs, the function will return an error containing information
 // about the crash, which can be reported to the user.
 func CoordinateFuzzing(ctx context.Context, opts CoordinateFuzzingOpts) (err error) {
-	if err := ctx.Err(); err != nil {
-		return err
-	}
+	ctx.Err()!
 	if opts.Log == nil {
 		opts.Log = io.Discard
 	}
@@ -434,19 +432,14 @@ type corpus struct {
 func (c *coordinator) addCorpusEntries(addToCache bool, entries ...CorpusEntry) (bool, error) {
 	noDupes := true
 	for _, e := range entries {
-		data, err := corpusEntryData(e)
-		if err != nil {
-			return false, err
-		}
+		data := corpusEntryData(e)!
 		h := sha256.Sum256(data)
 		if c.corpus.hashes[h] {
 			noDupes = false
 			continue
 		}
 		if addToCache {
-			if err := writeToCorpus(&e, c.opts.CacheDir); err != nil {
-				return false, err
-			}
+			writeToCorpus(&e, c.opts.CacheDir)!
 			// For entries written to disk, we don't hold onto the bytes,
 			// since the corpus would consume a significant amount of
 			// memory.
@@ -672,9 +665,7 @@ func newCoordinator(opts CoordinateFuzzingOpts) (*coordinator, error) {
 		timeLastLog: time.Now(),
 		corpus:      corpus{hashes: make(map[[sha256.Size]byte]bool)},
 	}
-	if err := c.readCache(); err != nil {
-		return nil, err
-	}
+	c.readCache()!
 	if opts.MinimizeLimit > 0 || opts.MinimizeTimeout > 0 {
 		for _, t := range opts.Types {
 			if isMinimizable(t) {
@@ -939,9 +930,7 @@ func (c *coordinator) elapsed() time.Duration {
 // TODO(fuzzing): need a mechanism that can remove values that
 // aren't useful anymore, for example, because they have the wrong type.
 func (c *coordinator) readCache() error {
-	if _, err := c.addCorpusEntries(false, c.opts.Seed...); err != nil {
-		return err
-	}
+	c.addCorpusEntries(false, c.opts.Seed...)!
 	entries, err := ReadCorpus(c.opts.CacheDir, c.opts.Types)
 	if err != nil {
 		if _, ok := err.(*MalformedCorpusError); !ok {
@@ -953,9 +942,7 @@ func (c *coordinator) readCache() error {
 		// indicating the number of files which were skipped because they are
 		// malformed.
 	}
-	if _, err := c.addCorpusEntries(false, entries...); err != nil {
-		return err
-	}
+	c.addCorpusEntries(false, entries...)!
 	return nil
 }
 
@@ -1051,9 +1038,7 @@ func CheckCorpus(vals []any, types []reflect.Type) error {
 func writeToCorpus(entry *CorpusEntry, dir string) (err error) {
 	sum := fmt.Sprintf("%x", sha256.Sum256(entry.Data))[:16]
 	entry.Path = filepath.Join(dir, sum)
-	if err := os.MkdirAll(dir, 0777); err != nil {
-		return err
-	}
+	os.MkdirAll(dir, 0777)!
 	if err := os.WriteFile(entry.Path, entry.Data, 0666); err != nil {
 		os.Remove(entry.Path) // remove partially written file
 		return err

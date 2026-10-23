@@ -131,10 +131,7 @@ func rootOpenDir(parent int, name string) (int, error) {
 
 func rootStat(r *Root, name string, lstat bool) (FileInfo, error) {
 	fi, err := doInRoot(r, name, 0, nil, func(parent sysfdType, n string, endsInSlash bool) (FileInfo, error) {
-		fi, err := lstatatWithName(parent, name, n)
-		if err != nil {
-			return nil, err
-		}
+		fi := lstatatWithName(parent, name, n)!
 		if !lstat && fi.Mode()&ModeSymlink != 0 {
 			return nil, checkSymlink(parent, n, syscall.ELOOP)
 		}
@@ -168,9 +165,7 @@ func rootSymlink(r *Root, oldname, newname string) error {
 // This race condition is unfortunate, but does not permit escaping a root:
 // We may act on the wrong file, but that file will be contained within the root.
 func afterResolvingSymlink(parent int, name string, f func() error) error {
-	if err := checkSymlink(parent, name, nil); err != nil {
-		return err
-	}
+	checkSymlink(parent, name, nil)!
 	return f()
 }
 
@@ -263,9 +258,7 @@ func lstatat(parent int, name string) (FileInfo, error) {
 
 func lstatatWithName(parent int, origName, name string) (FileInfo, error) {
 	var fs fileStat
-	if err := unix.Fstatat(parent, name, &fs.sys, unix.AT_SYMLINK_NOFOLLOW); err != nil {
-		return nil, err
-	}
+	unix.Fstatat(parent, name, &fs.sys, unix.AT_SYMLINK_NOFOLLOW)!
 	fillFileStatFromSys(&fs, origName)
 	return &fs, nil
 }

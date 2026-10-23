@@ -931,9 +931,7 @@ func listStdPkgs(goroot string) ([]string, error) {
 		pkgs = append(pkgs, strings.TrimPrefix(name, "vendor/"))
 		return nil
 	}
-	if err := filepath.WalkDir(src, walkFn); err != nil {
-		return nil, err
-	}
+	filepath.WalkDir(src, walkFn)!
 	return pkgs, nil
 }
 
@@ -980,10 +978,7 @@ func findImports(pkg string) ([]string, error) {
 		vpkg = "vendor/" + pkg
 	}
 	dir := filepath.Join(Default.GOROOT, "src", vpkg)
-	files, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
+	files := os.ReadDir(dir)!
 	var imports []string
 	var haveImport = map[string]bool{}
 	if pkg == "crypto/internal/boring" {

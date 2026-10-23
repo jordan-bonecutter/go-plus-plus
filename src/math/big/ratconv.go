@@ -24,10 +24,7 @@ var _ fmt.Scanner = &ratZero // *Rat must implement fmt.Scanner
 // Scan is a support routine for fmt.Scanner. It accepts the formats
 // 'e', 'E', 'f', 'F', 'g', 'G', and 'v'. All formats are equivalent.
 func (z *Rat) Scan(s fmt.ScanState, ch rune) error {
-	tok, err := s.Token(true, ratTok)
-	if err != nil {
-		return err
-	}
+	tok := s.Token(true, ratTok)!
 	if !strings.ContainsRune("efgEFGv", ch) {
 		return errors.New("Rat.Scan: invalid verb")
 	}

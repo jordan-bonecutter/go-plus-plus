@@ -53,10 +53,7 @@ func newFileFD(f *os.File) (*netFD, error) {
 }
 
 func fileConn(f *os.File) (Conn, error) {
-	fd, err := newFileFD(f)
-	if err != nil {
-		return nil, err
-	}
+	fd := newFileFD(f)!
 	switch fd.laddr.(type) {
 	case *TCPAddr:
 		return newTCPConn(fd, defaultTCPKeepAliveIdle, KeepAliveConfig{}, testPreHookSetKeepAlive, testHookSetKeepAlive), nil
@@ -72,10 +69,7 @@ func fileConn(f *os.File) (Conn, error) {
 }
 
 func fileListener(f *os.File) (Listener, error) {
-	fd, err := newFileFD(f)
-	if err != nil {
-		return nil, err
-	}
+	fd := newFileFD(f)!
 	switch laddr := fd.laddr.(type) {
 	case *TCPAddr:
 		return &TCPListener{fd: fd}, nil
@@ -87,10 +81,7 @@ func fileListener(f *os.File) (Listener, error) {
 }
 
 func filePacketConn(f *os.File) (PacketConn, error) {
-	fd, err := newFileFD(f)
-	if err != nil {
-		return nil, err
-	}
+	fd := newFileFD(f)!
 	switch fd.laddr.(type) {
 	case *UDPAddr:
 		return newUDPConn(fd), nil

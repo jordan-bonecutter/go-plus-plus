@@ -172,23 +172,14 @@ func TestRootSymlinkRelativity(t *testing.T) {
 }
 
 func readSymlinkReparseData(name string) (*windows.SymbolicLinkReparseBuffer, error) {
-	nameu16, err := syscall.UTF16FromString(name)
-	if err != nil {
-		return nil, err
-	}
-	h, err := syscall.CreateFile(&nameu16[0], syscall.GENERIC_READ, 0, nil, syscall.OPEN_EXISTING,
-		syscall.FILE_FLAG_OPEN_REPARSE_POINT|syscall.FILE_FLAG_BACKUP_SEMANTICS, 0)
-	if err != nil {
-		return nil, err
-	}
+	nameu16 := syscall.UTF16FromString(name)!
+	h := syscall.CreateFile(&nameu16[0], syscall.GENERIC_READ, 0, nil, syscall.OPEN_EXISTING,
+		syscall.FILE_FLAG_OPEN_REPARSE_POINT|syscall.FILE_FLAG_BACKUP_SEMANTICS, 0)!
 	defer syscall.CloseHandle(h)
 
 	var rdbbuf [syscall.MAXIMUM_REPARSE_DATA_BUFFER_SIZE]byte
 	var bytesReturned uint32
-	err = syscall.DeviceIoControl(h, syscall.FSCTL_GET_REPARSE_POINT, nil, 0, &rdbbuf[0], uint32(len(rdbbuf)), &bytesReturned, nil)
-	if err != nil {
-		return nil, err
-	}
+	syscall.DeviceIoControl(h, syscall.FSCTL_GET_REPARSE_POINT, nil, 0, &rdbbuf[0], uint32(len(rdbbuf)), &bytesReturned, nil)!
 
 	rdb := (*windows.REPARSE_DATA_BUFFER)(unsafe.Pointer(&rdbbuf[0]))
 	if rdb.ReparseTag != syscall.IO_REPARSE_TAG_SYMLINK {

@@ -285,9 +285,7 @@ func ntCreateFileError(err error, flag uint64) error {
 
 func Mkdirat(dirfd syscall.Handle, name string, mode uint32) error {
 	objAttrs := &OBJECT_ATTRIBUTES{}
-	if err := objAttrs.init(dirfd, name); err != nil {
-		return err
-	}
+	objAttrs.init(dirfd, name)!
 	var h syscall.Handle
 	err := NtCreateFile(
 		&h,
@@ -316,9 +314,7 @@ func Deleteat(dirfd syscall.Handle, name string, options uint32) error {
 		return syscall.EINVAL
 	}
 	objAttrs := &OBJECT_ATTRIBUTES{}
-	if err := objAttrs.init(dirfd, name); err != nil {
-		return err
-	}
+	objAttrs.init(dirfd, name)!
 	var h syscall.Handle
 	err := NtOpenFile(
 		&h,
@@ -438,9 +434,7 @@ func deleteatFallback(h syscall.Handle) error {
 
 func Renameat(olddirfd syscall.Handle, oldpath string, newdirfd syscall.Handle, newpath string) error {
 	objAttrs := &OBJECT_ATTRIBUTES{}
-	if err := objAttrs.init(olddirfd, oldpath); err != nil {
-		return err
-	}
+	objAttrs.init(olddirfd, oldpath)!
 	var h syscall.Handle
 	err := NtOpenFile(
 		&h,
@@ -512,9 +506,7 @@ func Renameat(olddirfd syscall.Handle, oldpath string, newdirfd syscall.Handle, 
 
 func Linkat(olddirfd syscall.Handle, oldpath string, newdirfd syscall.Handle, newpath string) error {
 	objAttrs := &OBJECT_ATTRIBUTES{}
-	if err := objAttrs.init(olddirfd, oldpath); err != nil {
-		return err
-	}
+	objAttrs.init(olddirfd, oldpath)!
 	var h syscall.Handle
 	err := NtOpenFile(
 		&h,
@@ -601,9 +593,7 @@ func symlinkat(oldname string, newdirfd syscall.Handle, newname string, flags Sy
 	}
 
 	objAttrs := &OBJECT_ATTRIBUTES{}
-	if err := objAttrs.init(newdirfd, newname); err != nil {
-		return err
-	}
+	objAttrs.init(newdirfd, newname)!
 	var h syscall.Handle
 	err = NtCreateFile(
 		&h,

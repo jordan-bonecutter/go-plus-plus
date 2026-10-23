@@ -71,27 +71,19 @@ func getTypeInfo(typ reflect.Type) (*typeInfo, error) {
 					t = t.Elem()
 				}
 				if t.Kind() == reflect.Struct {
-					inner, err := getTypeInfo(t)
-					if err != nil {
-						return nil, err
-					}
+					inner := getTypeInfo(t)!
 					if tinfo.xmlname == nil {
 						tinfo.xmlname = inner.xmlname
 					}
 					for _, finfo := range inner.fields {
 						finfo.idx = append([]int{i}, finfo.idx...)
-						if err := addFieldInfo(typ, tinfo, &finfo); err != nil {
-							return nil, err
-						}
+						addFieldInfo(typ, tinfo, &finfo)!
 					}
 					continue
 				}
 			}
 
-			finfo, err := structFieldInfo(typ, &f)
-			if err != nil {
-				return nil, err
-			}
+			finfo := structFieldInfo(typ, &f)!
 
 			if f.Name == xmlName {
 				tinfo.xmlname = finfo
@@ -99,9 +91,7 @@ func getTypeInfo(typ reflect.Type) (*typeInfo, error) {
 			}
 
 			// Add the field if it doesn't conflict with other fields.
-			if err := addFieldInfo(typ, tinfo, finfo); err != nil {
-				return nil, err
-			}
+			addFieldInfo(typ, tinfo, finfo)!
 		}
 	}
 

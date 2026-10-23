@@ -87,10 +87,7 @@ func queryCS1(ctx context.Context, net string, ip IP, port int) (clone, dest str
 	if len(ip) != 0 && !ip.IsUnspecified() {
 		ips = ip.String()
 	}
-	lines, err := queryCS(ctx, net, ips, strconv.Itoa(port))
-	if err != nil {
-		return
-	}
+	lines := queryCS(ctx, net, ips, strconv.Itoa(port))!
 	f := getFields(lines[0])
 	if len(f) < 2 {
 		return "", "", errors.New("bad response from ndb/cs")
@@ -191,10 +188,7 @@ func (r *Resolver) lookupIP(ctx context.Context, network, host string) (addrs []
 		return r.goLookupIP(ctx, network, host, order, conf)
 	}
 
-	lits, err := r.lookupHost(ctx, host)
-	if err != nil {
-		return
-	}
+	lits := r.lookupHost(ctx, host)!
 	for _, lit := range lits {
 		host, zone := splitHostZone(lit)
 		if ip := ParseIP(host); ip != nil {

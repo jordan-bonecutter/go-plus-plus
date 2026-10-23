@@ -634,10 +634,7 @@ func (t *Tree) newNumber(pos Pos, text string, typ itemType) (*NumberNode, error
 	n := &NumberNode{tr: t, NodeType: NodeNumber, Pos: pos, Text: text}
 	switch typ {
 	case itemCharConstant:
-		rune, _, tail, err := strconv.UnquoteChar(text[1:], text[0])
-		if err != nil {
-			return nil, err
-		}
+		rune, _, tail := strconv.UnquoteChar(text[1:], text[0])!
 		if tail != "'" {
 			return nil, fmt.Errorf("malformed character constant: %s", text)
 		}
@@ -650,9 +647,7 @@ func (t *Tree) newNumber(pos Pos, text string, typ itemType) (*NumberNode, error
 		return n, nil
 	case itemComplex:
 		// fmt.Sscan can parse the pair, so let it do the work.
-		if _, err := fmt.Sscan(text, &n.Complex128); err != nil {
-			return nil, err
-		}
+		fmt.Sscan(text, &n.Complex128)!
 		n.IsComplex = true
 		n.simplifyComplex()
 		return n, nil

@@ -20,6 +20,8 @@ import (
 var replacements = map[string]string{
 	"k": "k1024",
 
+	"testingOnlyRejectionOutcome": "testingOnlyRejectionOutcome1024",
+
 	"CiphertextSize768":       "CiphertextSize1024",
 	"EncapsulationKeySize768": "EncapsulationKeySize1024",
 	"decapsulationKeySize768": "decapsulationKeySize1024",

@@ -209,9 +209,7 @@ func prepareForMetaEmit() ([]rtcov.CovMetaBlob, error) {
 	h := fnv.New128a()
 	tlen := uint64(unsafe.Sizeof(coverage.MetaFileHeader{}))
 	for _, entry := range ml {
-		if _, err := h.Write(entry.Hash[:]); err != nil {
-			return nil, err
-		}
+		h.Write(entry.Hash[:])!
 		tlen += uint64(entry.Len)
 		ecm := coverage.CounterMode(entry.CounterMode)
 		if modeClash(ecm) {
@@ -239,10 +237,7 @@ func prepareForMetaEmit() ([]rtcov.CovMetaBlob, error) {
 // emitMetaDataToDirectory emits the meta-data output file to the specified
 // directory, returning an error if something went wrong.
 func emitMetaDataToDirectory(outdir string, ml []rtcov.CovMetaBlob) error {
-	ml, err := prepareForMetaEmit()
-	if err != nil {
-		return err
-	}
+	ml = prepareForMetaEmit()!
 	if len(ml) == 0 {
 		return nil
 	}
@@ -256,15 +251,11 @@ func emitMetaDataToDirectory(outdir string, ml []rtcov.CovMetaBlob) error {
 	}
 
 	// Open output files.
-	if err := s.openOutputFiles(finalHash, finalMetaLen, metaDataFile); err != nil {
-		return err
-	}
+	s.openOutputFiles(finalHash, finalMetaLen, metaDataFile)!
 
 	// Emit meta-data file only if needed (may already be present).
 	if s.needMetaDataFile() {
-		if err := s.emitMetaDataFile(finalHash, finalMetaLen); err != nil {
-			return err
-		}
+		s.emitMetaDataFile(finalHash, finalMetaLen)!
 	}
 	return nil
 }
@@ -307,17 +298,13 @@ func emitCounterDataToDirectory(outdir string) error {
 	}
 
 	// Open output file.
-	if err := s.openOutputFiles(finalHash, finalMetaLen, counterDataFile); err != nil {
-		return err
-	}
+	s.openOutputFiles(finalHash, finalMetaLen, counterDataFile)!
 	if s.cf == nil {
 		return fmt.Errorf("counter data output file open failed (no additional info")
 	}
 
 	// Emit counter data file.
-	if err := s.emitCounterDataFile(finalHash, s.cf); err != nil {
-		return err
-	}
+	s.emitCounterDataFile(finalHash, s.cf)!
 	if err := s.cf.Close(); err != nil {
 		return fmt.Errorf("closing counter data file: %v", err)
 	}
@@ -333,10 +320,7 @@ func emitCounterDataToDirectory(outdir string) error {
 
 // emitCounterDataToWriter emits counter data for this coverage run to an io.Writer.
 func (s *emitState) emitCounterDataToWriter(w io.Writer) error {
-	if err := s.emitCounterDataFile(finalHash, w); err != nil {
-		return err
-	}
-	return nil
+	return s.emitCounterDataFile(finalHash, w)
 }
 
 // openMetaFile determines whether we need to emit a meta-data output
@@ -399,14 +383,10 @@ func (s *emitState) openOutputFiles(metaHash [16]byte, metaLen uint64, which fil
 	}
 
 	if (which & metaDataFile) != 0 {
-		if err := s.openMetaFile(metaHash, metaLen); err != nil {
-			return err
-		}
+		s.openMetaFile(metaHash, metaLen)!
 	}
 	if (which & counterDataFile) != 0 {
-		if err := s.openCounterFile(metaHash); err != nil {
-			return err
-		}
+		s.openCounterFile(metaHash)!
 	}
 	return nil
 }
@@ -529,9 +509,7 @@ func (s *emitState) VisitFuncs(f encodecounter.CounterVisitorFn) error {
 			}
 
 			tcounters = rdCounters(counters, tcounters)
-			if err := f(pkgId, funcId, tcounters); err != nil {
-				return err
-			}
+			f(pkgId, funcId, tcounters)!
 
 			// Skip over this function.
 			i += coverage.FirstCtrOffset + int(nCtrs) - 1
@@ -563,10 +541,7 @@ func captureOsArgs() map[string]string {
 // coverage output file (to the file 's.cf').
 func (s *emitState) emitCounterDataFile(finalHash [16]byte, w io.Writer) error {
 	cfw := encodecounter.NewCoverageDataWriter(w, coverage.CtrULeb128)
-	if err := cfw.Write(finalHash, capturedOsArgs, s); err != nil {
-		return err
-	}
-	return nil
+	return cfw.Write(finalHash, capturedOsArgs, s)
 }
 
 // MarkProfileEmitted signals the coverage machinery that

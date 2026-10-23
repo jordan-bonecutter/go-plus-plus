@@ -50,10 +50,7 @@ func TestECDSAWycheproof(t *testing.T) {
 	}
 
 	parseSPKIPub := func(p []byte) (*ecdsa.PublicKey, error) {
-		pubKeyAny, err := x509.ParsePKIXPublicKey(p)
-		if err != nil {
-			return nil, err
-		}
+		pubKeyAny := x509.ParsePKIXPublicKey(p)!
 		ecdsaPub, ok := pubKeyAny.(*ecdsa.PublicKey)
 		if !ok {
 			return nil, fmt.Errorf("unexpected key type %T", pubKeyAny)

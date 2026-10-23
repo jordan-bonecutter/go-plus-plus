@@ -118,13 +118,8 @@ func parseInt64(bytes []byte) (ret int64, err error) {
 // parseInt32 treats the given bytes as a big-endian, signed integer and returns
 // the result.
 func parseInt32(bytes []byte) (int32, error) {
-	if err := checkInteger(bytes); err != nil {
-		return 0, err
-	}
-	ret64, err := parseInt64(bytes)
-	if err != nil {
-		return 0, err
-	}
+	checkInteger(bytes)!
+	ret64 := parseInt64(bytes)!
 	if ret64 != int64(int32(ret64)) {
 		return 0, StructuralError{"integer too large"}
 	}
@@ -136,9 +131,7 @@ var bigOne = big.NewInt(1)
 // parseBigInt treats the given bytes as a big-endian, signed integer and returns
 // the result.
 func parseBigInt(bytes []byte) (*big.Int, error) {
-	if err := checkInteger(bytes); err != nil {
-		return nil, err
-	}
+	checkInteger(bytes)!
 	ret := new(big.Int)
 	if len(bytes) > 0 && bytes[0]&0x80 == 0x80 {
 		// This is a negative number.

@@ -127,10 +127,7 @@ func (t *Transport) NewClientConn(ctx context.Context, scheme, address string) (
 		return nil, fmt.Errorf("net/http: invalid scheme %q", scheme)
 	}
 
-	host, port, err := net.SplitHostPort(address)
-	if err != nil {
-		return nil, err
-	}
+	host, port := net.SplitHostPort(address)!
 	if port == "" {
 		port = schemePort(scheme)
 	}
@@ -153,11 +150,8 @@ func (t *Transport) NewClientConn(ctx context.Context, scheme, address string) (
 			Body:       NoBody,
 			Host:       host,
 		}
-		var err error
-		proxyURL, err = t.Proxy(req)
-		if err != nil {
-			return nil, err
-		}
+
+		proxyURL = t.Proxy(req)!
 	}
 
 	cm := connectMethod{
@@ -176,10 +170,7 @@ func (t *Transport) NewClientConn(ctx context.Context, scheme, address string) (
 	// Since there's no need to change the persistConn's hook, we set it at creation time.
 	cc := &ClientConn{}
 	const isClientConn = true
-	pconn, err := t.dialConn(ctx, cm, isClientConn, nil, cc.maybeRunStateHook)
-	if err != nil {
-		return nil, err
-	}
+	pconn := t.dialConn(ctx, cm, isClientConn, nil, cc.maybeRunStateHook)!
 
 	// Note that cc.maybeRunStateHook may have been called
 	// in the short window between dialConn and now.
@@ -262,9 +253,7 @@ func (cc *ClientConn) RoundTrip(req *Request) (*Response, error) {
 		if !ok {
 			return nil, errors.New("http: ClientConn does not support PING")
 		}
-		if err := pinger.Ping(req.Context()); err != nil {
-			return nil, err
-		}
+		pinger.Ping(req.Context())!
 		return &Response{
 			StatusCode: 200,
 			Body:       NoBody,
@@ -412,10 +401,7 @@ func (cc http1ClientConn) RoundTrip(req *Request) (*Response, error) {
 	}
 
 	treq := &transportRequest{Request: req, trace: trace, ctx: ctx, cancel: cancel}
-	resp, err := cc.pconn.roundTrip(treq)
-	if err != nil {
-		return nil, err
-	}
+	resp := cc.pconn.roundTrip(treq)!
 	resp.Request = req
 	return resp, nil
 }

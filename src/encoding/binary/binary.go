@@ -259,9 +259,7 @@ func Read(r io.Reader, order ByteOrder, data any) error {
 	// Fast path for basic types and slices.
 	if n, _ := intDataSize(data); n != 0 {
 		bs := make([]byte, n)
-		if _, err := io.ReadFull(r, bs); err != nil {
-			return err
-		}
+		io.ReadFull(r, bs)!
 
 		if decodeFast(bs, order, data) {
 			return nil
@@ -283,9 +281,7 @@ func Read(r io.Reader, order ByteOrder, data any) error {
 	}
 
 	d := &decoder{order: order, buf: make([]byte, size)}
-	if _, err := io.ReadFull(r, d.buf); err != nil {
-		return err
-	}
+	io.ReadFull(r, d.buf)!
 	d.value(v)
 	return nil
 }

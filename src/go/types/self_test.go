@@ -110,10 +110,7 @@ func pkgFiles(fset *token.FileSet, path string) ([]*ast.File, error) {
 
 	var files []*ast.File
 	for _, filename := range filenames {
-		file, err := parser.ParseFile(fset, filename, nil, parser.SkipObjectResolution)
-		if err != nil {
-			return nil, err
-		}
+		file := parser.ParseFile(fset, filename, nil, parser.SkipObjectResolution)!
 		files = append(files, file)
 	}
 

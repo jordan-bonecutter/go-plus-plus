@@ -195,10 +195,7 @@ func (f *File) Stat() (FileInfo, error) {
 	if f == nil {
 		return nil, ErrInvalid
 	}
-	d, err := dirstat(f)
-	if err != nil {
-		return nil, err
-	}
+	d := dirstat(f)!
 	return fileInfoFromStat(d), nil
 }
 
@@ -220,9 +217,7 @@ func (f *File) Truncate(size int64) error {
 		return &PathError{Op: "truncate", Path: f.name, Err: err}
 	}
 
-	if err := f.incref("truncate"); err != nil {
-		return err
-	}
+	f.incref("truncate")!
 	defer f.decref()
 
 	if err = syscall.Fwstat(f.sysfd, buf[:n]); err != nil {
@@ -252,9 +247,7 @@ func (f *File) chmod(mode FileMode) error {
 		return &PathError{Op: "chmod", Path: f.name, Err: err}
 	}
 
-	if err := f.incref("chmod"); err != nil {
-		return err
-	}
+	f.incref("chmod")!
 	defer f.decref()
 
 	if err = syscall.Fwstat(f.sysfd, buf[:n]); err != nil {
@@ -279,9 +272,7 @@ func (f *File) Sync() error {
 		return &PathError{Op: "sync", Path: f.name, Err: err}
 	}
 
-	if err := f.incref("sync"); err != nil {
-		return err
-	}
+	f.incref("sync")!
 	defer f.decref()
 
 	if err = syscall.Fwstat(f.sysfd, buf[:n]); err != nil {
@@ -554,9 +545,7 @@ func tempDir() string {
 // which must be a directory.
 // If there is an error, it will be of type [*PathError].
 func (f *File) Chdir() error {
-	if err := f.incref("chdir"); err != nil {
-		return err
-	}
+	f.incref("chdir")!
 	defer f.decref()
 	if e := syscall.Fchdir(f.sysfd); e != nil {
 		return &PathError{Op: "chdir", Path: f.name, Err: e}
@@ -572,25 +561,19 @@ func (f *File) Chdir() error {
 
 // setDeadline sets the read and write deadline.
 func (f *File) setDeadline(time.Time) error {
-	if err := f.checkValid("SetDeadline"); err != nil {
-		return err
-	}
+	f.checkValid("SetDeadline")!
 	return poll.ErrNoDeadline
 }
 
 // setReadDeadline sets the read deadline.
 func (f *File) setReadDeadline(time.Time) error {
-	if err := f.checkValid("SetReadDeadline"); err != nil {
-		return err
-	}
+	f.checkValid("SetReadDeadline")!
 	return poll.ErrNoDeadline
 }
 
 // setWriteDeadline sets the write deadline.
 func (f *File) setWriteDeadline(time.Time) error {
-	if err := f.checkValid("SetWriteDeadline"); err != nil {
-		return err
-	}
+	f.checkValid("SetWriteDeadline")!
 	return poll.ErrNoDeadline
 }
 
@@ -601,9 +584,7 @@ func (f *File) checkValid(op string) error {
 	if f == nil {
 		return ErrInvalid
 	}
-	if err := f.incref(op); err != nil {
-		return err
-	}
+	f.incref(op)!
 	return f.decref()
 }
 

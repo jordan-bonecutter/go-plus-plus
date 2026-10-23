@@ -59,10 +59,7 @@ func (netHTTPServer) Addr() net.Addr            { return nil }
 // for requests receieved via this port.
 func (s netHTTPServer) ServeHTTP3(ctx context.Context, conn net.PacketConn, tlsConfig *tls.Config, h http.Handler) error {
 	s.init()
-	e, err := quic.NewEndpoint(conn, newQUICConfig(s.opts.QUICConfig, tlsConfig))
-	if err != nil {
-		return err
-	}
+	e := quic.NewEndpoint(conn, newQUICConfig(s.opts.QUICConfig, tlsConfig))!
 	return s.serve(ctx, e, h)
 }
 
@@ -108,10 +105,7 @@ func (s *server) serve(ctx context.Context, e *quic.Endpoint, h http.Handler) er
 	s.init()
 	defer e.Close(canceledCtx)
 	for {
-		qconn, err := e.Accept(ctx)
-		if err != nil {
-			return err
-		}
+		qconn := e.Accept(ctx)!
 		go s.newServerConn(ctx, qconn, h)
 	}
 }
@@ -295,10 +289,7 @@ func (sc *serverConn) handleControlStream(st *stream) error {
 	}
 
 	for {
-		ftype, err := st.readFrameHeader()
-		if err != nil {
-			return err
-		}
+		ftype := st.readFrameHeader()!
 		switch ftype {
 		case frameTypeCancelPush:
 			// "If a server receives a CANCEL_PUSH frame for a push ID
@@ -313,9 +304,7 @@ func (sc *serverConn) handleControlStream(st *stream) error {
 			return errH3NoError
 		default:
 			// Unknown frames are ignored.
-			if err := st.discardUnknownFrame(ftype); err != nil {
-				return err
-			}
+			st.discardUnknownFrame(ftype)!
 		}
 	}
 }
@@ -381,10 +370,7 @@ var errHeadersTooLarge = &streamError{errH3MessageError, "headers too large"}
 const headerFieldOverhead = 32 // RFC 9114 Section 4.2.2
 
 func (sc *serverConn) parseHeader(st *stream) (http.Header, pseudoHeader, error) {
-	ftype, err := st.readFrameHeader()
-	if err != nil {
-		return nil, pseudoHeader{}, err
-	}
+	ftype := st.readFrameHeader()!
 	if ftype != frameTypeHeaders {
 		return nil, pseudoHeader{}, &streamError{errH3MessageError, "received other frames when expecting HEADERS"}
 	}
@@ -469,9 +455,7 @@ func (sc *serverConn) parseHeader(st *stream) (http.Header, pseudoHeader, error)
 	}); err != nil {
 		return nil, pseudoHeader{}, err
 	}
-	if err := st.endFrame(); err != nil {
-		return nil, pseudoHeader{}, err
-	}
+	st.endFrame()!
 	if hasDisallowedConnectionHeader(header) {
 		return nil, pseudoHeader{}, &streamError{errH3MessageError, "invalid connection-related header"}
 	}
@@ -936,9 +920,7 @@ func (rw *responseWriter) FlushError() error {
 	defer rw.mu.Unlock()
 	rw.writeHeaderLockedOnce()
 	if !rw.cannotHaveBody {
-		if _, err := rw.bw.Write(rw.bb); err != nil {
-			return err
-		}
+		rw.bw.Write(rw.bb)!
 		rw.bb.discard()
 	}
 	return rw.st.Flush()

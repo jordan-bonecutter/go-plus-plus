@@ -137,9 +137,7 @@ func (r *CovDataReader) Visit() error {
 		r.warn("no applicable files found in input directories")
 	}
 	for _, p := range podlist {
-		if err := r.visitPod(p); err != nil {
-			return err
-		}
+		r.visitPod(p)!
 	}
 	r.vis.Finish()
 	return nil
@@ -238,9 +236,7 @@ func (r *CovDataReader) visitPod(p pods.Pod) error {
 
 	// Read counter data files.
 	for k, cdf := range p.CounterDataFiles {
-		if err := processCounterDataFile(cdf, k); err != nil {
-			return err
-		}
+		processCounterDataFile(cdf, k)!
 	}
 	r.vis.EndCounters()
 

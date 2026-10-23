@@ -75,10 +75,7 @@ type listener struct {
 // Accept waits for and returns the next incoming TLS connection.
 // The returned connection is of type *Conn.
 func (l *listener) Accept() (net.Conn, error) {
-	c, err := l.Listener.Accept()
-	if err != nil {
-		return nil, err
-	}
+	c := l.Listener.Accept()!
 	return Server(c, l.config), nil
 }
 
@@ -103,10 +100,7 @@ func Listen(network, laddr string, config *Config) (net.Listener, error) {
 		config.GetCertificate == nil && config.GetConfigForClient == nil {
 		return nil, errors.New("tls: neither Certificates, GetCertificate, nor GetConfigForClient set in Config")
 	}
-	l, err := net.Listen(network, laddr)
-	if err != nil {
-		return nil, err
-	}
+	l := net.Listen(network, laddr)!
 	return NewListener(l, config), nil
 }
 
@@ -145,10 +139,7 @@ func dial(ctx context.Context, netDialer *net.Dialer, network, addr string, conf
 		defer cancel()
 	}
 
-	rawConn, err := netDialer.DialContext(ctx, network, addr)
-	if err != nil {
-		return nil, err
-	}
+	rawConn := netDialer.DialContext(ctx, network, addr)!
 
 	colonPos := strings.LastIndex(addr, ":")
 	if colonPos == -1 {
@@ -242,14 +233,8 @@ func (d *Dialer) DialContext(ctx context.Context, network, addr string) (net.Con
 // contain intermediate certificates following the leaf certificate to form a
 // certificate chain. On successful return, Certificate.Leaf will be populated.
 func LoadX509KeyPair(certFile, keyFile string) (Certificate, error) {
-	certPEMBlock, err := os.ReadFile(certFile)
-	if err != nil {
-		return Certificate{}, err
-	}
-	keyPEMBlock, err := os.ReadFile(keyFile)
-	if err != nil {
-		return Certificate{}, err
-	}
+	certPEMBlock := os.ReadFile(certFile)!
+	keyPEMBlock := os.ReadFile(keyFile)!
 	return X509KeyPair(certPEMBlock, keyPEMBlock)
 }
 

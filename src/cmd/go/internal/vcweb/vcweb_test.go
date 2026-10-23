@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -60,4 +62,29 @@ func TestOverview(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Logf("%s", body)
+}
+
+func TestBackgroundFailureCached(t *testing.T) {
+	scriptDir := t.TempDir()
+	exe, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// An unknown test flag makes the background child fail on every platform.
+	content := "exec '" + strings.ReplaceAll(exe, "'", "''") + "' -vcweb-invalid-flag &\nhandle dir\n"
+	if err := os.WriteFile(filepath.Join(scriptDir, "fail.txt"), []byte(content), 0600); err != nil {
+		t.Fatal(err)
+	}
+	s, err := vcweb.NewServer(scriptDir, t.TempDir(), log.New(io.Discard, "", 0))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	for range 2 {
+		called := false
+		err := s.HandleScript("fail.txt", log.New(io.Discard, "", 0), func(http.Handler) { called = true })
+		if err == nil || called {
+			t.Fatalf("background failure: error = %v, handler called = %v", err, called)
+		}
+	}
 }

@@ -521,9 +521,7 @@ func testPidFD(t *testing.T, userns bool) error {
 	if userns {
 		cmd.SysProcAttr.Cloneflags = syscall.CLONE_NEWUSER
 	}
-	if err := cmd.Start(); err != nil {
-		return err
-	}
+	cmd.Start()!
 	defer func() {
 		cmd.Process.Kill()
 		cmd.Wait()

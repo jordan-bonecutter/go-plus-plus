@@ -260,9 +260,7 @@ func (r *Response) Write(w io.Writer) error {
 		text = strings.TrimPrefix(text, strconv.Itoa(r.StatusCode)+" ")
 	}
 
-	if _, err := fmt.Fprintf(w, "HTTP/%d.%d %03d %s\r\n", r.ProtoMajor, r.ProtoMinor, r.StatusCode, text); err != nil {
-		return err
-	}
+	fmt.Fprintf(w, "HTTP/%d.%d %03d %s\r\n", r.ProtoMajor, r.ProtoMinor, r.StatusCode, text)!
 
 	// Clone it, so we can modify r1 as needed.
 	r1 := new(Response)
@@ -298,40 +296,24 @@ func (r *Response) Write(w io.Writer) error {
 	}
 
 	// Process Body,ContentLength,Close,Trailer
-	tw, err := newTransferWriter(r1)
-	if err != nil {
-		return err
-	}
-	err = tw.writeHeader(w, nil)
-	if err != nil {
-		return err
-	}
+	tw := newTransferWriter(r1)!
+	tw.writeHeader(w, nil)!
 
 	// Rest of header
-	err = r.Header.WriteSubset(w, respExcludeHeader)
-	if err != nil {
-		return err
-	}
+	r.Header.WriteSubset(w, respExcludeHeader)!
 
 	// contentLengthAlreadySent may have been already sent for
 	// POST/PUT requests, even if zero length. See Issue 8180.
 	contentLengthAlreadySent := tw.shouldSendContentLength()
 	if r1.ContentLength == 0 && !chunked(r1.TransferEncoding) && !contentLengthAlreadySent && bodyAllowedForStatus(r.StatusCode) {
-		if _, err := io.WriteString(w, "Content-Length: 0\r\n"); err != nil {
-			return err
-		}
+		io.WriteString(w, "Content-Length: 0\r\n")!
 	}
 
 	// End-of-header
-	if _, err := io.WriteString(w, "\r\n"); err != nil {
-		return err
-	}
+	io.WriteString(w, "\r\n")!
 
 	// Write body and trailer
-	err = tw.writeBody(w)
-	if err != nil {
-		return err
-	}
+	tw.writeBody(w)!
 
 	// Success
 	return nil

@@ -152,10 +152,7 @@ type dumpReader struct {
 // by function, then deserializes each func section into a
 // fnInlHeur object and returns a slice of those objects.
 func readDump(t *testing.T, path string) ([]fnInlHeur, []encodedCallSiteTab, error) {
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return nil, nil, err
-	}
+	content := os.ReadFile(path)!
 	dr := &dumpReader{
 		s:  bufio.NewScanner(strings.NewReader(string(content))),
 		t:  t,
@@ -218,9 +215,7 @@ func (dr *dumpReader) readObjBlob(delim string) (string, error) {
 		}
 		sb.WriteString(line + "\n")
 	}
-	if err := dr.s.Err(); err != nil {
-		return "", err
-	}
+	dr.s.Err()!
 	if !foundDelim {
 		return "", fmt.Errorf("malformed input %s, missing delimiter %q",
 			dr.p, delim)
@@ -362,15 +357,10 @@ func gatherPropsDumpForFile(t *testing.T, testcase string, td string) (string, e
 // output from a "-d=dumpinlfuncprops=..." compilation.
 func genExpected(td string, testcase string) (string, error) {
 	epath := filepath.Join(td, testcase+".expected")
-	outf, err := os.OpenFile(epath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		return "", err
-	}
+	outf := os.OpenFile(epath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)!
+	defer outf.Close()
 	gopath := "testdata/props/" + testcase + ".go"
-	content, err := os.ReadFile(gopath)
-	if err != nil {
-		return "", err
-	}
+	content := os.ReadFile(gopath)!
 	lines := strings.Split(string(content), "\n")
 	for _, line := range lines[3:] {
 		if !strings.HasPrefix(line, "// ") {
@@ -378,9 +368,7 @@ func genExpected(td string, testcase string) (string, error) {
 		}
 		fmt.Fprintf(outf, "%s\n", line)
 	}
-	if err := outf.Close(); err != nil {
-		return "", err
-	}
+	outf.Close()!
 	return epath, nil
 }
 

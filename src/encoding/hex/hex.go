@@ -278,10 +278,7 @@ func (h *dumper) Write(data []byte) (n int, err error) {
 			Encode(h.buf[4:], h.buf[:4])
 			h.buf[12] = ' '
 			h.buf[13] = ' '
-			_, err = h.w.Write(h.buf[4:])
-			if err != nil {
-				return
-			}
+			h.w.Write(h.buf[4:])!
 		}
 		Encode(h.buf[:], data[i:i+1])
 		h.buf[2] = ' '
@@ -297,10 +294,7 @@ func (h *dumper) Write(data []byte) (n int, err error) {
 			h.buf[4] = '|'
 			l = 5
 		}
-		_, err = h.w.Write(h.buf[:l])
-		if err != nil {
-			return
-		}
+		h.w.Write(h.buf[:l])!
 		n++
 		h.rightChars[h.used] = toChar(data[i])
 		h.used++
@@ -308,10 +302,7 @@ func (h *dumper) Write(data []byte) (n int, err error) {
 		if h.used == 16 {
 			h.rightChars[16] = '|'
 			h.rightChars[17] = '\n'
-			_, err = h.w.Write(h.rightChars[:])
-			if err != nil {
-				return
-			}
+			h.w.Write(h.rightChars[:])!
 			h.used = 0
 		}
 	}

@@ -150,9 +150,7 @@ func newPart(mr *Reader, rawPart bool, maxMIMEHeaderSize, maxMIMEHeaders int64) 
 		Header: make(map[string][]string),
 		mr:     mr,
 	}
-	if err := bp.populateHeaders(maxMIMEHeaderSize, maxMIMEHeaders); err != nil {
-		return nil, err
-	}
+	bp.populateHeaders(maxMIMEHeaderSize, maxMIMEHeaders)!
 	bp.r = partReader{bp}
 
 	// rawPart is used to switch between Part.NextPart and Part.NextRawPart.
@@ -406,10 +404,7 @@ func (r *Reader) nextPart(rawPart bool, maxMIMEHeaderSize, maxMIMEHeaders int64)
 
 		if r.isBoundaryDelimiterLine(line) {
 			r.partsRead++
-			bp, err := newPart(r, rawPart, maxMIMEHeaderSize, maxMIMEHeaders)
-			if err != nil {
-				return nil, err
-			}
+			bp := newPart(r, rawPart, maxMIMEHeaderSize, maxMIMEHeaders)!
 			r.currentPart = bp
 			return bp, nil
 		}

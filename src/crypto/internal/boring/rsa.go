@@ -192,10 +192,7 @@ func cryptRSA(withKey func(func(*C.GO_RSA) C.int) C.int,
 	crypt func(*C.GO_EVP_PKEY_CTX, *C.uint8_t, *C.size_t, *C.uint8_t, C.size_t) C.int,
 	in []byte) ([]byte, error) {
 
-	pkey, ctx, err := setupRSA(withKey, padding, h, mgfHash, label, saltLen, ch, init)
-	if err != nil {
-		return nil, err
-	}
+	pkey, ctx := setupRSA(withKey, padding, h, mgfHash, label, saltLen, ch, init)!
 	defer C._goboringcrypto_EVP_PKEY_free(pkey)
 	defer C._goboringcrypto_EVP_PKEY_CTX_free(ctx)
 

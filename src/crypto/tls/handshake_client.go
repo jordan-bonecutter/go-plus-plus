@@ -161,10 +161,7 @@ func (c *Conn) makeClientHello() (*clientHelloMsg, *keySharePrivateKeys, *echCli
 	}
 
 	if c.quic != nil {
-		p, err := c.quicGetTransportParameters()
-		if err != nil {
-			return nil, nil, nil, err
-		}
+		p := c.quicGetTransportParameters()!
 		if p == nil {
 			p = []byte{}
 		}
@@ -272,16 +269,12 @@ func (c *Conn) clientHandshake(ctx context.Context) (err error) {
 		// work around _possibly_ broken middleboxes, but there is little-to-no
 		// evidence that this is actually a problem.
 
-		if err := computeAndUpdateOuterECHExtension(hello, ech.innerHello, ech, true); err != nil {
-			return err
-		}
+		computeAndUpdateOuterECHExtension(hello, ech.innerHello, ech, true)!
 	}
 
 	c.serverName = hello.serverName
 
-	if _, err := c.writeHandshakeRecord(hello, nil); err != nil {
-		return err
-	}
+	c.writeHandshakeRecord(hello, nil)!
 
 	if hello.earlyData {
 		suite := cipherSuiteTLS13ByID(session.cipherSuite)
@@ -290,9 +283,7 @@ func (c *Conn) clientHandshake(ctx context.Context) (err error) {
 		if ech != nil {
 			transcriptHello = ech.innerHello
 		}
-		if err := transcriptMsg(transcriptHello, transcript); err != nil {
-			return err
-		}
+		transcriptMsg(transcriptHello, transcript)!
 		earlyTrafficSecret := earlySecret.ClientEarlyTrafficSecret(transcript)
 		c.quicSetWriteSecret(QUICEncryptionLevelEarly, suite.id, earlyTrafficSecret)
 	}
@@ -309,9 +300,7 @@ func (c *Conn) clientHandshake(ctx context.Context) (err error) {
 		return unexpectedMessageError(serverHello, msg)
 	}
 
-	if err := c.pickTLSVersion(serverHello); err != nil {
-		return err
-	}
+	c.pickTLSVersion(serverHello)!
 
 	// If we are negotiating a protocol version that's lower than what we
 	// support, check for the server downgrade canaries.
@@ -547,10 +536,7 @@ func (hs *clientHandshakeState) handshake() error {
 		return errors.New("tls: server echoed TLS 1.3 compatibility session ID in TLS 1.2")
 	}
 
-	isResume, err := hs.processServerHello()
-	if err != nil {
-		return err
-	}
+	isResume := hs.processServerHello()!
 
 	hs.finishedHash = newFinishedHash(c.vers, hs.suite)
 
@@ -562,25 +548,15 @@ func (hs *clientHandshakeState) handshake() error {
 		hs.finishedHash.discardHandshakeBuffer()
 	}
 
-	if err := transcriptMsg(hs.hello, &hs.finishedHash); err != nil {
-		return err
-	}
-	if err := transcriptMsg(hs.serverHello, &hs.finishedHash); err != nil {
-		return err
-	}
+	transcriptMsg(hs.hello, &hs.finishedHash)!
+	transcriptMsg(hs.serverHello, &hs.finishedHash)!
 
 	c.buffering = true
 	c.didResume = isResume
 	if isResume {
-		if err := hs.establishKeys(); err != nil {
-			return err
-		}
-		if err := hs.readSessionTicket(); err != nil {
-			return err
-		}
-		if err := hs.readFinished(c.serverFinished[:]); err != nil {
-			return err
-		}
+		hs.establishKeys()!
+		hs.readSessionTicket()!
+		hs.readFinished(c.serverFinished[:])!
 		c.clientFinishedIsFirst = false
 		// Make sure the connection is still being verified whether or not this
 		// is a resumption. Resumptions currently don't reverify certificates so
@@ -591,36 +567,18 @@ func (hs *clientHandshakeState) handshake() error {
 				return err
 			}
 		}
-		if err := hs.sendFinished(c.clientFinished[:]); err != nil {
-			return err
-		}
-		if _, err := c.flush(); err != nil {
-			return err
-		}
+		hs.sendFinished(c.clientFinished[:])!
+		c.flush()!
 	} else {
-		if err := hs.doFullHandshake(); err != nil {
-			return err
-		}
-		if err := hs.establishKeys(); err != nil {
-			return err
-		}
-		if err := hs.sendFinished(c.clientFinished[:]); err != nil {
-			return err
-		}
-		if _, err := c.flush(); err != nil {
-			return err
-		}
+		hs.doFullHandshake()!
+		hs.establishKeys()!
+		hs.sendFinished(c.clientFinished[:])!
+		c.flush()!
 		c.clientFinishedIsFirst = true
-		if err := hs.readSessionTicket(); err != nil {
-			return err
-		}
-		if err := hs.readFinished(c.serverFinished[:]); err != nil {
-			return err
-		}
+		hs.readSessionTicket()!
+		hs.readFinished(c.serverFinished[:])!
 	}
-	if err := hs.saveSessionTicket(); err != nil {
-		return err
-	}
+	hs.saveSessionTicket()!
 
 	c.ekm = ekmFromMasterSecret(c.vers, hs.suite, hs.masterSecret, hs.hello.random, hs.serverHello.random)
 	c.isHandshakeComplete.Store(true)
@@ -681,9 +639,7 @@ func (hs *clientHandshakeState) doFullHandshake() error {
 	if c.handshakes == 0 {
 		// If this is the first handshake on a connection, process and
 		// (optionally) verify the server's certificates.
-		if err := c.verifyServerCertificate(certMsg.certificates); err != nil {
-			return err
-		}
+		c.verifyServerCertificate(certMsg.certificates)!
 	} else {
 		// This is a renegotiation handshake. We require that the
 		// server's identity (i.e. leaf certificate) is unchanged and
@@ -751,9 +707,7 @@ func (hs *clientHandshakeState) doFullHandshake() error {
 	if certRequested {
 		certMsg = new(certificateMsg)
 		certMsg.certificates = chainToSend.Certificate
-		if _, err := hs.c.writeHandshakeRecord(certMsg, &hs.finishedHash); err != nil {
-			return err
-		}
+		hs.c.writeHandshakeRecord(certMsg, &hs.finishedHash)!
 	}
 
 	preMasterSecret, ckx, err := keyAgreement.generateClientKeyExchange(c.config, hs.hello, c.peerCertificates[0])
@@ -762,9 +716,7 @@ func (hs *clientHandshakeState) doFullHandshake() error {
 		return err
 	}
 	if ckx != nil {
-		if _, err := hs.c.writeHandshakeRecord(ckx, &hs.finishedHash); err != nil {
-			return err
-		}
+		hs.c.writeHandshakeRecord(ckx, &hs.finishedHash)!
 	}
 
 	if hs.serverHello.extendedMasterSecret {
@@ -839,9 +791,7 @@ func (hs *clientHandshakeState) doFullHandshake() error {
 			}
 		}
 
-		if _, err := hs.c.writeHandshakeRecord(certVerify, &hs.finishedHash); err != nil {
-			return err
-		}
+		hs.c.writeHandshakeRecord(certVerify, &hs.finishedHash)!
 	}
 
 	hs.finishedHash.discardHandshakeBuffer()
@@ -881,9 +831,7 @@ func (hs *clientHandshakeState) serverResumedSession() bool {
 func (hs *clientHandshakeState) processServerHello() (bool, error) {
 	c := hs.c
 
-	if err := hs.pickCipherSuite(); err != nil {
-		return false, err
-	}
+	hs.pickCipherSuite()!
 
 	if hs.serverHello.compressionMethod != compressionNone {
 		c.sendAlert(alertIllegalParameter)
@@ -989,17 +937,12 @@ func checkALPN(clientProtos []string, serverProto string, quic bool) error {
 func (hs *clientHandshakeState) readFinished(out []byte) error {
 	c := hs.c
 
-	if err := c.readChangeCipherSpec(); err != nil {
-		return err
-	}
+	c.readChangeCipherSpec()!
 
 	// finishedMsg is included in the transcript, but not until after we
 	// check the client version, since the state before this message was
 	// sent is used during verification.
-	msg, err := c.readHandshake(nil)
-	if err != nil {
-		return err
-	}
+	msg := c.readHandshake(nil)!
 	serverFinished, ok := msg.(*finishedMsg)
 	if !ok {
 		c.sendAlert(alertUnexpectedMessage)
@@ -1013,9 +956,7 @@ func (hs *clientHandshakeState) readFinished(out []byte) error {
 		return errors.New("tls: server's Finished message was incorrect")
 	}
 
-	if err := transcriptMsg(serverFinished, &hs.finishedHash); err != nil {
-		return err
-	}
+	transcriptMsg(serverFinished, &hs.finishedHash)!
 
 	copy(out, verify)
 	return nil
@@ -1032,10 +973,7 @@ func (hs *clientHandshakeState) readSessionTicket() error {
 		return errors.New("tls: server sent unrequested session ticket")
 	}
 
-	msg, err := c.readHandshake(&hs.finishedHash)
-	if err != nil {
-		return err
-	}
+	msg := c.readHandshake(&hs.finishedHash)!
 	sessionTicketMsg, ok := msg.(*newSessionTicketMsg)
 	if !ok {
 		c.sendAlert(alertUnexpectedMessage)
@@ -1069,15 +1007,11 @@ func (hs *clientHandshakeState) saveSessionTicket() error {
 func (hs *clientHandshakeState) sendFinished(out []byte) error {
 	c := hs.c
 
-	if err := c.writeChangeCipherRecord(); err != nil {
-		return err
-	}
+	c.writeChangeCipherRecord()!
 
 	finished := new(finishedMsg)
 	finished.verifyData = hs.finishedHash.clientSum(hs.masterSecret)
-	if _, err := hs.c.writeHandshakeRecord(finished, &hs.finishedHash); err != nil {
-		return err
-	}
+	hs.c.writeHandshakeRecord(finished, &hs.finishedHash)!
 	copy(out, finished.verifyData)
 	return nil
 }
@@ -1326,10 +1260,7 @@ func hostnameInSNI(name string) string {
 }
 
 func computeAndUpdatePSK(m *clientHelloMsg, binderKey []byte, transcript hash.Hash, finishedHash func([]byte, hash.Hash) []byte) error {
-	helloBytes, err := m.marshalWithoutBinders()
-	if err != nil {
-		return err
-	}
+	helloBytes := m.marshalWithoutBinders()!
 	transcript.Write(helloBytes)
 	pskBinders := [][]byte{finishedHash(binderKey, transcript)}
 	return m.updateBinders(pskBinders)

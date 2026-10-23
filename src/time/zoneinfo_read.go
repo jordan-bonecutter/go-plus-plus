@@ -401,10 +401,7 @@ func get2(b []byte) int {
 // loadTzinfoFromZip returns the contents of the file with the given name
 // in the given uncompressed zip file.
 func loadTzinfoFromZip(zipfile, name string) ([]byte, error) {
-	fd, err := open(zipfile)
-	if err != nil {
-		return nil, err
-	}
+	fd := open(zipfile)!
 	defer closefd(fd)
 
 	const (

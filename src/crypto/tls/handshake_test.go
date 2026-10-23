@@ -85,10 +85,7 @@ func checkOpenSSLVersion() error {
 	}
 
 	openssl := exec.Command("openssl", "version")
-	output, err := openssl.CombinedOutput()
-	if err != nil {
-		return err
-	}
+	output := openssl.CombinedOutput()!
 
 	version := string(output)
 	if strings.HasPrefix(version, "OpenSSL 1.1.1") {
@@ -643,10 +640,7 @@ func TestDoubleClientHelloHRR(t *testing.T) {
 func concatHandshakeMessages(msgs ...handshakeMessage) ([]byte, error) {
 	var marshalled []byte
 	for _, msg := range msgs {
-		data, err := msg.marshal()
-		if err != nil {
-			return nil, err
-		}
+		data := msg.marshal()!
 		marshalled = append(marshalled, data...)
 	}
 	m := len(marshalled)

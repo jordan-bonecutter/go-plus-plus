@@ -111,10 +111,7 @@ func StringToUTF16Ptr(s string) *uint16 { return &StringToUTF16(s)[0] }
 // contains a NUL byte at any location, it returns (nil, EINVAL).
 // Unpaired surrogates are encoded using WTF-8.
 func UTF16PtrFromString(s string) (*uint16, error) {
-	a, err := UTF16FromString(s)
-	if err != nil {
-		return nil, err
-	}
+	a := UTF16FromString(s)!
 	return &a[0], nil
 }
 
@@ -613,46 +610,28 @@ func Getwd() (wd string, err error) {
 }
 
 func Chdir(path string) (err error) {
-	pathp, err := UTF16PtrFromString(path)
-	if err != nil {
-		return err
-	}
+	pathp := UTF16PtrFromString(path)!
 	return SetCurrentDirectory(pathp)
 }
 
 func Mkdir(path string, mode uint32) (err error) {
-	pathp, err := UTF16PtrFromString(path)
-	if err != nil {
-		return err
-	}
+	pathp := UTF16PtrFromString(path)!
 	return CreateDirectory(pathp, nil)
 }
 
 func Rmdir(path string) (err error) {
-	pathp, err := UTF16PtrFromString(path)
-	if err != nil {
-		return err
-	}
+	pathp := UTF16PtrFromString(path)!
 	return RemoveDirectory(pathp)
 }
 
 func Unlink(path string) (err error) {
-	pathp, err := UTF16PtrFromString(path)
-	if err != nil {
-		return err
-	}
+	pathp := UTF16PtrFromString(path)!
 	return DeleteFile(pathp)
 }
 
 func Rename(oldpath, newpath string) (err error) {
-	from, err := UTF16PtrFromString(oldpath)
-	if err != nil {
-		return err
-	}
-	to, err := UTF16PtrFromString(newpath)
-	if err != nil {
-		return err
-	}
+	from := UTF16PtrFromString(oldpath)!
+	to := UTF16PtrFromString(newpath)!
 	return MoveFile(from, to)
 }
 
@@ -688,10 +667,7 @@ func Pipe(p []Handle) (err error) {
 		return EINVAL
 	}
 	var r, w Handle
-	e := CreatePipe(&r, &w, makeInheritSa(), 0)
-	if e != nil {
-		return e
-	}
+	CreatePipe(&r, &w, makeInheritSa(), 0)!
 	p[0] = r
 	p[1] = w
 	return nil
@@ -701,16 +677,10 @@ func Utimes(path string, tv []Timeval) (err error) {
 	if len(tv) != 2 {
 		return EINVAL
 	}
-	pathp, e := UTF16PtrFromString(path)
-	if e != nil {
-		return e
-	}
-	h, e := CreateFile(pathp,
+	pathp := UTF16PtrFromString(path)!
+	h := CreateFile(pathp,
 		FILE_WRITE_ATTRIBUTES, FILE_SHARE_WRITE, nil,
-		OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0)
-	if e != nil {
-		return e
-	}
+		OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0)!
 	defer Close(h)
 	a := Filetime{}
 	w := Filetime{}
@@ -730,16 +700,10 @@ func UtimesNano(path string, ts []Timespec) (err error) {
 	if len(ts) != 2 {
 		return EINVAL
 	}
-	pathp, e := UTF16PtrFromString(path)
-	if e != nil {
-		return e
-	}
-	h, e := CreateFile(pathp,
+	pathp := UTF16PtrFromString(path)!
+	h := CreateFile(pathp,
 		FILE_WRITE_ATTRIBUTES, FILE_SHARE_WRITE, nil,
-		OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0)
-	if e != nil {
-		return e
-	}
+		OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0)!
 	defer Close(h)
 	a := Filetime{}
 	w := Filetime{}
@@ -757,14 +721,8 @@ func Fsync(fd Handle) (err error) {
 }
 
 func Chmod(path string, mode uint32) (err error) {
-	p, e := UTF16PtrFromString(path)
-	if e != nil {
-		return e
-	}
-	attrs, e := GetFileAttributes(p)
-	if e != nil {
-		return e
-	}
+	p := UTF16PtrFromString(path)!
+	attrs := GetFileAttributes(p)!
 	if mode&S_IWRITE != 0 {
 		attrs &^= FILE_ATTRIBUTE_READONLY
 	} else {
@@ -992,36 +950,26 @@ func SetsockoptInt(fd Handle, level, opt int, value int) (err error) {
 }
 
 func Bind(fd Handle, sa Sockaddr) (err error) {
-	ptr, n, err := sa.sockaddr()
-	if err != nil {
-		return err
-	}
+	ptr, n := sa.sockaddr()!
 	return bind(fd, ptr, n)
 }
 
 func Connect(fd Handle, sa Sockaddr) (err error) {
-	ptr, n, err := sa.sockaddr()
-	if err != nil {
-		return err
-	}
+	ptr, n := sa.sockaddr()!
 	return connect(fd, ptr, n)
 }
 
 func Getsockname(fd Handle) (sa Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	l := int32(unsafe.Sizeof(rsa))
-	if err = getsockname(fd, &rsa, &l); err != nil {
-		return
-	}
+	getsockname(fd, &rsa, &l)!
 	return rsa.Sockaddr()
 }
 
 func Getpeername(fd Handle) (sa Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	l := int32(unsafe.Sizeof(rsa))
-	if err = getpeername(fd, &rsa, &l); err != nil {
-		return
-	}
+	getpeername(fd, &rsa, &l)!
 	return rsa.Sockaddr()
 }
 
@@ -1271,24 +1219,16 @@ func FindNextFile(handle Handle, data *Win32finddata) (err error) {
 }
 
 func getProcessEntry(pid int) (*ProcessEntry32, error) {
-	snapshot, err := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)
-	if err != nil {
-		return nil, err
-	}
+	snapshot := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)!
 	defer CloseHandle(snapshot)
 	var procEntry ProcessEntry32
 	procEntry.Size = uint32(unsafe.Sizeof(procEntry))
-	if err = Process32First(snapshot, &procEntry); err != nil {
-		return nil, err
-	}
+	Process32First(snapshot, &procEntry)!
 	for {
 		if procEntry.ProcessID == uint32(pid) {
 			return &procEntry, nil
 		}
-		err = Process32Next(snapshot, &procEntry)
-		if err != nil {
-			return nil, err
-		}
+		Process32Next(snapshot, &procEntry)!
 	}
 }
 
@@ -1346,10 +1286,7 @@ func removeExtendedPrefix(path []uint16) []uint16 {
 
 func Fchdir(fd Handle) (err error) {
 	var buf [MAX_PATH + 1]uint16
-	path, err := fdpath(fd, buf[:])
-	if err != nil {
-		return err
-	}
+	path := fdpath(fd, buf[:])!
 	// When using VOLUME_NAME_DOS, the path is always prefixed by "\\?\".
 	// That prefix tells the Windows APIs to disable all string parsing and to send
 	// the string that follows it straight to the file system.

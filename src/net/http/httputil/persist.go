@@ -423,9 +423,6 @@ func (cc *ClientConn) Read(req *http.Request) (resp *http.Response, err error) {
 
 // Do is convenience method that writes a request and reads a response.
 func (cc *ClientConn) Do(req *http.Request) (*http.Response, error) {
-	err := cc.Write(req)
-	if err != nil {
-		return nil, err
-	}
+	cc.Write(req)!
 	return cc.Read(req)
 }

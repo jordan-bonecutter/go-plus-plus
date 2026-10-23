@@ -640,23 +640,15 @@ func TestGCMAsm(t *testing.T) {
 	// run test for all permutations
 	test := func(ks int, pt, ad []byte) error {
 		key := make([]byte, ks)
-		if _, err := io.ReadFull(rand.Reader, key); err != nil {
-			return err
-		}
+		io.ReadFull(rand.Reader, key)!
 		asm, generic, err := newAESGCM(key)
 		if err != nil {
 			return err
 		}
-		if _, err := io.ReadFull(rand.Reader, pt); err != nil {
-			return err
-		}
-		if _, err := io.ReadFull(rand.Reader, ad); err != nil {
-			return err
-		}
+		io.ReadFull(rand.Reader, pt)!
+		io.ReadFull(rand.Reader, ad)!
 		nonce := make([]byte, 12)
-		if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-			return err
-		}
+		io.ReadFull(rand.Reader, nonce)!
 		want := generic.Seal(nil, nonce, pt, ad)
 		got := asm.Seal(nil, nonce, pt, ad)
 		if !bytes.Equal(want, got) {

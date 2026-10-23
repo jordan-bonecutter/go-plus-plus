@@ -109,9 +109,7 @@ func (t *traceMultiplexer) addedSubscriber() error {
 		// This is necessary for the trace reader goroutine to pick up on the new subscriber.
 		runtime_traceAdvance(false)
 	} else {
-		if err := t.startLocked(); err != nil {
-			return err
-		}
+		t.startLocked()!
 	}
 	t.subscribers++
 	return nil
@@ -139,9 +137,7 @@ func (t *traceMultiplexer) removedSubscriber() {
 }
 
 func (t *traceMultiplexer) startLocked() error {
-	if err := runtime.StartTrace(); err != nil {
-		return err
-	}
+	runtime.StartTrace()!
 
 	// Grab the trace reader goroutine's subscribers.
 	//

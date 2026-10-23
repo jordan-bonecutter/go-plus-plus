@@ -38,10 +38,7 @@ func NewPublicKeyECDH(curve string, bytes []byte) (*PublicKeyECDH, error) {
 		return nil, errors.New("NewPublicKeyECDH: wrong key length")
 	}
 
-	nid, err := curveNID(curve)
-	if err != nil {
-		return nil, err
-	}
+	nid := curveNID(curve)!
 
 	group := C._goboringcrypto_EC_GROUP_new_by_curve_name(nid)
 	if group == nil {
@@ -74,10 +71,7 @@ func NewPrivateKeyECDH(curve string, bytes []byte) (*PrivateKeyECDH, error) {
 		return nil, errors.New("NewPrivateKeyECDH: wrong key length")
 	}
 
-	nid, err := curveNID(curve)
-	if err != nil {
-		return nil, err
-	}
+	nid := curveNID(curve)!
 	key := C._goboringcrypto_EC_KEY_new_by_curve_name(nid)
 	if key == nil {
 		return nil, fail("EC_KEY_new_by_curve_name")
@@ -162,11 +156,7 @@ func ECDH(priv *PrivateKeyECDH, pub *PublicKeyECDH) ([]byte, error) {
 	if C._goboringcrypto_EC_POINT_mul(group, pt, nil, pub.key, privBig, nil) == 0 {
 		return nil, fail("EC_POINT_mul")
 	}
-	out, err := xCoordBytesECDH(priv.curve, group, pt)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
+	return xCoordBytesECDH(priv.curve, group, pt)!, nil
 }
 
 func xCoordBytesECDH(curve string, group *C.GO_EC_GROUP, pt *C.GO_EC_POINT) ([]byte, error) {

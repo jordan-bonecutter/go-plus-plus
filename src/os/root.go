@@ -23,10 +23,7 @@ import (
 //
 // See [Root] for details and limitations.
 func OpenInRoot(dir, name string) (*File, error) {
-	r, err := OpenRoot(dir)
-	if err != nil {
-		return nil, err
-	}
+	r := OpenRoot(dir)!
 	defer r.Close()
 	return r.Open(name)
 }
@@ -119,10 +116,7 @@ func (r *Root) OpenFile(name string, flag int, perm FileMode) (*File, error) {
 		return nil, &PathError{Op: "openat", Path: name, Err: errors.New("unsupported file mode")}
 	}
 	r.logOpen(name)
-	rf, err := rootOpenFileNolog(r, name, flag, perm)
-	if err != nil {
-		return nil, err
-	}
+	rf := rootOpenFileNolog(r, name, flag, perm)!
 	rf.appendMode = flag&O_APPEND != 0
 	return rf, nil
 }
@@ -251,10 +245,7 @@ func (r *Root) Symlink(oldname, newname string) error {
 // ReadFile reads the named file in the root and returns its contents.
 // See [ReadFile] for more details.
 func (r *Root) ReadFile(name string) ([]byte, error) {
-	f, err := r.Open(name)
-	if err != nil {
-		return nil, err
-	}
+	f := r.Open(name)!
 	defer f.Close()
 	return readFileContents(statOrZero(f), f.Read)
 }
@@ -367,11 +358,7 @@ func (rfs *rootFS) Open(name string) (fs.File, error) {
 	if !isValidRootFSPath(name) {
 		return nil, &PathError{Op: "open", Path: name, Err: ErrInvalid}
 	}
-	f, err := r.Open(name)
-	if err != nil {
-		return nil, err
-	}
-	return f, nil
+	return r.Open(name)!, nil
 }
 
 func (rfs *rootFS) ReadDir(name string) ([]DirEntry, error) {
@@ -403,10 +390,7 @@ func (rfs *rootFS) ReadFile(name string) ([]byte, error) {
 	if !isValidRootFSPath(name) {
 		return nil, &PathError{Op: "readfile", Path: name, Err: ErrInvalid}
 	}
-	f, err := r.Open(name)
-	if err != nil {
-		return nil, err
-	}
+	f := r.Open(name)!
 	defer f.Close()
 	return readFileContents(statOrZero(f), f.Read)
 }

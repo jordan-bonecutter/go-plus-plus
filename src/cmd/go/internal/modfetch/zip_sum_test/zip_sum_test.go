@@ -184,10 +184,7 @@ func TestZipSums(t *testing.T) {
 }
 
 func readZipSumTests() ([]zipSumTest, error) {
-	f, err := os.Open(filepath.FromSlash(zipSumsPath))
-	if err != nil {
-		return nil, err
-	}
+	f := os.Open(filepath.FromSlash(zipSumsPath))!
 	defer f.Close()
 	r := csv.NewReader(f)
 
@@ -221,9 +218,7 @@ func writeZipSumTests(tests []zipSumTest) (err error) {
 	line := make([]string, 0, 4)
 	for _, test := range tests {
 		line = append(line[:0], test.m.Path, test.m.Version, test.wantSum, test.wantFileHash)
-		if err := w.Write(line); err != nil {
-			return err
-		}
+		w.Write(line)!
 	}
 	w.Flush()
 	return nil

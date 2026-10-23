@@ -99,10 +99,7 @@ func listGroupsFromReader(u *User, r io.Reader) ([]string, error) {
 }
 
 func listGroups(u *User) ([]string, error) {
-	f, err := os.Open(groupFile)
-	if err != nil {
-		return nil, err
-	}
+	f := os.Open(groupFile)!
 	defer f.Close()
 
 	return listGroupsFromReader(u, f)

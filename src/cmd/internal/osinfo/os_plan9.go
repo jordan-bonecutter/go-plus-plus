@@ -12,10 +12,7 @@ import (
 
 // Version returns the OS version name/number.
 func Version() (string, error) {
-	b, err := os.ReadFile("/dev/osversion")
-	if err != nil {
-		return "", err
-	}
+	b := os.ReadFile("/dev/osversion")!
 
 	return string(b), nil
 }

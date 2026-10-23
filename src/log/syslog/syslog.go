@@ -136,10 +136,7 @@ func Dial(network, raddr string, priority Priority, tag string) (*Writer, error)
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	err := w.connect()
-	if err != nil {
-		return nil, err
-	}
+	w.connect()!
 	return w, nil
 }
 
@@ -258,9 +255,7 @@ func (w *Writer) writeAndRetry(p Priority, s string) (int, error) {
 			return n, nil
 		}
 	}
-	if err := w.connect(); err != nil {
-		return 0, err
-	}
+	w.connect()!
 	return w.write(pr, s)
 }
 
@@ -273,10 +268,7 @@ func (w *Writer) write(p Priority, msg string) (int, error) {
 		nl = "\n"
 	}
 
-	err := w.conn.writeString(p, w.hostname, w.tag, msg, nl)
-	if err != nil {
-		return 0, err
-	}
+	w.conn.writeString(p, w.hostname, w.tag, msg, nl)!
 	// Note: return the length of the input, not the number of
 	// bytes printed by Fprintf, because this must behave like
 	// an io.Writer.
@@ -310,9 +302,6 @@ func (n *netConn) close() error {
 // the syslog facility and severity. The logFlag argument is the flag
 // set passed through to [log.New] to create the Logger.
 func NewLogger(p Priority, logFlag int) (*log.Logger, error) {
-	s, err := New(p, "")
-	if err != nil {
-		return nil, err
-	}
+	s := New(p, "")!
 	return log.New(s, "", logFlag), nil
 }

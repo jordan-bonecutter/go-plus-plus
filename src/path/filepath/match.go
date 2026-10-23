@@ -336,10 +336,7 @@ func glob(dir, pattern string, matches []string) (m []string, e error) {
 	slices.Sort(names)
 
 	for _, n := range names {
-		matched, err := Match(pattern, n)
-		if err != nil {
-			return m, err
-		}
+		matched := Match(pattern, n)!
 		if matched {
 			m = append(m, Join(dir, n))
 		}

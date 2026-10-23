@@ -249,10 +249,7 @@ func (n *Number) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 	if k, n := dec.StackIndex(dec.StackDepth()); k == '{' && n%2 == 0 {
 		stringify = true // expecting a JSON object name
 	}
-	val, err := dec.ReadValue()
-	if err != nil {
-		return err
-	}
+	val := dec.ReadValue()!
 	val0 := val
 	k := val.Kind()
 	switch k {

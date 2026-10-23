@@ -149,10 +149,7 @@ func processLog(testName string, tsanLog []string) string {
 // built with instrumentation enabled and returns the output of 'go test'
 // which includes possible data race reports from ThreadSanitizer.
 func runTests(t *testing.T) ([]byte, error) {
-	tests, err := filepath.Glob("./testdata/*_test.go")
-	if err != nil {
-		return nil, err
-	}
+	tests := filepath.Glob("./testdata/*_test.go")!
 	args := []string{"test", "-race", "-v"}
 	args = append(args, tests...)
 	cmd := exec.Command(testenv.GoToolPath(t), args...)

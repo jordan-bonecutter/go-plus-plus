@@ -37,9 +37,7 @@ import (
 //		t.Fatal(err)
 //	}
 func TestFS(fsys fs.FS, expected ...string) error {
-	if err := testFS(fsys, expected...); err != nil {
-		return err
-	}
+	testFS(fsys, expected...)!
 	for _, name := range expected {
 		if i := strings.Index(name, "/"); i >= 0 {
 			dir, dirSlash := name[:i], name[:i+1]
@@ -49,10 +47,7 @@ func TestFS(fsys fs.FS, expected ...string) error {
 					subExpected = append(subExpected, name[len(dirSlash):])
 				}
 			}
-			sub, err := fs.Sub(fsys, dir)
-			if err != nil {
-				return err
-			}
+			sub := fs.Sub(fsys, dir)!
 			if err := testFS(sub, subExpected...); err != nil {
 				return fmt.Errorf("testing fs.Sub(fsys, %s): %w", dir, err)
 			}

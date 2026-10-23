@@ -45,10 +45,7 @@ func androidLoadTzinfoFromTzdata(file, name string) ([]byte, error) {
 	if len(name) > namesize {
 		return nil, errors.New(name + " is longer than the maximum zone name length (40 bytes)")
 	}
-	fd, err := open(file)
-	if err != nil {
-		return nil, err
-	}
+	fd := open(file)!
 	defer closefd(fd)
 
 	buf := make([]byte, headersize)

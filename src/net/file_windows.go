@@ -14,10 +14,7 @@ const _SO_TYPE = windows.SO_TYPE
 
 func dupSocket(h syscall.Handle) (syscall.Handle, error) {
 	var info syscall.WSAProtocolInfo
-	err := windows.WSADuplicateSocket(h, uint32(syscall.Getpid()), &info)
-	if err != nil {
-		return 0, err
-	}
+	windows.WSADuplicateSocket(h, uint32(syscall.Getpid()), &info)!
 	return windows.WSASocket(-1, -1, -1, &info, 0, windows.WSA_FLAG_OVERLAPPED|windows.WSA_FLAG_NO_HANDLE_INHERIT)
 }
 

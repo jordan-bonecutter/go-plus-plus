@@ -234,10 +234,7 @@ func ParseSessionState(data []byte) (*SessionState, error) {
 		return nil, errors.New("tls: invalid session encoding")
 	}
 	for _, cert := range cert.Certificate {
-		c, err := globalCertCache.newCert(cert)
-		if err != nil {
-			return nil, err
-		}
+		c := globalCertCache.newCert(cert)!
 		ss.peerCertificates = append(ss.peerCertificates, c)
 	}
 	if ss.isClient && len(ss.peerCertificates) == 0 {
@@ -264,10 +261,7 @@ func ParseSessionState(data []byte) (*SessionState, error) {
 			if !readUint24LengthPrefixed(&certList, &cert) {
 				return nil, errors.New("tls: invalid session encoding")
 			}
-			c, err := globalCertCache.newCert(cert)
-			if err != nil {
-				return nil, err
-			}
+			c := globalCertCache.newCert(cert)!
 			chain = append(chain, c)
 		}
 		ss.verifiedChains = append(ss.verifiedChains, chain)
@@ -315,10 +309,7 @@ func (c *Conn) sessionState() *SessionState {
 // session ticket keys. It can be used as a [Config.WrapSession] implementation.
 func (c *Config) EncryptTicket(cs ConnectionState, ss *SessionState) ([]byte, error) {
 	ticketKeys := c.ticketKeys(nil)
-	stateBytes, err := ss.Bytes()
-	if err != nil {
-		return nil, err
-	}
+	stateBytes := ss.Bytes()!
 	return c.encryptTicket(stateBytes, ticketKeys)
 }
 
@@ -333,9 +324,7 @@ func (c *Config) encryptTicket(state []byte, ticketKeys []ticketKey) ([]byte, er
 	authenticated := encrypted[:len(encrypted)-sha256.Size]
 	macBytes := encrypted[len(encrypted)-sha256.Size:]
 
-	if _, err := io.ReadFull(c.rand(), iv); err != nil {
-		return nil, err
-	}
+	io.ReadFull(c.rand(), iv)!
 	key := ticketKeys[0]
 	block, err := aes.NewCipher(key.aesKey[:])
 	if err != nil {

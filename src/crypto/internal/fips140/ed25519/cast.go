@@ -26,10 +26,7 @@ func pairwiseTest(k *PrivateKey) error {
 	// Note that this runs pub.a.SetBytes. If we wanted to make key generation
 	// in FIPS mode faster, we could reuse A from GenerateKey. But another thing
 	// that could make it faster is just _not doing a useless self-test_.
-	pub, err := NewPublicKey(k.PublicKey())
-	if err != nil {
-		return err
-	}
+	pub := NewPublicKey(k.PublicKey())!
 	return Verify(pub, msg, sig)
 }
 

@@ -214,9 +214,7 @@ func (t *Template) Parse(text string) (*Template, error) {
 	}
 	// Add the newly parsed trees, including the one for t, into our common structure.
 	for name, tree := range trees {
-		if _, err := t.AddParseTree(name, tree); err != nil {
-			return nil, err
-		}
+		t.AddParseTree(name, tree)!
 	}
 	return t, nil
 }

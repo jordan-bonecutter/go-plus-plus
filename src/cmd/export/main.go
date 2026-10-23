@@ -72,10 +72,7 @@ func main() {
 }
 
 func export(configFile string) error {
-	cfg, err := readConfig(configFile)
-	if err != nil {
-		return err
-	}
+	cfg := readConfig(configFile)!
 
 	// TODO: Determine if it's useful for go list -export to return partial type
 	// information, perhaps with the -e flag.
@@ -84,15 +81,9 @@ func export(configFile string) error {
 	var files []*ast.File
 	for _, name := range cfg.GoFiles {
 		// cmd/compile prefixes paths in std with "$GOROOT"; do the same here.
-		src, err := os.ReadFile(name)
-		if err != nil {
-			return err
-		}
+		src := os.ReadFile(name)!
 		name = objabi.AbsFile("", name, "") // name is an absolute path
-		f, err := parser.ParseFile(fset, name, src, parser.SkipObjectResolution)
-		if err != nil {
-			return err
-		}
+		f := parser.ParseFile(fset, name, src, parser.SkipObjectResolution)!
 		files = append(files, f)
 	}
 	tc := &types.Config{
@@ -100,16 +91,10 @@ func export(configFile string) error {
 		Sizes:     types.SizesFor("gc", build.Default.GOARCH),
 		GoVersion: cfg.GoVersion,
 	}
-	pkg, err := tc.Check(cfg.ImportPath, fset, files, nil)
-	if err != nil {
-		return err
-	}
+	pkg := tc.Check(cfg.ImportPath, fset, files, nil)!
 
 	// Write export data.
-	f, err := os.Create(cfg.Output)
-	if err != nil {
-		return err
-	}
+	f := os.Create(cfg.Output)!
 	if err := gcexportdata.Write(f, fset, pkg); err != nil {
 		f.Close() // ignore error
 		return err
@@ -118,10 +103,7 @@ func export(configFile string) error {
 }
 
 func readConfig(filename string) (*config, error) {
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
+	data := os.ReadFile(filename)!
 	cfg := new(config)
 	if err := json.Unmarshal(data, cfg); err != nil {
 		return nil, fmt.Errorf("can't decode input %s: %v", filename, err)
@@ -151,10 +133,7 @@ func makeTypesImporter(cfg *config, fset *token.FileSet) types.Importer {
 		if !ok {
 			return nil, fmt.Errorf("can't resolve export %s", pkgPath)
 		}
-		f, err := os.Open(cfgPath)
-		if err != nil {
-			return nil, err
-		}
+		f := os.Open(cfgPath)!
 		defer f.Close()
 		return gcexportdata.Read(f, fset, imports, pkgPath)
 	})

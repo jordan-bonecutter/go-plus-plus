@@ -152,9 +152,7 @@ func newUnmarshalErrorBefore(d *jsontext.Decoder, t reflect.Type, err error) err
 func newUnmarshalErrorBeforeWithSkipping(d *jsontext.Decoder, t reflect.Type, err error) error {
 	err = newUnmarshalErrorBefore(d, t, err)
 	if export.Decoder(d).Flags.Get(jsonflags.ReportErrorsWithLegacySemantics) {
-		if err2 := export.Decoder(d).SkipValue(); err2 != nil {
-			return err2
-		}
+		export.Decoder(d).SkipValue()!
 	}
 	return err
 }
@@ -195,9 +193,7 @@ func newUnmarshalErrorAfterWithValue(d *jsontext.Decoder, t reflect.Type, err er
 func newUnmarshalErrorAfterWithSkipping(d *jsontext.Decoder, t reflect.Type, err error) error {
 	err = newUnmarshalErrorAfter(d, t, err)
 	if export.Decoder(d).Flags.Get(jsonflags.ReportErrorsWithLegacySemantics) {
-		if err2 := export.Decoder(d).SkipValueRemainder(); err2 != nil {
-			return err2
-		}
+		export.Decoder(d).SkipValueRemainder()!
 	}
 	return err
 }

@@ -1296,10 +1296,7 @@ type filterListener struct {
 }
 
 func (l *filterListener) Accept() (net.Conn, error) {
-	c, err := l.Listener.Accept()
-	if err != nil {
-		return nil, err
-	}
+	c := l.Listener.Accept()!
 	return l.accept(c)
 }
 

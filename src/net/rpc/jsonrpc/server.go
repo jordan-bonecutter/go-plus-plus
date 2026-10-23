@@ -63,9 +63,7 @@ type serverResponse struct {
 
 func (c *serverCodec) ReadRequestHeader(r *rpc.Request) error {
 	c.req.reset()
-	if err := c.dec.Decode(&c.req); err != nil {
-		return err
-	}
+	c.dec.Decode(&c.req)!
 	r.ServiceMethod = c.req.Method
 
 	// JSON request id can be any JSON value;

@@ -13,10 +13,7 @@ import (
 )
 
 func getFeatureList() ([]string, error) {
-	cpuinfo, err := os.ReadFile("/proc/cpuinfo")
-	if err != nil {
-		return nil, err
-	}
+	cpuinfo := os.ReadFile("/proc/cpuinfo")!
 	r := regexp.MustCompile("features\\s*:\\s*(.*)")
 	b := r.FindSubmatch(cpuinfo)
 	if len(b) < 2 {

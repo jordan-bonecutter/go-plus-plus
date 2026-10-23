@@ -47,13 +47,6 @@ func fetchRIB(typ, arg int) ([]byte, error) {
 // The typ argument is something like syscall.NET_RT_IFLIST.
 // The argument is an interface index or 0 for all.
 func FetchRIBMessages(typ, arg int) ([]Message, error) {
-	b, err := fetchRIB(typ, arg)
-	if err != nil {
-		return nil, err
-	}
-	ms, err := parseRIB(b)
-	if err != nil {
-		return nil, err
-	}
-	return ms, nil
+	b := fetchRIB(typ, arg)!
+	return parseRIB(b)!, nil
 }

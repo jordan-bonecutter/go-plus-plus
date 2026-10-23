@@ -250,10 +250,7 @@ func f(a int, s string) S {
 	}
 
 	checkExpr := func(pos token.Pos, str string) (Object, error) {
-		expr, err := parser.ParseExprFrom(fset, "eval", str, 0)
-		if err != nil {
-			return nil, err
-		}
+		expr := parser.ParseExprFrom(fset, "eval", str, 0)!
 
 		info := &Info{
 			Uses:       make(map[*ast.Ident]Object),

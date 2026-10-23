@@ -244,34 +244,19 @@ var fileTests = []fileTest{
 }
 
 func readerAtFromObscured(name string) (io.ReaderAt, error) {
-	b, err := obscuretestdata.ReadFile(name)
-	if err != nil {
-		return nil, err
-	}
+	b := obscuretestdata.ReadFile(name)!
 	return bytes.NewReader(b), nil
 }
 
 func openObscured(name string) (*File, error) {
-	ra, err := readerAtFromObscured(name)
-	if err != nil {
-		return nil, err
-	}
-	ff, err := NewFile(ra)
-	if err != nil {
-		return nil, err
-	}
+	ra := readerAtFromObscured(name)!
+	ff := NewFile(ra)!
 	return ff, nil
 }
 
 func openFatObscured(name string) (*FatFile, error) {
-	ra, err := readerAtFromObscured(name)
-	if err != nil {
-		return nil, err
-	}
-	ff, err := NewFatFile(ra)
-	if err != nil {
-		return nil, err
-	}
+	ra := readerAtFromObscured(name)!
+	ff := NewFatFile(ra)!
 	return ff, nil
 }
 

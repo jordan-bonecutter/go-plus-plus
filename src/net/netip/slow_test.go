@@ -62,10 +62,7 @@ func parseIPSlow(s string) (Addr, error) {
 		return parseIPv4Slow(s)
 	}
 
-	normal, err := normalizeIPv6Slow(s)
-	if err != nil {
-		return Addr{}, err
-	}
+	normal := normalizeIPv6Slow(s)!
 
 	// At this point, we've normalized the address back into 8 hex
 	// fields of 16 bits each. Parse that.
@@ -75,10 +72,7 @@ func parseIPSlow(s string) (Addr, error) {
 	}
 	var ret [16]byte
 	for i, f := range fs {
-		a, b, err := parseWord(f)
-		if err != nil {
-			return Addr{}, err
-		}
+		a, b := parseWord(f)!
 		ret[i*2] = a
 		ret[i*2+1] = b
 	}
@@ -113,10 +107,7 @@ func normalizeIPv6Slow(orig string) (string, error) {
 		return "", fmt.Errorf("netaddr.ParseIP(%q): invalid IP address", orig)
 	}
 	if strings.Contains(s[i+1:], ".") {
-		ip, err := parseIPv4Slow(s[i+1:])
-		if err != nil {
-			return "", err
-		}
+		ip := parseIPv4Slow(s[i+1:])!
 		a4 := ip.As4()
 		s = fmt.Sprintf("%s:%02x%02x:%02x%02x", s[:i], a4[0], a4[1], a4[2], a4[3])
 	}
@@ -170,10 +161,7 @@ func parseIPv4Slow(s string) (Addr, error) {
 	}
 	var ret [4]byte
 	for i := range ret {
-		val, err := strconv.ParseUint(fs[i], 10, 8)
-		if err != nil {
-			return Addr{}, err
-		}
+		val := strconv.ParseUint(fs[i], 10, 8)!
 		ret[i] = uint8(val)
 	}
 	return AddrFrom4([4]byte{ret[0], ret[1], ret[2], ret[3]}), nil
@@ -185,9 +173,6 @@ func parseWord(s string) (byte, byte, error) {
 	if len(s) > 4 {
 		return 0, 0, fmt.Errorf("parseWord(%q): invalid word", s)
 	}
-	ret, err := strconv.ParseUint(s, 16, 16)
-	if err != nil {
-		return 0, 0, err
-	}
+	ret := strconv.ParseUint(s, 16, 16)!
 	return uint8(ret >> 8), uint8(ret), nil
 }

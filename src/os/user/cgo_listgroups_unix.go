@@ -29,9 +29,7 @@ func listGroups(u *User) ([]string, error) {
 	if rv == -1 {
 		// Mac is the only Unix that does not set n properly when rv == -1, so
 		// we need to use different logic for Mac vs. the other OS's.
-		if err := groupRetry(u.Username, nameC, userGID, &gidsC, &n); err != nil {
-			return nil, err
-		}
+		groupRetry(u.Username, nameC, userGID, &gidsC, &n)!
 	}
 	gidsC = gidsC[:n]
 	gids := make([]string, 0, n)

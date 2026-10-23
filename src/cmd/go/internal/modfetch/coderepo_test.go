@@ -55,9 +55,7 @@ func testMain(m *testing.M) (err error) {
 	}()
 
 	cfg.GOMODCACHE = filepath.Join(dir, "modcache")
-	if err := os.Mkdir(cfg.GOMODCACHE, 0o755); err != nil {
-		return err
-	}
+	os.Mkdir(cfg.GOMODCACHE, 0o755)!
 
 	srv, err := vcstest.NewServer()
 	if err != nil {

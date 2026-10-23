@@ -1119,10 +1119,7 @@ func serverHandle(c net.Conn, t *testing.T) error {
 			send("250 Ok")
 		case "STARTTLS":
 			send("220 Go ahead")
-			keypair, err := tls.X509KeyPair(localhostCert, localhostKey)
-			if err != nil {
-				return err
-			}
+			keypair := tls.X509KeyPair(localhostCert, localhostKey)!
 			config := &tls.Config{Certificates: []tls.Certificate{keypair}}
 			c = tls.Server(c, config)
 			defer c.Close()

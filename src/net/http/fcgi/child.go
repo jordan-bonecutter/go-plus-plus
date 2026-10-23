@@ -206,9 +206,7 @@ func (c *child) handleRecord(rec *record) error {
 		}
 
 		var br beginRequest
-		if err := br.read(rec.content()); err != nil {
-			return err
-		}
+		br.read(rec.content())!
 		if br.role != roleResponder {
 			c.conn.writeEndRequest(rec.h.Id, 0, statusUnknownRole)
 			return nil
@@ -338,21 +336,15 @@ func (c *child) cleanUp() {
 // If handler is nil, [http.DefaultServeMux] is used.
 func Serve(l net.Listener, handler http.Handler) error {
 	if l == nil {
-		var err error
-		l, err = net.FileListener(os.Stdin)
-		if err != nil {
-			return err
-		}
+
+		l = net.FileListener(os.Stdin)!
 		defer l.Close()
 	}
 	if handler == nil {
 		handler = http.DefaultServeMux
 	}
 	for {
-		rw, err := l.Accept()
-		if err != nil {
-			return err
-		}
+		rw := l.Accept()!
 		c := newChild(rw, handler)
 		go c.serve()
 	}

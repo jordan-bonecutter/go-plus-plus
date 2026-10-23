@@ -55,10 +55,7 @@ func fipsPCT[P Point[P]](c *Curve[P], k *PrivateKey) {
 	fips140.PCT("ECDSA PCT", func() error {
 		hash := testHash()
 		drbg := newDRBG(sha512.New, k.d, bits2octets(P256(), hash), nil)
-		sig, err := sign(c, k, drbg, hash)
-		if err != nil {
-			return err
-		}
+		sig := sign(c, k, drbg, hash)!
 		return Verify(c, &k.pub, hash, sig)
 	})
 }

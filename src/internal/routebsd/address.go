@@ -32,10 +32,7 @@ func parseLinkAddr(b []byte) (Addr, error) {
 	if len(b) < 8 {
 		return nil, errInvalidAddr
 	}
-	_, a, err := parseKernelLinkAddr(syscall.AF_LINK, b[4:])
-	if err != nil {
-		return nil, err
-	}
+	_, a := parseKernelLinkAddr(syscall.AF_LINK, b[4:])!
 	a.(*LinkAddr).Index = int(nativeEndian.Uint16(b[2:4]))
 	return a, nil
 }
@@ -248,10 +245,7 @@ func parseAddrs(attrs uint, b []byte) ([]Addr, error) {
 		if i <= syscall.RTAX_BRD {
 			switch b[1] {
 			case syscall.AF_LINK:
-				a, err := parseLinkAddr(b)
-				if err != nil {
-					return nil, err
-				}
+				a := parseLinkAddr(b)!
 				as[i] = a
 				l := roundup(int(b[0]))
 				if len(b) < l {
@@ -260,10 +254,7 @@ func parseAddrs(attrs uint, b []byte) ([]Addr, error) {
 				b = b[l:]
 			case syscall.AF_INET, syscall.AF_INET6:
 				af = int(b[1])
-				a, err := parseInetAddr(af, b)
-				if err != nil {
-					return nil, err
-				}
+				a := parseInetAddr(af, b)!
 				as[i] = a
 				l := roundup(int(b[0]))
 				if len(b) < l {
@@ -271,10 +262,7 @@ func parseAddrs(attrs uint, b []byte) ([]Addr, error) {
 				}
 				b = b[l:]
 			default:
-				l, a, err := parseKernelInetAddr(af, b)
-				if err != nil {
-					return nil, err
-				}
+				l, a := parseKernelInetAddr(af, b)!
 				as[i] = a
 				ll := roundup(l)
 				if len(b) < ll {

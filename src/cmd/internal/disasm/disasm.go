@@ -52,20 +52,11 @@ func DisasmForFile(f *objfile.File) (*Disasm, error) {
 }
 
 func disasmForEntry(e *objfile.Entry) (*Disasm, error) {
-	syms, err := e.Symbols()
-	if err != nil {
-		return nil, err
-	}
+	syms := e.Symbols()!
 
-	pcln, err := e.PCLineTable()
-	if err != nil {
-		return nil, err
-	}
+	pcln := e.PCLineTable()!
 
-	textStart, textBytes, err := e.Text()
-	if err != nil {
-		return nil, err
-	}
+	textStart, textBytes := e.Text()!
 
 	goarch := e.GOARCH()
 	disasm := disasms[goarch]
@@ -168,10 +159,7 @@ func (fc *FileCache) Line(filename string, line int) ([]byte, error) {
 	}
 
 	if e == nil {
-		content, err := os.ReadFile(filename)
-		if err != nil {
-			return nil, err
-		}
+		content := os.ReadFile(filename)!
 
 		cf = &CachedFile{
 			FileName: filename,

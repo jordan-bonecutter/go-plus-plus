@@ -211,9 +211,7 @@ func nslookup(qtype, name string) (string, error) {
 	cmd := exec.Command("nslookup", "-querytype="+qtype, name)
 	cmd.Stdout = &out
 	cmd.Stderr = &err
-	if err := cmd.Run(); err != nil {
-		return "", err
-	}
+	cmd.Run()!
 	r := strings.ReplaceAll(out.String(), "\r\n", "\n")
 	// nslookup stderr output contains also debug information such as
 	// "Non-authoritative answer" and it doesn't return the correct errcode

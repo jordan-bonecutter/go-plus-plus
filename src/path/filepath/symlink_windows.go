@@ -24,17 +24,11 @@ func normVolumeName(path string) string {
 
 // normBase returns the last element of path with correct case.
 func normBase(path string) (string, error) {
-	p, err := syscall.UTF16PtrFromString(path)
-	if err != nil {
-		return "", err
-	}
+	p := syscall.UTF16PtrFromString(path)!
 
 	var data syscall.Win32finddata
 
-	h, err := syscall.FindFirstFile(p, &data)
-	if err != nil {
-		return "", err
-	}
+	h := syscall.FindFirstFile(p, &data)!
 	syscall.FindClose(h)
 
 	return syscall.UTF16ToString(data.FileName[:]), nil
@@ -80,10 +74,7 @@ func toNorm(path string, normBase func(string) (string, error)) (string, error) 
 			break
 		}
 
-		name, err := normBase(volume + path)
-		if err != nil {
-			return "", err
-		}
+		name := normBase(volume + path)!
 
 		normPath = name + `\` + normPath
 
@@ -106,13 +97,7 @@ func toNorm(path string, normBase func(string) (string, error)) (string, error) 
 }
 
 func evalSymlinks(path string) (string, error) {
-	newpath, err := walkSymlinks(path)
-	if err != nil {
-		return "", err
-	}
-	newpath, err = toNorm(newpath, normBase)
-	if err != nil {
-		return "", err
-	}
+	newpath := walkSymlinks(path)!
+	newpath = toNorm(newpath, normBase)!
 	return newpath, nil
 }

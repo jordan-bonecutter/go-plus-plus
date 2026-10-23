@@ -15,9 +15,7 @@ import (
 // Version returns the OS version name/number.
 func Version() (string, error) {
 	var uts utsname
-	if err := uname(&uts); err != nil {
-		return "", err
-	}
+	uname(&uts)!
 
 	var sb strings.Builder
 

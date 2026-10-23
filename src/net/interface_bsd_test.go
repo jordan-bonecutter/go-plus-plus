@@ -19,10 +19,7 @@ func (ti *testInterface) setBroadcast(vid int) error {
 	} else {
 		ti.name = fmt.Sprintf("vlan%d", vid)
 	}
-	xname, err := exec.LookPath("ifconfig")
-	if err != nil {
-		return err
-	}
+	xname := exec.LookPath("ifconfig")!
 	ti.setupCmds = append(ti.setupCmds, &exec.Cmd{
 		Path: xname,
 		Args: []string{"ifconfig", ti.name, "create"},
@@ -36,10 +33,7 @@ func (ti *testInterface) setBroadcast(vid int) error {
 
 func (ti *testInterface) setPointToPoint(suffix int) error {
 	ti.name = fmt.Sprintf("gif%d", suffix)
-	xname, err := exec.LookPath("ifconfig")
-	if err != nil {
-		return err
-	}
+	xname := exec.LookPath("ifconfig")!
 	ti.setupCmds = append(ti.setupCmds, &exec.Cmd{
 		Path: xname,
 		Args: []string{"ifconfig", ti.name, "create"},

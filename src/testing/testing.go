@@ -1511,13 +1511,8 @@ func (c *common) makeArtifactDir() (string, error) {
 	}
 
 	artifactBase := filepath.Join(artifactDir, c.relativeArtifactBase())
-	if err := os.MkdirAll(artifactBase, 0o777); err != nil {
-		return "", err
-	}
-	dir, err := os.MkdirTemp(artifactBase, "")
-	if err != nil {
-		return "", err
-	}
+	os.MkdirAll(artifactBase, 0o777)!
+	dir := os.MkdirTemp(artifactBase, "")!
 	if c.chatty != nil {
 		c.chatty.Updatef(c.name, "=== ARTIFACTS %s %v\n", c.name, dir)
 	}
@@ -1635,9 +1630,7 @@ func (c *common) makeTempDir() (string, error) {
 	}
 
 	dir := fmt.Sprintf("%s%c%03d", c.tempDir, os.PathSeparator, seq)
-	if err := os.Mkdir(dir, 0o777); err != nil {
-		return "", err
-	}
+	os.Mkdir(dir, 0o777)!
 	return dir, nil
 }
 

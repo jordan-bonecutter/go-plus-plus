@@ -72,19 +72,10 @@ func parsePlan9Addr(s string) (ip IP, iport int, err error) {
 func readPlan9Addr(net, filename string) (addr Addr, err error) {
 	var buf [128]byte
 
-	f, err := os.Open(filename)
-	if err != nil {
-		return
-	}
+	f := os.Open(filename)!
 	defer f.Close()
-	n, err := f.Read(buf[:])
-	if err != nil {
-		return
-	}
-	ip, port, err := parsePlan9Addr(string(buf[:n]))
-	if err != nil {
-		return
-	}
+	n := f.Read(buf[:])!
+	ip, port := parsePlan9Addr(string(buf[:n]))!
 	switch net {
 	case "tcp4", "udp4":
 		if ip.Equal(IPv6zero) {

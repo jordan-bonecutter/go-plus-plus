@@ -91,9 +91,7 @@ func dupCloseOnExecOld(fd int) (int, string, error) {
 
 // Fchdir wraps syscall.Fchdir.
 func (fd *FD) Fchdir() error {
-	if err := fd.incref(); err != nil {
-		return err
-	}
+	fd.incref()!
 	defer fd.decref()
 	return syscall.Chdir(fd.Path)
 }
@@ -102,9 +100,7 @@ func (fd *FD) Fchdir() error {
 // We treat this like an ordinary system call rather than a call
 // that tries to fill the buffer.
 func (fd *FD) ReadDir(buf []byte, cookie syscall.Dircookie) (int, error) {
-	if err := fd.incref(); err != nil {
-		return 0, err
-	}
+	fd.incref()!
 	defer fd.decref()
 	for {
 		n, err := syscall.ReadDir(fd.Sysfd, buf, cookie)
@@ -122,10 +118,7 @@ func (fd *FD) ReadDir(buf []byte, cookie syscall.Dircookie) (int, error) {
 }
 
 func (fd *FD) ReadDirent(buf []byte) (int, error) {
-	n, err := fd.ReadDir(buf, fd.Dircookie)
-	if err != nil {
-		return 0, err
-	}
+	n := fd.ReadDir(buf, fd.Dircookie)!
 	if n <= 0 {
 		return n, nil // EOF
 	}
@@ -163,9 +156,7 @@ func (fd *FD) ReadDirent(buf []byte) (int, error) {
 
 // Seek wraps syscall.Seek.
 func (fd *FD) Seek(offset int64, whence int) (int64, error) {
-	if err := fd.incref(); err != nil {
-		return 0, err
-	}
+	fd.incref()!
 	defer fd.decref()
 	// syscall.Filetype is a uint8 but we store it as a uint32 in SysFile in
 	// order to use atomic load/store on the field, which is why we have to
@@ -174,9 +165,7 @@ func (fd *FD) Seek(offset int64, whence int) (int64, error) {
 
 	if fileType == syscall.FILETYPE_UNKNOWN {
 		var stat syscall.Stat_t
-		if err := fd.Fstat(&stat); err != nil {
-			return 0, err
-		}
+		fd.Fstat(&stat)!
 		fileType = stat.Filetype
 		atomic.StoreUint32(&fd.Filetype, uint32(fileType))
 	}

@@ -144,13 +144,9 @@ func (fd *FD) SetWriteDeadline(t time.Time) error {
 }
 
 func setDeadlineImpl(fd *FD, t time.Time, mode int) error {
-	if err := fd.incref(); err != nil {
-		return err
-	}
+	fd.incref()!
 	defer fd.decref()
-	if err := fd.ensureInit(); err != nil {
-		return err
-	}
+	fd.ensureInit()!
 
 	var d int64
 	if !t.IsZero() {

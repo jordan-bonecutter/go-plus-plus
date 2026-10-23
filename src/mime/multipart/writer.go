@@ -97,9 +97,7 @@ func randomBoundary() string {
 // be written to.
 func (w *Writer) CreatePart(header textproto.MIMEHeader) (io.Writer, error) {
 	if w.lastpart != nil {
-		if err := w.lastpart.close(); err != nil {
-			return nil, err
-		}
+		w.lastpart.close()!
 	}
 	var b bytes.Buffer
 	if w.lastpart != nil {
@@ -114,10 +112,7 @@ func (w *Writer) CreatePart(header textproto.MIMEHeader) (io.Writer, error) {
 		}
 	}
 	fmt.Fprintf(&b, "\r\n")
-	_, err := io.Copy(w.w, &b)
-	if err != nil {
-		return nil, err
-	}
+	io.Copy(w.w, &b)!
 	p := &part{
 		mw: w,
 	}
@@ -182,9 +177,7 @@ func (w *Writer) WriteField(fieldname, value string) error {
 // boundary end line to the output.
 func (w *Writer) Close() error {
 	if w.lastpart != nil {
-		if err := w.lastpart.close(); err != nil {
-			return err
-		}
+		w.lastpart.close()!
 		w.lastpart = nil
 	}
 	_, err := fmt.Fprintf(w.w, "\r\n--%s--\r\n", w.boundary)

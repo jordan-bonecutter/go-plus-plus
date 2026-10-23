@@ -142,10 +142,7 @@ func makeTimeUnmarshaler(fncs *unmarshaler, t reflect.Type) *unmarshaler {
 			stringify := !u.isNumeric() || xd.Tokens.Last.NeedObjectName() || uo.Flags.Get(jsonflags.StringifyNumbers|jsonflags.StringTag)
 			var flags jsonwire.ValueFlags
 			td, _ := reflect.TypeAssert[*time.Duration](va.Addr())
-			val, err := xd.ReadValue(&flags)
-			if err != nil {
-				return err
-			}
+			val := xd.ReadValue(&flags)!
 			switch k := val.Kind(); k {
 			case 'n':
 				if !uo.Flags.Get(jsonflags.MergeWithLegacySemantics) {
@@ -193,10 +190,7 @@ func makeTimeUnmarshaler(fncs *unmarshaler, t reflect.Type) *unmarshaler {
 			stringify := !u.isNumeric() || xd.Tokens.Last.NeedObjectName() || uo.Flags.Get(jsonflags.StringifyNumbers|jsonflags.StringTag)
 			var flags jsonwire.ValueFlags
 			tt, _ := reflect.TypeAssert[*time.Time](va.Addr())
-			val, err := xd.ReadValue(&flags)
-			if err != nil {
-				return err
-			}
+			val := xd.ReadValue(&flags)!
 			switch k := val.Kind(); k {
 			case 'n':
 				if !uo.Flags.Get(jsonflags.MergeWithLegacySemantics) {
@@ -413,9 +407,7 @@ func (a *timeArshaler) unmarshal(b []byte) (err error) {
 	switch a.base {
 	case 0:
 		// Use time.Time.UnmarshalText to avoid possible string allocation.
-		if err := a.tt.UnmarshalText(b); err != nil {
-			return err
-		}
+		a.tt.UnmarshalText(b)!
 		// TODO(https://go.dev/issue/57912):
 		// RFC 3339 specifies the grammar for a valid timestamp.
 		// However, the parsing functionality in "time" is too loose and

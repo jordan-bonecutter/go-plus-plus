@@ -206,10 +206,7 @@ func loadOnDiskRoots(certFilePath, certDirPath string) (*CertPool, error) {
 // readUniqueDirectoryEntries is like os.ReadDir but omits
 // symlinks that point within the directory.
 func readUniqueDirectoryEntries(dir string) ([]fs.DirEntry, error) {
-	files, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
+	files := os.ReadDir(dir)!
 	uniq := files[:0]
 	for _, f := range files {
 		if !isSameDirSymlink(f, dir) {

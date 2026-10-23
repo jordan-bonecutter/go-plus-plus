@@ -24,10 +24,7 @@ func Fchmodat(dirfd int, path string, mode uint32, flags int) error {
 	// Instead, use the same workaround as GNU libc and musl, which is to open the file
 	// and then fchmodat the FD in /proc/self/fd.
 	// See: https://lwn.net/Articles/939217/
-	fd, err := Openat(dirfd, path, O_PATH|syscall.O_NOFOLLOW|syscall.O_CLOEXEC, 0)
-	if err != nil {
-		return err
-	}
+	fd := Openat(dirfd, path, O_PATH|syscall.O_NOFOLLOW|syscall.O_CLOEXEC, 0)!
 	defer syscall.Close(fd)
 	procPath := "/proc/self/fd/" + strconv.Itoa(fd)
 

@@ -13,9 +13,6 @@ import (
 )
 
 func newAESGCM(key []byte) (cipher.AEAD, error) {
-	b, err := aes.New(key)
-	if err != nil {
-		return nil, err
-	}
+	b := aes.New(key)!
 	return gcm.NewGCMForHPKE(b)
 }

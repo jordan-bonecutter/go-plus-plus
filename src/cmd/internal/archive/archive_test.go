@@ -37,19 +37,10 @@ func TestMain(m *testing.M) {
 }
 
 func copyDir(dst, src string) error {
-	err := os.MkdirAll(dst, 0777)
-	if err != nil {
-		return err
-	}
-	entries, err := os.ReadDir(src)
-	if err != nil {
-		return err
-	}
+	os.MkdirAll(dst, 0777)!
+	entries := os.ReadDir(src)!
 	for _, entry := range entries {
-		err = copyFile(filepath.Join(dst, entry.Name()), filepath.Join(src, entry.Name()))
-		if err != nil {
-			return err
-		}
+		copyFile(filepath.Join(dst, entry.Name()), filepath.Join(src, entry.Name()))!
 	}
 	return nil
 }

@@ -1136,9 +1136,7 @@ type recursiveNode struct {
 func (n *recursiveNode) UnmarshalXML(d *Decoder, start StartElement) error {
 	type alias recursiveNode
 	var a alias
-	if err := d.DecodeElement(&a, &start); err != nil {
-		return err
-	}
+	d.DecodeElement(&a, &start)!
 	*n = recursiveNode(a)
 	return nil
 }
@@ -1197,9 +1195,7 @@ type customUnmarshalerNode struct {
 
 func (e *customUnmarshalerNode) UnmarshalXML(d *Decoder, start StartElement) error {
 	var body standardNode
-	if err := d.DecodeElement(&body, &start); err != nil {
-		return err
-	}
+	d.DecodeElement(&body, &start)!
 	e.Body = body
 	return nil
 }
@@ -1235,16 +1231,11 @@ type manualNode struct {
 
 func (m *manualNode) UnmarshalXML(d *Decoder, start StartElement) error {
 	for {
-		tok, err := d.Token()
-		if err != nil {
-			return err
-		}
+		tok := d.Token()!
 		switch t := tok.(type) {
 		case StartElement:
 			var child manualNode
-			if err := d.DecodeElement(&child, &t); err != nil {
-				return err
-			}
+			d.DecodeElement(&child, &t)!
 			m.Child = &child
 		case EndElement:
 			return nil

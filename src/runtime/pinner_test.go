@@ -357,7 +357,7 @@ func TestPinnerCgoCheckPtr2Ptr(t *testing.T) {
 	var pinner runtime.Pinner
 	defer pinner.Unpin()
 	p := new(obj)
-	p2 := &objWith[*obj]{o: p}
+	p2 := &objWith{o: p}
 	assertCgoCheckPanics(t, p2)
 	pinner.Pin(p)
 	runtime.CgoCheckPointer(p2, true)
@@ -367,7 +367,7 @@ func TestPinnerCgoCheckPtr2UnsafePtr(t *testing.T) {
 	var pinner runtime.Pinner
 	defer pinner.Unpin()
 	p := unsafe.Pointer(new(obj))
-	p2 := &objWith[unsafe.Pointer]{o: p}
+	p2 := &objWith{o: p}
 	assertCgoCheckPanics(t, p2)
 	pinner.Pin(p)
 	runtime.CgoCheckPointer(p2, true)
@@ -421,7 +421,7 @@ func TestPinnerCgoCheckPinned2UnpinnedPanics(t *testing.T) {
 	var pinner runtime.Pinner
 	defer pinner.Unpin()
 	p := new(obj)
-	p2 := &objWith[*obj]{o: p}
+	p2 := &objWith{o: p}
 	assertCgoCheckPanics(t, p2)
 	pinner.Pin(p2)
 	assertCgoCheckPanics(t, p2)
@@ -431,8 +431,8 @@ func TestPinnerCgoCheckPtr2Pinned2Unpinned(t *testing.T) {
 	var pinner runtime.Pinner
 	defer pinner.Unpin()
 	p := new(obj)
-	p2 := &objWith[*obj]{o: p}
-	p3 := &objWith[*objWith[*obj]]{o: p2}
+	p2 := &objWith{o: p}
+	p3 := &objWith{o: p2}
 	assertCgoCheckPanics(t, p2)
 	assertCgoCheckPanics(t, p3)
 	pinner.Pin(p2)

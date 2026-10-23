@@ -269,9 +269,7 @@ func (d *decoder) readFull(p []byte) error {
 		if len(p) == 0 {
 			break
 		}
-		if err := d.fill(); err != nil {
-			return err
-		}
+		d.fill()!
 	}
 	return nil
 }
@@ -296,9 +294,7 @@ func (d *decoder) ignore(n int) error {
 		if n == 0 {
 			break
 		}
-		if err := d.fill(); err != nil {
-			return err
-		}
+		d.fill()!
 	}
 	return nil
 }
@@ -318,9 +314,7 @@ func (d *decoder) processSOF(n int) error {
 	default:
 		return UnsupportedError("number of components")
 	}
-	if err := d.readFull(d.tmp[:n]); err != nil {
-		return err
-	}
+	d.readFull(d.tmp[:n])!
 	// We only support 8-bit precision.
 	if d.tmp[0] != 8 {
 		return UnsupportedError("precision")
@@ -431,10 +425,7 @@ func (d *decoder) processDQT(n int) error {
 loop:
 	for n > 0 {
 		n--
-		x, err := d.readByte()
-		if err != nil {
-			return err
-		}
+		x := d.readByte()!
 		tq := x & 0x0f
 		if tq > maxTq {
 			return FormatError("bad Tq value")
@@ -447,9 +438,7 @@ loop:
 				break loop
 			}
 			n -= blockSize
-			if err := d.readFull(d.tmp[:blockSize]); err != nil {
-				return err
-			}
+			d.readFull(d.tmp[:blockSize])!
 			for i := range d.quant[tq] {
 				d.quant[tq][i] = int32(d.tmp[i])
 			}
@@ -458,9 +447,7 @@ loop:
 				break loop
 			}
 			n -= 2 * blockSize
-			if err := d.readFull(d.tmp[:2*blockSize]); err != nil {
-				return err
-			}
+			d.readFull(d.tmp[:2*blockSize])!
 			for i := range d.quant[tq] {
 				d.quant[tq][i] = int32(d.tmp[2*i])<<8 | int32(d.tmp[2*i+1])
 			}
@@ -477,9 +464,7 @@ func (d *decoder) processDRI(n int) error {
 	if n != 2 {
 		return FormatError("DRI has wrong length")
 	}
-	if err := d.readFull(d.tmp[:2]); err != nil {
-		return err
-	}
+	d.readFull(d.tmp[:2])!
 	d.ri = int(d.tmp[0])<<8 + int(d.tmp[1])
 	return nil
 }
@@ -488,9 +473,7 @@ func (d *decoder) processApp0Marker(n int) error {
 	if n < 5 {
 		return d.ignore(n)
 	}
-	if err := d.readFull(d.tmp[:5]); err != nil {
-		return err
-	}
+	d.readFull(d.tmp[:5])!
 	n -= 5
 
 	d.jfif = d.tmp[0] == 'J' && d.tmp[1] == 'F' && d.tmp[2] == 'I' && d.tmp[3] == 'F' && d.tmp[4] == '\x00'
@@ -505,9 +488,7 @@ func (d *decoder) processApp14Marker(n int) error {
 	if n < 12 {
 		return d.ignore(n)
 	}
-	if err := d.readFull(d.tmp[:12]); err != nil {
-		return err
-	}
+	d.readFull(d.tmp[:12])!
 	n -= 12
 
 	if d.tmp[0] == 'A' && d.tmp[1] == 'd' && d.tmp[2] == 'o' && d.tmp[3] == 'b' && d.tmp[4] == 'e' {
@@ -526,9 +507,7 @@ func (d *decoder) decode(r io.Reader, configOnly bool) (image.Image, error) {
 	d.r = r
 
 	// Check for the Start Of Image marker.
-	if err := d.readFull(d.tmp[:2]); err != nil {
-		return nil, err
-	}
+	d.readFull(d.tmp[:2])!
 	if d.tmp[0] != 0xff || d.tmp[1] != soiMarker {
 		return nil, FormatError("missing SOI marker")
 	}
@@ -652,9 +631,7 @@ func (d *decoder) decode(r io.Reader, configOnly bool) (image.Image, error) {
 	}
 
 	if d.progressive {
-		if err := d.reconstructProgressiveImage(); err != nil {
-			return nil, err
-		}
+		d.reconstructProgressiveImage()!
 	}
 	if d.img1 != nil {
 		return d.img1, nil
@@ -802,9 +779,7 @@ func Decode(r io.Reader) (image.Image, error) {
 // decoding the entire image.
 func DecodeConfig(r io.Reader) (image.Config, error) {
 	var d decoder
-	if _, err := d.decode(r, true); err != nil {
-		return image.Config{}, err
-	}
+	d.decode(r, true)!
 	switch d.nComp {
 	case 1:
 		return image.Config{

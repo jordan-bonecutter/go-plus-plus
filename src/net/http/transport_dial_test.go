@@ -700,14 +700,8 @@ func newTransportDialTester(t *testing.T, mode testMode, opts ...any) *transport
 	}), append([]any{func(tr *http.Transport) {
 		dialContext := tr.DialContext
 		tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-			c, err := dialer(addr)
-			if err != nil {
-				return nil, err
-			}
-			nc, err := dialContext(ctx, network, addr)
-			if err != nil {
-				return nil, err
-			}
+			c := dialer(addr)!
+			nc := dialContext(ctx, network, addr)!
 			c.Conn = nc.(*nettest.Conn)
 			return c, nil
 		}

@@ -125,10 +125,7 @@ func GenerateKey(rand io.Reader, bits int) (*PrivateKey, error) {
 					0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
 					0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20,
 				}
-				sig, err := signPKCS1v15(k, "SHA-256", hash)
-				if err != nil {
-					return err
-				}
+				sig := signPKCS1v15(k, "SHA-256", hash)!
 				return verifyPKCS1v15(k.PublicKey(), "SHA-256", hash, sig)
 			})
 		}
@@ -164,10 +161,7 @@ func totient(p, q *bigmod.Modulus) (*bigmod.Modulus, error) {
 		return nil, errors.New("rsa: internal error: p and q must be 7 mod 8")
 	}
 
-	gcd, err := bigmod.NewNat().GCDVarTime(a, b)
-	if err != nil {
-		return nil, err
-	}
+	gcd := bigmod.NewNat().GCDVarTime(a, b)!
 	if gcd.IsOdd() == 0 {
 		return nil, errors.New("rsa: internal error: gcd(a, b) is even")
 	}
@@ -200,9 +194,7 @@ func randomPrime(rand io.Reader, bits int) ([]byte, error) {
 
 	b := make([]byte, (bits+7)/8)
 	for {
-		if err := drbg.ReadWithReader(rand, b); err != nil {
-			return nil, err
-		}
+		drbg.ReadWithReader(rand, b)!
 		// Clear the most significant bits to reach the desired size. We use a
 		// mask rather than right-shifting b[0] to make it easier to inject test
 		// candidates, which can be represented as simple big-endian integers.
@@ -370,10 +362,7 @@ func millerRabinSetup(w []byte) (*millerRabin, error) {
 	if len(w) == 0 || w[len(w)-1]&0b11 != 0b11 {
 		return nil, errors.New("candidate is not 3 mod 4")
 	}
-	wm, err := bigmod.NewModulus(w)
-	if err != nil {
-		return nil, err
-	}
+	wm := bigmod.NewModulus(w)!
 	mr.w = wm
 
 	// Compute m = (w-1)/2^a, where m is odd.
@@ -399,9 +388,7 @@ func millerRabinIteration(mr *millerRabin, bb []byte) (bool, error) {
 		return false, errors.New("incorrect length")
 	}
 	b := bigmod.NewNat()
-	if _, err := b.SetBytes(bb, mr.w); err != nil {
-		return false, err
-	}
+	b.SetBytes(bb, mr.w)!
 	if b.IsZero() == 1 || b.IsOne() == 1 || b.IsMinusOne(mr.w) == 1 {
 		return false, errors.New("out-of-range candidate")
 	}

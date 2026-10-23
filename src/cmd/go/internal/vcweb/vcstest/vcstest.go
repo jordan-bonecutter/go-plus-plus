@@ -157,9 +157,7 @@ func (srv *Server) WriteCertificateFile() (string, error) {
 	})
 
 	filename := filepath.Join(srv.workDir, "cert.pem")
-	if err := os.WriteFile(filename, b, 0644); err != nil {
-		return "", err
-	}
+	os.WriteFile(filename, b, 0644)!
 	return filename, nil
 }
 
@@ -170,10 +168,7 @@ func TLSClient(certFile string) (*http.Client, error) {
 		Transport: http.DefaultTransport.(*http.Transport).Clone(),
 	}
 
-	pemBytes, err := os.ReadFile(certFile)
-	if err != nil {
-		return nil, err
-	}
+	pemBytes := os.ReadFile(certFile)!
 
 	certpool := x509.NewCertPool()
 	if !certpool.AppendCertsFromPEM(pemBytes) {

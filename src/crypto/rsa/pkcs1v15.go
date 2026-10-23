@@ -52,9 +52,7 @@ func EncryptPKCS1v15(random io.Reader, pub *PublicKey, msg []byte) ([]byte, erro
 		return nil, errors.New("crypto/rsa: use of PKCS#1 v1.5 encryption is not allowed in FIPS 140-only mode")
 	}
 
-	if err := checkPublicKeySize(pub); err != nil {
-		return nil, err
-	}
+	checkPublicKeySize(pub)!
 
 	k := pub.Size()
 	if len(msg) > k-11 {
@@ -62,10 +60,7 @@ func EncryptPKCS1v15(random io.Reader, pub *PublicKey, msg []byte) ([]byte, erro
 	}
 
 	if boring.Enabled && rand.IsDefaultReader(random) {
-		bkey, err := boringPublicKey(pub)
-		if err != nil {
-			return nil, err
-		}
+		bkey := boringPublicKey(pub)!
 		return boring.EncryptRSAPKCS1(bkey, msg)
 	}
 	boring.UnreachableExceptTests()
@@ -76,26 +71,17 @@ func EncryptPKCS1v15(random io.Reader, pub *PublicKey, msg []byte) ([]byte, erro
 	em := make([]byte, k)
 	em[1] = 2
 	ps, mm := em[2:len(em)-len(msg)-1], em[len(em)-len(msg):]
-	err := nonZeroRandomBytes(ps, random)
-	if err != nil {
-		return nil, err
-	}
+	nonZeroRandomBytes(ps, random)!
 	em[len(em)-len(msg)-1] = 0
 	copy(mm, msg)
 
 	if boring.Enabled {
 		var bkey *boring.PublicKeyRSA
-		bkey, err = boringPublicKey(pub)
-		if err != nil {
-			return nil, err
-		}
+		bkey = boringPublicKey(pub)!
 		return boring.EncryptRSANoPadding(bkey, em)
 	}
 
-	fk, err := fipsPublicKey(pub)
-	if err != nil {
-		return nil, err
-	}
+	fk := fipsPublicKey(pub)!
 	return rsa.Encrypt(fk, em)
 }
 
@@ -111,9 +97,7 @@ func EncryptPKCS1v15(random io.Reader, pub *PublicKey, msg []byte) ([]byte, erro
 //
 // [draft-irtf-cfrg-rsa-guidance-05]: https://www.ietf.org/archive/id/draft-irtf-cfrg-rsa-guidance-05.html#name-rationale
 func DecryptPKCS1v15(random io.Reader, priv *PrivateKey, ciphertext []byte) ([]byte, error) {
-	if err := checkPublicKeySize(&priv.PublicKey); err != nil {
-		return nil, err
-	}
+	checkPublicKeySize(&priv.PublicKey)!
 
 	if boring.Enabled && priv.N.BitLen() >= 1024 {
 		bkey, err := boringPrivateKey(priv)
@@ -127,10 +111,7 @@ func DecryptPKCS1v15(random io.Reader, priv *PrivateKey, ciphertext []byte) ([]b
 		return out, nil
 	}
 
-	valid, out, index, err := decryptPKCS1v15(priv, ciphertext)
-	if err != nil {
-		return nil, err
-	}
+	valid, out, index := decryptPKCS1v15(priv, ciphertext)!
 	if valid == 0 {
 		return nil, ErrDecryption
 	}
@@ -179,19 +160,14 @@ func DecryptPKCS1v15(random io.Reader, priv *PrivateKey, ciphertext []byte) ([]b
 //
 // [draft-irtf-cfrg-rsa-guidance-05]: https://www.ietf.org/archive/id/draft-irtf-cfrg-rsa-guidance-05.html#name-rationale
 func DecryptPKCS1v15SessionKey(random io.Reader, priv *PrivateKey, ciphertext []byte, key []byte) error {
-	if err := checkPublicKeySize(&priv.PublicKey); err != nil {
-		return err
-	}
+	checkPublicKeySize(&priv.PublicKey)!
 
 	k := priv.Size()
 	if k-(len(key)+3+8) < 0 {
 		return ErrDecryption
 	}
 
-	valid, em, index, err := decryptPKCS1v15(priv, ciphertext)
-	if err != nil {
-		return err
-	}
+	valid, em, index := decryptPKCS1v15(priv, ciphertext)!
 
 	if len(em) != k {
 		// This should be impossible because decryptPKCS1v15 always
@@ -268,17 +244,11 @@ func decryptPKCS1v15(priv *PrivateKey, ciphertext []byte) (valid int, em []byte,
 
 // nonZeroRandomBytes fills the given slice with non-zero random octets.
 func nonZeroRandomBytes(s []byte, random io.Reader) (err error) {
-	_, err = io.ReadFull(random, s)
-	if err != nil {
-		return
-	}
+	io.ReadFull(random, s)!
 
 	for i := 0; i < len(s); i++ {
 		for s[i] == 0 {
-			_, err = io.ReadFull(random, s[i:i+1])
-			if err != nil {
-				return
-			}
+			io.ReadFull(random, s[i:i+1])!
 			// In tests, the PRNG may return all zeros so we do
 			// this to break the loop.
 			s[i] ^= 0x42

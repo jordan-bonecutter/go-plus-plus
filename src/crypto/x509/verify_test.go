@@ -1528,11 +1528,8 @@ func TestValidHostname(t *testing.T) {
 
 func generateCert(cn string, isCA bool, issuer *Certificate, issuerKey crypto.PrivateKey, priv crypto.PrivateKey) (*Certificate, crypto.PrivateKey, error) {
 	if priv == nil {
-		var err error
-		priv, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-		if err != nil {
-			return nil, nil, err
-		}
+
+		priv = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)!
 	}
 
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
@@ -1555,14 +1552,8 @@ func generateCert(cn string, isCA bool, issuer *Certificate, issuerKey crypto.Pr
 		issuerKey = priv
 	}
 
-	derBytes, err := CreateCertificate(rand.Reader, template, issuer, priv.(crypto.Signer).Public(), issuerKey)
-	if err != nil {
-		return nil, nil, err
-	}
-	cert, err := ParseCertificate(derBytes)
-	if err != nil {
-		return nil, nil, err
-	}
+	derBytes := CreateCertificate(rand.Reader, template, issuer, priv.(crypto.Signer).Public(), issuerKey)!
+	cert := ParseCertificate(derBytes)!
 
 	return cert, priv, nil
 }

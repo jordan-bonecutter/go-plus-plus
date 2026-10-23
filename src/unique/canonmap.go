@@ -292,7 +292,7 @@ type indirect[T comparable] struct {
 }
 
 func newIndirectNode[T comparable](parent *indirect[T]) *indirect[T] {
-	return &indirect[T]{node: node[T]{isEntry: false}, parent: parent}
+	return &indirect{node: node{isEntry: false}, parent: parent}
 }
 
 func (i *indirect[T]) empty() bool {
@@ -316,8 +316,8 @@ func newEntryNode[T comparable](key T, hash uintptr) (*entry[T], *T, weak.Pointe
 	k := new(T)
 	*k = key
 	wp := weak.Make(k)
-	return &entry[T]{
-		node: node[T]{isEntry: true},
+	return &entry{
+		node: node{isEntry: true},
 		key:  wp,
 		hash: hash,
 	}, k, wp
@@ -334,7 +334,7 @@ func (e *entry[T]) lookup(key T) (*T, weak.Pointer[T]) {
 		}
 		e = e.overflow.Load()
 	}
-	return nil, weak.Pointer[T]{}
+	return nil, weak.Pointer{}
 }
 
 // hasWeakPointer returns true if the provided weak pointer can be found in the overflow chain.

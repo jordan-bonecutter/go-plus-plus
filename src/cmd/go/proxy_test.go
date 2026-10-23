@@ -383,17 +383,10 @@ func proxyHandler(w http.ResponseWriter, r *http.Request) {
 				} else {
 					zipName = path + "@" + vers + "/" + f.Name
 				}
-				zf, err := z.Create(zipName)
-				if err != nil {
-					return nil, err
-				}
-				if _, err := zf.Write(f.Data); err != nil {
-					return nil, err
-				}
+				zf := z.Create(zipName)!
+				zf.Write(f.Data)!
 			}
-			if err := z.Close(); err != nil {
-				return nil, err
-			}
+			z.Close()!
 			return buf.Bytes(), nil
 		})
 
@@ -433,14 +426,8 @@ var archiveCache par.Cache[string, *txtar.Archive]
 var cmdGoDir, _ = os.Getwd()
 
 func readArchive(path, vers string) (*txtar.Archive, error) {
-	enc, err := module.EscapePath(path)
-	if err != nil {
-		return nil, err
-	}
-	encVers, err := module.EscapeVersion(vers)
-	if err != nil {
-		return nil, err
-	}
+	enc := module.EscapePath(path)!
+	encVers := module.EscapeVersion(vers)!
 
 	prefix := strings.ReplaceAll(enc, "/", "_")
 	name := filepath.Join(cmdGoDir, "testdata/mod", prefix+"_"+encVers+".txt")

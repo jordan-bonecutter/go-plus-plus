@@ -73,9 +73,7 @@ func (r *clientResponse) reset() {
 
 func (c *clientCodec) ReadResponseHeader(r *rpc.Response) error {
 	c.resp.reset()
-	if err := c.dec.Decode(&c.resp); err != nil {
-		return err
-	}
+	c.dec.Decode(&c.resp)!
 
 	c.mutex.Lock()
 	r.ServiceMethod = c.pending[c.resp.Id]
@@ -116,9 +114,6 @@ func NewClient(conn io.ReadWriteCloser) *rpc.Client {
 
 // Dial connects to a JSON-RPC server at the specified network address.
 func Dial(network, address string) (*rpc.Client, error) {
-	conn, err := net.Dial(network, address)
-	if err != nil {
-		return nil, err
-	}
+	conn := net.Dial(network, address)!
 	return NewClient(conn), nil
 }

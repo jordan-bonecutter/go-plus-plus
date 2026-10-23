@@ -17,10 +17,7 @@ import (
 func isDomainJoined() (bool, error) {
 	var domain *uint16
 	var status uint32
-	err := syscall.NetGetJoinInformation(nil, &domain, &status)
-	if err != nil {
-		return false, err
-	}
+	syscall.NetGetJoinInformation(nil, &domain, &status)!
 	syscall.NetApiBufferFree((*byte)(unsafe.Pointer(domain)))
 	return status == syscall.NetSetupDomainName, nil
 }
@@ -31,19 +28,10 @@ func lookupFullNameDomain(domainAndUser string) (string, error) {
 }
 
 func lookupFullNameServer(servername, username string) (string, error) {
-	s, e := syscall.UTF16PtrFromString(servername)
-	if e != nil {
-		return "", e
-	}
-	u, e := syscall.UTF16PtrFromString(username)
-	if e != nil {
-		return "", e
-	}
+	s := syscall.UTF16PtrFromString(servername)!
+	u := syscall.UTF16PtrFromString(username)!
 	var p *byte
-	e = syscall.NetUserGetInfo(s, u, 10, &p)
-	if e != nil {
-		return "", e
-	}
+	syscall.NetUserGetInfo(s, u, 10, &p)!
 	defer syscall.NetApiBufferFree(p)
 	i := (*syscall.UserInfo10)(unsafe.Pointer(p))
 	return windows.UTF16PtrToString(i.FullName), nil
@@ -219,10 +207,7 @@ func listGroupsForUsernameAndDomain(username, domain string) ([]string, error) {
 		if entry.Name == nil {
 			continue
 		}
-		sid, err := lookupGroupName(windows.UTF16PtrToString(entry.Name))
-		if err != nil {
-			return nil, err
-		}
+		sid := lookupGroupName(windows.UTF16PtrToString(entry.Name))!
 		sids = append(sids, sid)
 	}
 	return sids, nil
@@ -230,10 +215,7 @@ func listGroupsForUsernameAndDomain(username, domain string) ([]string, error) {
 
 func newUser(uid, gid, dir, username, domain string) (*User, error) {
 	domainAndUser := domain + `\` + username
-	name, e := lookupFullName(domain, username, domainAndUser)
-	if e != nil {
-		return nil, e
-	}
+	name := lookupFullName(domain, username, domainAndUser)!
 	u := &User{
 		Uid:      uid,
 		Gid:      gid,
@@ -356,17 +338,11 @@ func getCurrentToken() (t syscall.Token, isProcessToken bool, err error) {
 // The method follows this formula: domainRID + "-" + primaryGroupRID
 func lookupUserPrimaryGroup(username, domain string) (string, error) {
 	// get the domain RID
-	sid, _, t, e := syscall.LookupSID("", domain)
-	if e != nil {
-		return "", e
-	}
+	sid, _, t := syscall.LookupSID("", domain)!
 	if t != syscall.SidTypeDomain {
 		return "", fmt.Errorf("lookupUserPrimaryGroup: should be domain account type, not %d", t)
 	}
-	domainRID, e := sid.String()
-	if e != nil {
-		return "", e
-	}
+	domainRID := sid.String()!
 	// If the user has joined a domain use the RID of the default primary group
 	// called "Domain Users":
 	// https://support.microsoft.com/en-us/help/243330/well-known-security-identifiers-in-windows-operating-systems
@@ -390,19 +366,10 @@ func lookupUserPrimaryGroup(username, domain string) (string, error) {
 	// but the group will be called "None" instead:
 	// https://www.adampalmer.me/iodigitalsec/2013/08/10/windows-null-session-enumeration/
 	// "Group 'None' (RID: 513)"
-	u, e := syscall.UTF16PtrFromString(username)
-	if e != nil {
-		return "", e
-	}
-	d, e := syscall.UTF16PtrFromString(domain)
-	if e != nil {
-		return "", e
-	}
+	u := syscall.UTF16PtrFromString(username)!
+	d := syscall.UTF16PtrFromString(domain)!
 	var p *byte
-	e = syscall.NetUserGetInfo(d, u, 4, &p)
-	if e != nil {
-		return "", e
-	}
+	syscall.NetUserGetInfo(d, u, 4, &p)!
 	defer syscall.NetApiBufferFree(p)
 	i := (*windows.UserInfo4)(unsafe.Pointer(p))
 	return fmt.Sprintf("%s-%d", domainRID, i.PrimaryGroupID), nil
@@ -469,30 +436,18 @@ func lookupUser(username string) (*User, error) {
 }
 
 func lookupUserId(uid string) (*User, error) {
-	sid, e := syscall.StringToSid(uid)
-	if e != nil {
-		return nil, e
-	}
+	sid := syscall.StringToSid(uid)!
 	return newUserFromSid(sid)
 }
 
 func lookupGroup(groupname string) (*Group, error) {
-	sid, err := lookupGroupName(groupname)
-	if err != nil {
-		return nil, err
-	}
+	sid := lookupGroupName(groupname)!
 	return &Group{Name: groupname, Gid: sid}, nil
 }
 
 func lookupGroupId(gid string) (*Group, error) {
-	sid, err := syscall.StringToSid(gid)
-	if err != nil {
-		return nil, err
-	}
-	groupname, _, t, err := sid.LookupAccount("")
-	if err != nil {
-		return nil, err
-	}
+	sid := syscall.StringToSid(gid)!
+	groupname, _, t := sid.LookupAccount("")!
 	if !isValidGroupAccountType(t) {
 		return nil, fmt.Errorf("lookupGroupId: should be group account type, not %d", t)
 	}
@@ -505,20 +460,11 @@ func listGroups(user *User) ([]string, error) {
 		// It is faster and more reliable to get the groups
 		// of the current user from the current process token.
 		err := runAsProcessOwner(func() error {
-			t, err := syscall.OpenCurrentProcessToken()
-			if err != nil {
-				return err
-			}
+			t := syscall.OpenCurrentProcessToken()!
 			defer t.Close()
-			groups, err := windows.GetTokenGroups(t)
-			if err != nil {
-				return err
-			}
+			groups := windows.GetTokenGroups(t)!
 			for _, g := range groups.AllGroups() {
-				sid, err := g.Sid.String()
-				if err != nil {
-					return err
-				}
+				sid := g.Sid.String()!
 				sids = append(sids, sid)
 			}
 			return nil

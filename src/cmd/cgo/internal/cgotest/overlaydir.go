@@ -14,9 +14,7 @@ import (
 // OverlayDir makes a minimal-overhead copy of srcRoot in which new files may be added.
 func OverlayDir(dstRoot, srcRoot string) error {
 	dstRoot = filepath.Clean(dstRoot)
-	if err := os.MkdirAll(dstRoot, 0777); err != nil {
-		return err
-	}
+	os.MkdirAll(dstRoot, 0777)!
 
 	srcRoot, err := filepath.Abs(srcRoot)
 	if err != nil {

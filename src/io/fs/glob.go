@@ -105,10 +105,7 @@ func glob(fs FS, dir, pattern string, matches []string) (m []string, e error) {
 
 	for _, info := range infos {
 		n := info.Name()
-		matched, err := path.Match(pattern, n)
-		if err != nil {
-			return m, err
-		}
+		matched := path.Match(pattern, n)!
 		if matched {
 			m = append(m, path.Join(dir, n))
 		}

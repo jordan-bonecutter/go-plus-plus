@@ -280,14 +280,8 @@ func readASN1Time(der *cryptobyte.String) (time.Time, error) {
 }
 
 func parseValidity(der cryptobyte.String) (time.Time, time.Time, error) {
-	notBefore, err := readASN1Time(&der)
-	if err != nil {
-		return time.Time{}, time.Time{}, err
-	}
-	notAfter, err := readASN1Time(&der)
-	if err != nil {
-		return time.Time{}, time.Time{}, err
-	}
+	notBefore := readASN1Time(&der)!
+	notAfter := readASN1Time(&der)!
 
 	return notBefore, notAfter, nil
 }
@@ -496,9 +490,7 @@ func forEachSAN(der cryptobyte.String, callback func(tag int, data []byte) error
 		if !seq.ReadAnyASN1(&san, &tag) {
 			return errors.New("x509: invalid subject alternative name")
 		}
-		if err := callback(int(tag^0x80), san); err != nil {
-			return err
-		}
+		callback(int(tag^0x80), san)!
 	}
 
 	return nil
@@ -1173,10 +1165,7 @@ func parseCertificate(der []byte) (*Certificate, error) {
 					if !extensions.ReadASN1(&extension, cryptobyte_asn1.SEQUENCE) {
 						return nil, errors.New("x509: malformed extension")
 					}
-					ext, err := parseExtension(extension)
-					if err != nil {
-						return nil, err
-					}
+					ext := parseExtension(extension)!
 					oidStr := ext.Id.String()
 					if seenExts[oidStr] {
 						return nil, fmt.Errorf("x509: certificate contains duplicate extension with OID %q", oidStr)
@@ -1207,10 +1196,7 @@ func parseCertificate(der []byte) (*Certificate, error) {
 // numbers. This behavior can be restored by including "x509negativeserial=1" in
 // the GODEBUG environment variable.
 func ParseCertificate(der []byte) (*Certificate, error) {
-	cert, err := parseCertificate(der)
-	if err != nil {
-		return nil, err
-	}
+	cert := parseCertificate(der)!
 	if len(der) != len(cert.Raw) {
 		return nil, errors.New("x509: trailing data")
 	}
@@ -1222,10 +1208,7 @@ func ParseCertificate(der []byte) (*Certificate, error) {
 func ParseCertificates(der []byte) ([]*Certificate, error) {
 	var certs []*Certificate
 	for len(der) > 0 {
-		cert, err := parseCertificate(der)
-		if err != nil {
-			return nil, err
-		}
+		cert := parseCertificate(der)!
 		certs = append(certs, cert)
 		der = der[len(cert.Raw):]
 	}
@@ -1363,10 +1346,7 @@ func ParseRevocationList(der []byte) (*RevocationList, error) {
 					if !extensions.ReadASN1(&extension, cryptobyte_asn1.SEQUENCE) {
 						return nil, errors.New("x509: malformed extension")
 					}
-					ext, err := parseExtension(extension)
-					if err != nil {
-						return nil, err
-					}
+					ext := parseExtension(extension)!
 					if ext.Id.Equal(oidExtensionReasonCode) {
 						val := cryptobyte.String(ext.Value)
 						if !val.ReadASN1Enum(&rce.ReasonCode) {

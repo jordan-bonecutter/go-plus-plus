@@ -156,10 +156,7 @@ func spuriousENOTAVAIL(err error) bool {
 func (ln *TCPListener) ok() bool { return ln != nil && ln.fd != nil }
 
 func (ln *TCPListener) accept() (*TCPConn, error) {
-	fd, err := ln.fd.accept()
-	if err != nil {
-		return nil, err
-	}
+	fd := ln.fd.accept()!
 	return newTCPConn(fd, ln.lc.KeepAlive, ln.lc.KeepAliveConfig, testPreHookSetKeepAlive, testHookSetKeepAlive), nil
 }
 
@@ -168,11 +165,7 @@ func (ln *TCPListener) close() error {
 }
 
 func (ln *TCPListener) file() (*os.File, error) {
-	f, err := ln.fd.dup()
-	if err != nil {
-		return nil, err
-	}
-	return f, nil
+	return ln.fd.dup()!, nil
 }
 
 func (sl *sysListener) listenTCP(ctx context.Context, laddr *TCPAddr) (*TCPListener, error) {
@@ -186,9 +179,6 @@ func (sl *sysListener) listenTCPProto(ctx context.Context, laddr *TCPAddr, proto
 			return sl.ListenConfig.Control(network, address, c)
 		}
 	}
-	fd, err := internetSocket(ctx, sl.network, laddr, nil, syscall.SOCK_STREAM, proto, "listen", ctrlCtxFn)
-	if err != nil {
-		return nil, err
-	}
+	fd := internetSocket(ctx, sl.network, laddr, nil, syscall.SOCK_STREAM, proto, "listen", ctrlCtxFn)!
 	return &TCPListener{fd: fd, lc: sl.ListenConfig}, nil
 }

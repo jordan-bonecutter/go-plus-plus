@@ -325,9 +325,7 @@ func (f *taskFilter) match(t *parsedTrace, task *trace.UserTaskSummary) bool {
 
 // newTaskFilter creates a new task filter from URL query variables.
 func newTaskFilter(r *http.Request) (*taskFilter, error) {
-	if err := r.ParseForm(); err != nil {
-		return nil, err
-	}
+	r.ParseForm()!
 
 	var name []string
 	var conditions []func(*parsedTrace, *trace.UserTaskSummary) bool

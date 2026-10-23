@@ -115,9 +115,7 @@ func appendJSONValue(s *handleState, v Value) error {
 		// json.Marshal is funny about floats; it doesn't
 		// always match strconv.AppendFloat. So just call it.
 		// That's expensive, but floats are rare.
-		if err := appendJSONMarshal(s.buf, v.Float64()); err != nil {
-			return err
-		}
+		appendJSONMarshal(s.buf, v.Float64())!
 	case KindBool:
 		*s.buf = strconv.AppendBool(*s.buf, v.Bool())
 	case KindDuration:
@@ -168,9 +166,7 @@ func appendJSONMarshal(buf *buffer.Buffer, v any) error {
 		jsonEncoderPool.Put(j)
 	}()
 
-	if err := j.json.Encode(v); err != nil {
-		return err
-	}
+	j.json.Encode(v)!
 
 	bs := j.buf.Bytes()
 	buf.Write(bs[:len(bs)-1]) // remove final newline

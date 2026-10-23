@@ -53,9 +53,7 @@ func timespecFromStatxTimestamp(x statxTimestamp) Timespec {
 func fstatat(dirfd int, path string, stat *Stat_t, flags int) (err error) {
 	var r statx_t
 	// Do it the glibc way, add AT_NO_AUTOMOUNT.
-	if err = statx(dirfd, path, _AT_NO_AUTOMOUNT|flags, _STATX_BASIC_STATS, &r); err != nil {
-		return err
-	}
+	statx(dirfd, path, _AT_NO_AUTOMOUNT|flags, _STATX_BASIC_STATS, &r)!
 
 	stat.Dev = makedev(r.Dev_major, r.Dev_minor)
 	stat.Ino = r.Ino
@@ -153,10 +151,7 @@ func futimesat(dirfd int, path string, tv *[2]Timeval) (err error) {
 
 func Time(t *Time_t) (Time_t, error) {
 	var tv Timeval
-	err := Gettimeofday(&tv)
-	if err != nil {
-		return 0, err
-	}
+	Gettimeofday(&tv)!
 	if t != nil {
 		*t = Time_t(tv.Sec)
 	}

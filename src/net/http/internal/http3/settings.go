@@ -38,14 +38,8 @@ func (st *stream) readSettings(f func(settingType, value int64) error) error {
 		}
 	}
 	for st.lim > 0 {
-		settingsType, err := st.readVarint()
-		if err != nil {
-			return err
-		}
-		settingsValue, err := st.readVarint()
-		if err != nil {
-			return err
-		}
+		settingsType := st.readVarint()!
+		settingsValue := st.readVarint()!
 
 		// Use of HTTP/2 settings where there is no corresponding HTTP/3 setting
 		// is an error.
@@ -58,9 +52,7 @@ func (st *stream) readSettings(f func(settingType, value int64) error) error {
 			}
 		}
 
-		if err := f(settingsType, settingsValue); err != nil {
-			return err
-		}
+		f(settingsType, settingsValue)!
 	}
 	return st.endFrame()
 }

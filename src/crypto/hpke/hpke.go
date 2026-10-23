@@ -55,19 +55,13 @@ func newContext(sharedSecret []byte, kemID uint16, kdf KDF, aead AEAD, info []by
 		ksContext = byteorder.BEAppendUint16(ksContext, uint16(len(info)))
 		ksContext = append(ksContext, info...)
 
-		secret, err := kdf.labeledDerive(sid, secrets, "secret", ksContext,
-			uint16(aead.keySize()+aead.nonceSize()+kdf.size()))
-		if err != nil {
-			return nil, err
-		}
+		secret := kdf.labeledDerive(sid, secrets, "secret", ksContext,
+			uint16(aead.keySize()+aead.nonceSize()+kdf.size()))!
 		key := secret[:aead.keySize()]
 		baseNonce := secret[aead.keySize() : aead.keySize()+aead.nonceSize()]
 		expSecret := secret[aead.keySize()+aead.nonceSize():]
 
-		a, err := aead.aead(key)
-		if err != nil {
-			return nil, err
-		}
+		a := aead.aead(key)!
 		export := func(exporterContext string, length uint16) ([]byte, error) {
 			return kdf.labeledDerive(sid, expSecret, "sec", []byte(exporterContext), length)
 		}
@@ -80,37 +74,16 @@ func newContext(sharedSecret []byte, kemID uint16, kdf KDF, aead AEAD, info []by
 		}, nil
 	}
 
-	pskIDHash, err := kdf.labeledExtract(sid, nil, "psk_id_hash", nil)
-	if err != nil {
-		return nil, err
-	}
-	infoHash, err := kdf.labeledExtract(sid, nil, "info_hash", info)
-	if err != nil {
-		return nil, err
-	}
+	pskIDHash := kdf.labeledExtract(sid, nil, "psk_id_hash", nil)!
+	infoHash := kdf.labeledExtract(sid, nil, "info_hash", info)!
 	ksContext := append([]byte{0}, pskIDHash...)
 	ksContext = append(ksContext, infoHash...)
 
-	secret, err := kdf.labeledExtract(sid, sharedSecret, "secret", nil)
-	if err != nil {
-		return nil, err
-	}
-	key, err := kdf.labeledExpand(sid, secret, "key", ksContext, uint16(aead.keySize()))
-	if err != nil {
-		return nil, err
-	}
-	a, err := aead.aead(key)
-	if err != nil {
-		return nil, err
-	}
-	baseNonce, err := kdf.labeledExpand(sid, secret, "base_nonce", ksContext, uint16(aead.nonceSize()))
-	if err != nil {
-		return nil, err
-	}
-	expSecret, err := kdf.labeledExpand(sid, secret, "exp", ksContext, uint16(kdf.size()))
-	if err != nil {
-		return nil, err
-	}
+	secret := kdf.labeledExtract(sid, sharedSecret, "secret", nil)!
+	key := kdf.labeledExpand(sid, secret, "key", ksContext, uint16(aead.keySize()))!
+	a := aead.aead(key)!
+	baseNonce := kdf.labeledExpand(sid, secret, "base_nonce", ksContext, uint16(aead.nonceSize()))!
+	expSecret := kdf.labeledExpand(sid, secret, "exp", ksContext, uint16(kdf.size()))!
 	export := func(exporterContext string, length uint16) ([]byte, error) {
 		return kdf.labeledExpand(sid, expSecret, "sec", []byte(exporterContext), length)
 	}
@@ -152,14 +125,8 @@ func NewSender(pk PublicKey, kdf KDF, aead AEAD, info []byte) (enc []byte, s *Se
 // with the corresponding KEM encapsulation key. The info parameter is
 // additional public information that must match between sender and recipient.
 func NewRecipient(enc []byte, k PrivateKey, kdf KDF, aead AEAD, info []byte) (*Recipient, error) {
-	sharedSecret, err := k.decap(enc)
-	if err != nil {
-		return nil, err
-	}
-	context, err := newContext(sharedSecret, k.KEM().ID(), kdf, aead, info)
-	if err != nil {
-		return nil, err
-	}
+	sharedSecret := k.decap(enc)!
+	context := newContext(sharedSecret, k.KEM().ID(), kdf, aead, info)!
 	return &Recipient{context}, nil
 }
 
@@ -181,14 +148,8 @@ func (s *Sender) Seal(aad, plaintext []byte) ([]byte, error) {
 // and then encrypts the provided plaintext like [Sender.Seal] (with no aad).
 // Seal returns the concatenation of the encapsulated key and the ciphertext.
 func Seal(pk PublicKey, kdf KDF, aead AEAD, info, plaintext []byte) ([]byte, error) {
-	enc, s, err := NewSender(pk, kdf, aead, info)
-	if err != nil {
-		return nil, err
-	}
-	ct, err := s.Seal(nil, plaintext)
-	if err != nil {
-		return nil, err
-	}
+	enc, s := NewSender(pk, kdf, aead, info)!
+	ct := s.Seal(nil, plaintext)!
 	return append(enc, ct...), nil
 }
 
@@ -210,10 +171,7 @@ func (r *Recipient) Open(aad, ciphertext []byte) ([]byte, error) {
 	if r.aead == nil {
 		return nil, errors.New("export-only instantiation")
 	}
-	plaintext, err := r.aead.Open(nil, r.nextNonce(), ciphertext, aad)
-	if err != nil {
-		return nil, err
-	}
+	plaintext := r.aead.Open(nil, r.nextNonce(), ciphertext, aad)!
 	r.seqNum++
 	return plaintext, nil
 }
@@ -227,10 +185,7 @@ func Open(k PrivateKey, kdf KDF, aead AEAD, info, ciphertext []byte) ([]byte, er
 		return nil, errors.New("ciphertext too short")
 	}
 	enc, ciphertext := ciphertext[:encSize], ciphertext[encSize:]
-	r, err := NewRecipient(enc, k, kdf, aead, info)
-	if err != nil {
-		return nil, err
-	}
+	r := NewRecipient(enc, k, kdf, aead, info)!
 	return r.Open(nil, ciphertext)
 }
 

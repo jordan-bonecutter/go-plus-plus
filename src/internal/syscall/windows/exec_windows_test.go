@@ -58,16 +58,10 @@ const (
 )
 
 func getProcessIntegrityLevel() (string, error) {
-	procToken, err := syscall.OpenCurrentProcessToken()
-	if err != nil {
-		return "", err
-	}
+	procToken := syscall.OpenCurrentProcessToken()!
 	defer procToken.Close()
 
-	p, err := tokenGetInfo(procToken, syscall.TokenIntegrityLevel, 64)
-	if err != nil {
-		return "", err
-	}
+	p := tokenGetInfo(procToken, syscall.TokenIntegrityLevel, 64)!
 
 	tml := (*windows.TOKEN_MANDATORY_LABEL)(p)
 

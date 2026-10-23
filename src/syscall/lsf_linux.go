@@ -48,10 +48,7 @@ type iflags struct {
 
 // Deprecated: Use golang.org/x/net/bpf instead.
 func SetLsfPromisc(name string, m bool) error {
-	s, e := Socket(AF_INET, SOCK_DGRAM|SOCK_CLOEXEC, 0)
-	if e != nil {
-		return e
-	}
+	s := Socket(AF_INET, SOCK_DGRAM|SOCK_CLOEXEC, 0)!
 	defer Close(s)
 	var ifl iflags
 	copy(ifl.name[:], []byte(name))

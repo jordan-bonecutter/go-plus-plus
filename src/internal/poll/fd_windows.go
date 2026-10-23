@@ -267,9 +267,7 @@ func (fd *FD) execIO(
 	submit func(o *operation) (uint32, error),
 	pinPtrs ...any,
 ) (int, error) {
-	if err := fd.ensureInit(); err != nil {
-		return 0, err
-	}
+	fd.ensureInit()!
 	// Notify runtime netpoll about starting IO.
 	err := fd.pd.prepare(mode, fd.isFile)
 	if err != nil {
@@ -543,9 +541,7 @@ func (fd *FD) initIOCP() error {
 	// It is safe to add overlapped handles that also perform I/O
 	// outside of the runtime poller. The runtime poller will ignore
 	// I/O completion notifications not initiated by us.
-	if err := fd.pd.init(fd); err != nil {
-		return err
-	}
+	fd.pd.init(fd)!
 	fd.associated = true
 
 	if !fd.KeepFileCompletionModes {
@@ -613,9 +609,7 @@ func (fd *FD) DisassociateIOCP() error {
 	}
 
 	info := windows.FILE_COMPLETION_INFORMATION{}
-	if err := windows.NtSetInformationFile(fd.Sysfd, &windows.IO_STATUS_BLOCK{}, unsafe.Pointer(&info), uint32(unsafe.Sizeof(info)), windows.FileReplaceCompletionInformation); err != nil {
-		return err
-	}
+	windows.NtSetInformationFile(fd.Sysfd, &windows.IO_STATUS_BLOCK{}, unsafe.Pointer(&info), uint32(unsafe.Sizeof(info)), windows.FileReplaceCompletionInformation)!
 	// tryReadWriteLock means we have exclusive access to fd.
 	fd.associated = false
 	// Don't call fd.pd.close(), it would be too racy.
@@ -684,14 +678,10 @@ func pinPtrsFromBuf(buf []byte) []any {
 // Read implements io.Reader.
 func (fd *FD) Read(buf []byte) (int, error) {
 	if fd.kind == kindFile {
-		if err := fd.readWriteLock(); err != nil {
-			return 0, err
-		}
+		fd.readWriteLock()!
 		defer fd.readWriteUnlock()
 	} else {
-		if err := fd.readLock(); err != nil {
-			return 0, err
-		}
+		fd.readLock()!
 		defer fd.readUnlock()
 	}
 
@@ -765,10 +755,7 @@ func (fd *FD) readConsole(b []byte) (int, error) {
 			n = len(b)
 		}
 		var nw uint32
-		err := ReadConsole(fd.Sysfd, &fd.readuint16[:len(fd.readuint16)+1][len(fd.readuint16)], uint32(n), &nw, nil)
-		if err != nil {
-			return 0, err
-		}
+		ReadConsole(fd.Sysfd, &fd.readuint16[:len(fd.readuint16)+1][len(fd.readuint16)], uint32(n), &nw, nil)!
 		uint16s := fd.readuint16[:len(fd.readuint16)+int(nw)]
 		fd.readuint16 = fd.readuint16[:0]
 		buf := fd.readbyte[:0]
@@ -822,9 +809,7 @@ func (fd *FD) Pread(buf []byte, off int64) (int, error) {
 		return 0, syscall.ESPIPE
 	}
 
-	if err := fd.readWriteLock(); err != nil {
-		return 0, err
-	}
+	fd.readWriteLock()!
 	defer fd.readWriteUnlock()
 
 	if len(buf) > maxRW {
@@ -866,9 +851,7 @@ func (fd *FD) ReadFrom(buf []byte) (int, syscall.Sockaddr, error) {
 	if len(buf) > maxRW {
 		buf = buf[:maxRW]
 	}
-	if err := fd.readLock(); err != nil {
-		return 0, nil, err
-	}
+	fd.readLock()!
 	defer fd.readUnlock()
 
 	rsa := newWSARsa()
@@ -894,9 +877,7 @@ func (fd *FD) ReadFromInet4(buf []byte, sa4 *syscall.SockaddrInet4) (int, error)
 	if len(buf) > maxRW {
 		buf = buf[:maxRW]
 	}
-	if err := fd.readLock(); err != nil {
-		return 0, err
-	}
+	fd.readLock()!
 	defer fd.readUnlock()
 
 	rsa := newWSARsa()
@@ -922,9 +903,7 @@ func (fd *FD) ReadFromInet6(buf []byte, sa6 *syscall.SockaddrInet6) (int, error)
 	if len(buf) > maxRW {
 		buf = buf[:maxRW]
 	}
-	if err := fd.readLock(); err != nil {
-		return 0, err
-	}
+	fd.readLock()!
 	defer fd.readUnlock()
 
 	rsa := newWSARsa()
@@ -945,14 +924,10 @@ func (fd *FD) ReadFromInet6(buf []byte, sa6 *syscall.SockaddrInet6) (int, error)
 // Write implements io.Writer.
 func (fd *FD) Write(buf []byte) (int, error) {
 	if fd.kind == kindFile {
-		if err := fd.readWriteLock(); err != nil {
-			return 0, err
-		}
+		fd.readWriteLock()!
 		defer fd.readWriteUnlock()
 	} else {
-		if err := fd.writeLock(); err != nil {
-			return 0, err
-		}
+		fd.writeLock()!
 		defer fd.writeUnlock()
 	}
 
@@ -1035,10 +1010,7 @@ func (fd *FD) writeConsole(b []byte) (int, error) {
 		uint16s := utf16.Encode(chunk)
 		for len(uint16s) > 0 {
 			var written uint32
-			err := syscall.WriteConsole(fd.Sysfd, &uint16s[0], uint32(len(uint16s)), &written, nil)
-			if err != nil {
-				return 0, err
-			}
+			syscall.WriteConsole(fd.Sysfd, &uint16s[0], uint32(len(uint16s)), &written, nil)!
 			uint16s = uint16s[written:]
 		}
 	}
@@ -1052,9 +1024,7 @@ func (fd *FD) Pwrite(buf []byte, off int64) (int, error) {
 		return 0, syscall.ESPIPE
 	}
 
-	if err := fd.readWriteLock(); err != nil {
-		return 0, err
-	}
+	fd.readWriteLock()!
 	defer fd.readWriteUnlock()
 
 	var ntotal int
@@ -1099,9 +1069,7 @@ func (fd *FD) Writev(buf *[][]byte) (int64, error) {
 	if len(*buf) == 0 {
 		return 0, nil
 	}
-	if err := fd.writeLock(); err != nil {
-		return 0, err
-	}
+	fd.writeLock()!
 	defer fd.writeUnlock()
 	if race.Enabled {
 		race.ReleaseMerge(unsafe.Pointer(&ioSync))
@@ -1119,9 +1087,7 @@ func (fd *FD) Writev(buf *[][]byte) (int64, error) {
 
 // WriteTo wraps the sendto network call.
 func (fd *FD) WriteTo(buf []byte, sa syscall.Sockaddr) (int, error) {
-	if err := fd.writeLock(); err != nil {
-		return 0, err
-	}
+	fd.writeLock()!
 	defer fd.writeUnlock()
 
 	if len(buf) == 0 {
@@ -1154,9 +1120,7 @@ func (fd *FD) WriteTo(buf []byte, sa syscall.Sockaddr) (int, error) {
 
 // WriteToInet4 is WriteTo, specialized for syscall.SockaddrInet4.
 func (fd *FD) WriteToInet4(buf []byte, sa4 *syscall.SockaddrInet4) (int, error) {
-	if err := fd.writeLock(); err != nil {
-		return 0, err
-	}
+	fd.writeLock()!
 	defer fd.writeUnlock()
 
 	if len(buf) == 0 {
@@ -1189,9 +1153,7 @@ func (fd *FD) WriteToInet4(buf []byte, sa4 *syscall.SockaddrInet4) (int, error) 
 
 // WriteToInet6 is WriteTo, specialized for syscall.SockaddrInet6.
 func (fd *FD) WriteToInet6(buf []byte, sa6 *syscall.SockaddrInet6) (int, error) {
-	if err := fd.writeLock(); err != nil {
-		return 0, err
-	}
+	fd.writeLock()!
 	defer fd.writeUnlock()
 
 	if len(buf) == 0 {
@@ -1298,14 +1260,10 @@ func (fd *FD) Seek(offset int64, whence int) (int64, error) {
 	if fd.kind == kindPipe {
 		return 0, syscall.ESPIPE
 	}
-	if err := fd.readWriteLock(); err != nil {
-		return 0, err
-	}
+	fd.readWriteLock()!
 	defer fd.readWriteUnlock()
 
-	if err := fd.ensureInit(); err != nil {
-		return 0, err
-	}
+	fd.ensureInit()!
 	if !fd.isBlocking {
 		// Windows doesn't use the file pointer for overlapped file handles,
 		// there is no point on calling syscall.Seek.
@@ -1317,9 +1275,7 @@ func (fd *FD) Seek(offset int64, whence int) (int64, error) {
 			newOffset = fd.offset + offset
 		case io.SeekEnd:
 			var size int64
-			if err := windows.GetFileSizeEx(fd.Sysfd, &size); err != nil {
-				return 0, err
-			}
+			windows.GetFileSizeEx(fd.Sysfd, &size)!
 			newOffset = size + offset
 		default:
 			return 0, windows.ERROR_INVALID_PARAMETER
@@ -1337,15 +1293,11 @@ func (fd *FD) Seek(offset int64, whence int) (int64, error) {
 
 // Fchmod updates syscall.ByHandleFileInformation.Fileattributes when needed.
 func (fd *FD) Fchmod(mode uint32) error {
-	if err := fd.incref(); err != nil {
-		return err
-	}
+	fd.incref()!
 	defer fd.decref()
 
 	var d syscall.ByHandleFileInformation
-	if err := syscall.GetFileInformationByHandle(fd.Sysfd, &d); err != nil {
-		return err
-	}
+	syscall.GetFileInformationByHandle(fd.Sysfd, &d)!
 	attrs := d.FileAttributes
 	if mode&syscall.S_IWRITE != 0 {
 		attrs &^= syscall.FILE_ATTRIBUTE_READONLY
@@ -1363,36 +1315,28 @@ func (fd *FD) Fchmod(mode uint32) error {
 
 // Fchdir wraps syscall.Fchdir.
 func (fd *FD) Fchdir() error {
-	if err := fd.incref(); err != nil {
-		return err
-	}
+	fd.incref()!
 	defer fd.decref()
 	return syscall.Fchdir(fd.Sysfd)
 }
 
 // GetFileType wraps syscall.GetFileType.
 func (fd *FD) GetFileType() (uint32, error) {
-	if err := fd.incref(); err != nil {
-		return 0, err
-	}
+	fd.incref()!
 	defer fd.decref()
 	return syscall.GetFileType(fd.Sysfd)
 }
 
 // GetFileInformationByHandle wraps GetFileInformationByHandle.
 func (fd *FD) GetFileInformationByHandle(data *syscall.ByHandleFileInformation) error {
-	if err := fd.incref(); err != nil {
-		return err
-	}
+	fd.incref()!
 	defer fd.decref()
 	return syscall.GetFileInformationByHandle(fd.Sysfd, data)
 }
 
 // RawRead invokes the user-defined function f for a read operation.
 func (fd *FD) RawRead(f func(uintptr) bool) error {
-	if err := fd.readLock(); err != nil {
-		return err
-	}
+	fd.readLock()!
 	defer fd.readUnlock()
 	for {
 		if f(uintptr(fd.Sysfd)) {
@@ -1419,9 +1363,7 @@ func (fd *FD) RawRead(f func(uintptr) bool) error {
 
 // RawWrite invokes the user-defined function f for a write operation.
 func (fd *FD) RawWrite(f func(uintptr) bool) error {
-	if err := fd.writeLock(); err != nil {
-		return err
-	}
+	fd.writeLock()!
 	defer fd.writeUnlock()
 
 	if f(uintptr(fd.Sysfd)) {
@@ -1485,9 +1427,7 @@ func sockaddrToRaw(rsa *syscall.RawSockaddrAny, sa syscall.Sockaddr) (int32, err
 
 // ReadMsg wraps the WSARecvMsg network call.
 func (fd *FD) ReadMsg(p []byte, oob []byte, flags int) (int, int, int, syscall.Sockaddr, error) {
-	if err := fd.readLock(); err != nil {
-		return 0, 0, 0, nil, err
-	}
+	fd.readLock()!
 	defer fd.readUnlock()
 
 	if len(p) > maxRW {
@@ -1512,9 +1452,7 @@ func (fd *FD) ReadMsg(p []byte, oob []byte, flags int) (int, int, int, syscall.S
 
 // ReadMsgInet4 is ReadMsg, but specialized to return a syscall.SockaddrInet4.
 func (fd *FD) ReadMsgInet4(p []byte, oob []byte, flags int, sa4 *syscall.SockaddrInet4) (int, int, int, error) {
-	if err := fd.readLock(); err != nil {
-		return 0, 0, 0, err
-	}
+	fd.readLock()!
 	defer fd.readUnlock()
 
 	if len(p) > maxRW {
@@ -1538,9 +1476,7 @@ func (fd *FD) ReadMsgInet4(p []byte, oob []byte, flags int, sa4 *syscall.Sockadd
 
 // ReadMsgInet6 is ReadMsg, but specialized to return a syscall.SockaddrInet6.
 func (fd *FD) ReadMsgInet6(p []byte, oob []byte, flags int, sa6 *syscall.SockaddrInet6) (int, int, int, error) {
-	if err := fd.readLock(); err != nil {
-		return 0, 0, 0, err
-	}
+	fd.readLock()!
 	defer fd.readUnlock()
 
 	if len(p) > maxRW {
@@ -1568,9 +1504,7 @@ func (fd *FD) WriteMsg(p []byte, oob []byte, sa syscall.Sockaddr) (int, int, err
 		return 0, 0, errors.New("packet is too large (only 1GB is allowed)")
 	}
 
-	if err := fd.writeLock(); err != nil {
-		return 0, 0, err
-	}
+	fd.writeLock()!
 	defer fd.writeUnlock()
 
 	var rsa *wsaRsa
@@ -1598,9 +1532,7 @@ func (fd *FD) WriteMsgInet4(p []byte, oob []byte, sa *syscall.SockaddrInet4) (in
 		return 0, 0, errors.New("packet is too large (only 1GB is allowed)")
 	}
 
-	if err := fd.writeLock(); err != nil {
-		return 0, 0, err
-	}
+	fd.writeLock()!
 	defer fd.writeUnlock()
 
 	var rsa *wsaRsa
@@ -1624,9 +1556,7 @@ func (fd *FD) WriteMsgInet6(p []byte, oob []byte, sa *syscall.SockaddrInet6) (in
 		return 0, 0, errors.New("packet is too large (only 1GB is allowed)")
 	}
 
-	if err := fd.writeLock(); err != nil {
-		return 0, 0, err
-	}
+	fd.writeLock()!
 	defer fd.writeUnlock()
 
 	var rsa *wsaRsa

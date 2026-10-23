@@ -49,10 +49,7 @@ func TestDash(t *testing.T) {
 type shuffledFS MapFS
 
 func (fsys shuffledFS) Open(name string) (fs.File, error) {
-	f, err := MapFS(fsys).Open(name)
-	if err != nil {
-		return nil, err
-	}
+	f := MapFS(fsys).Open(name)!
 	return &shuffledFile{File: f}, nil
 }
 

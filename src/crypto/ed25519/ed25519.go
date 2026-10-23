@@ -165,18 +165,13 @@ func GenerateKey(random io.Reader) (PublicKey, PrivateKey, error) {
 	}
 
 	if rand.IsDefaultReader(random) {
-		privateKey, err := ed25519.GenerateKey()
-		if err != nil {
-			return nil, nil, err
-		}
+		privateKey := ed25519.GenerateKey()!
 		publicKey := PublicKey(privateKey.PublicKey())
 		return publicKey, PrivateKey(privateKey.Bytes()), nil
 	}
 
 	seed := make([]byte, SeedSize)
-	if _, err := io.ReadFull(random, seed); err != nil {
-		return nil, nil, err
-	}
+	io.ReadFull(random, seed)!
 
 	privateKey := NewKeyFromSeed(seed)
 	publicKey := privateKey.Public().(PublicKey)
@@ -250,10 +245,7 @@ func VerifyWithOptions(publicKey PublicKey, message, sig []byte, opts *Options) 
 	if l := len(publicKey); l != PublicKeySize {
 		panic("ed25519: bad public key length: " + strconv.Itoa(l))
 	}
-	k, err := ed25519.NewPublicKey(publicKey)
-	if err != nil {
-		return err
-	}
+	k := ed25519.NewPublicKey(publicKey)!
 	switch {
 	case opts.Hash == crypto.SHA512: // Ed25519ph
 		return ed25519.VerifyPH(k, message, sig, opts.Context)

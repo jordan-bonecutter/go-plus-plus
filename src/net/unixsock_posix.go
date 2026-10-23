@@ -42,11 +42,7 @@ func unixSocket(ctx context.Context, net string, laddr, raddr sockaddr, mode str
 		return nil, errors.New("unknown mode: " + mode)
 	}
 
-	fd, err := socket(ctx, net, syscall.AF_UNIX, sotype, 0, false, laddr, raddr, ctxCtrlFn)
-	if err != nil {
-		return nil, err
-	}
-	return fd, nil
+	return socket(ctx, net, syscall.AF_UNIX, sotype, 0, false, laddr, raddr, ctxCtrlFn)!, nil
 }
 
 func sockaddrToUnix(sa syscall.Sockaddr) Addr {
@@ -161,18 +157,12 @@ func (sd *sysDialer) dialUnix(ctx context.Context, laddr, raddr *UnixAddr) (*Uni
 			return sd.Dialer.Control(network, address, c)
 		}
 	}
-	fd, err := unixSocket(ctx, sd.network, laddr, raddr, "dial", ctrlCtxFn)
-	if err != nil {
-		return nil, err
-	}
+	fd := unixSocket(ctx, sd.network, laddr, raddr, "dial", ctrlCtxFn)!
 	return newUnixConn(fd), nil
 }
 
 func (ln *UnixListener) accept() (*UnixConn, error) {
-	fd, err := ln.fd.accept()
-	if err != nil {
-		return nil, err
-	}
+	fd := ln.fd.accept()!
 	return newUnixConn(fd), nil
 }
 
@@ -197,11 +187,7 @@ func (ln *UnixListener) close() error {
 }
 
 func (ln *UnixListener) file() (*os.File, error) {
-	f, err := ln.fd.dup()
-	if err != nil {
-		return nil, err
-	}
-	return f, nil
+	return ln.fd.dup()!, nil
 }
 
 // SetUnlinkOnClose sets whether the underlying socket file should be removed
@@ -223,10 +209,7 @@ func (sl *sysListener) listenUnix(ctx context.Context, laddr *UnixAddr) (*UnixLi
 			return sl.ListenConfig.Control(network, address, c)
 		}
 	}
-	fd, err := unixSocket(ctx, sl.network, laddr, nil, "listen", ctrlCtxFn)
-	if err != nil {
-		return nil, err
-	}
+	fd := unixSocket(ctx, sl.network, laddr, nil, "listen", ctrlCtxFn)!
 	return &UnixListener{fd: fd, path: fd.laddr.String(), unlink: true}, nil
 }
 
@@ -237,9 +220,6 @@ func (sl *sysListener) listenUnixgram(ctx context.Context, laddr *UnixAddr) (*Un
 			return sl.ListenConfig.Control(network, address, c)
 		}
 	}
-	fd, err := unixSocket(ctx, sl.network, laddr, nil, "listen", ctrlCtxFn)
-	if err != nil {
-		return nil, err
-	}
+	fd := unixSocket(ctx, sl.network, laddr, nil, "listen", ctrlCtxFn)!
 	return newUnixConn(fd), nil
 }

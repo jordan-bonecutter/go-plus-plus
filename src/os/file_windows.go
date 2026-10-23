@@ -206,16 +206,9 @@ func (f *File) seek(offset int64, whence int) (ret int64, err error) {
 // Truncate changes the size of the named file.
 // If the file is a symbolic link, it changes the size of the link's target.
 func Truncate(name string, size int64) error {
-	f, e := OpenFile(name, O_WRONLY, 0666)
-	if e != nil {
-		return e
-	}
+	f := OpenFile(name, O_WRONLY, 0666)!
 	defer f.Close()
-	e1 := f.Truncate(size)
-	if e1 != nil {
-		return e1
-	}
-	return nil
+	return f.Truncate(size)
 }
 
 // Remove removes the named file or directory.
@@ -390,19 +383,12 @@ func Symlink(oldname, newname string) error {
 // parameter, so that Windows does not follow symlink, if path is a symlink.
 // openSymlink returns opened file handle.
 func openSymlink(path string) (syscall.Handle, error) {
-	p, err := syscall.UTF16PtrFromString(path)
-	if err != nil {
-		return 0, err
-	}
+	p := syscall.UTF16PtrFromString(path)!
 	attrs := uint32(syscall.FILE_FLAG_BACKUP_SEMANTICS)
 	// Use FILE_FLAG_OPEN_REPARSE_POINT, otherwise CreateFile will follow symlink.
 	// See https://docs.microsoft.com/en-us/windows/desktop/FileIO/symbolic-link-effects-on-file-systems-functions#createfile-and-createfiletransacted
 	attrs |= syscall.FILE_FLAG_OPEN_REPARSE_POINT
-	h, err := syscall.CreateFile(p, 0, 0, nil, syscall.OPEN_EXISTING, attrs, 0)
-	if err != nil {
-		return 0, err
-	}
-	return h, nil
+	return syscall.CreateFile(p, 0, 0, nil, syscall.OPEN_EXISTING, attrs, 0)!, nil
 }
 
 var winreadlinkvolume = godebug.New("winreadlinkvolume")
@@ -435,18 +421,12 @@ func normaliseLinkPath(path string) (string, error) {
 	}
 	winreadlinkvolume.IncNonDefault()
 
-	h, err := openSymlink(path)
-	if err != nil {
-		return "", err
-	}
+	h := openSymlink(path)!
 	defer syscall.CloseHandle(h)
 
 	buf := make([]uint16, 100)
 	for {
-		n, err := windows.GetFinalPathNameByHandle(h, &buf[0], uint32(len(buf)), windows.VOLUME_NAME_DOS)
-		if err != nil {
-			return "", err
-		}
+		n := windows.GetFinalPathNameByHandle(h, &buf[0], uint32(len(buf)), windows.VOLUME_NAME_DOS)!
 		if n < uint32(len(buf)) {
 			break
 		}
@@ -465,10 +445,7 @@ func normaliseLinkPath(path string) (string, error) {
 }
 
 func readReparseLink(path string) (string, error) {
-	h, err := openSymlink(path)
-	if err != nil {
-		return "", err
-	}
+	h := openSymlink(path)!
 	defer syscall.CloseHandle(h)
 	return readReparseLinkHandle(h)
 }
@@ -476,10 +453,7 @@ func readReparseLink(path string) (string, error) {
 func readReparseLinkHandle(h syscall.Handle) (string, error) {
 	rdbbuf := make([]byte, syscall.MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
 	var bytesReturned uint32
-	err := syscall.DeviceIoControl(h, syscall.FSCTL_GET_REPARSE_POINT, nil, 0, &rdbbuf[0], uint32(len(rdbbuf)), &bytesReturned, nil)
-	if err != nil {
-		return "", err
-	}
+	syscall.DeviceIoControl(h, syscall.FSCTL_GET_REPARSE_POINT, nil, 0, &rdbbuf[0], uint32(len(rdbbuf)), &bytesReturned, nil)!
 
 	rdb := (*windows.REPARSE_DATA_BUFFER)(unsafe.Pointer(&rdbbuf[0]))
 	switch rdb.ReparseTag {

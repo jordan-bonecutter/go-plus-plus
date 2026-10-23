@@ -242,10 +242,7 @@ func (test *globTest) buildWant(root string) []string {
 
 func (test *globTest) globAbs(root, rootPattern string) error {
 	p := FromSlash(rootPattern + `\` + test.pattern)
-	have, err := Glob(p)
-	if err != nil {
-		return err
-	}
+	have := Glob(p)!
 	slices.Sort(have)
 	want := test.buildWant(root + `\`)
 	if slices.Equal(want, have) {
@@ -256,10 +253,7 @@ func (test *globTest) globAbs(root, rootPattern string) error {
 
 func (test *globTest) globRel(root string) error {
 	p := root + FromSlash(test.pattern)
-	have, err := Glob(p)
-	if err != nil {
-		return err
-	}
+	have := Glob(p)!
 	slices.Sort(have)
 	want := test.buildWant(root)
 	if slices.Equal(want, have) {

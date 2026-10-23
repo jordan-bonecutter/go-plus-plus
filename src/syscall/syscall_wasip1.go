@@ -468,10 +468,7 @@ const (
 func clock_time_get(id clockid, precision timestamp, time *timestamp) Errno
 
 func SetNonblock(fd int, nonblocking bool) error {
-	flags, err := fd_fdstat_get_flags(fd)
-	if err != nil {
-		return err
-	}
+	flags := fd_fdstat_get_flags(fd)!
 	if nonblocking {
 		flags |= FDFLAG_NONBLOCK
 	} else {

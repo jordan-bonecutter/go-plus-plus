@@ -1908,9 +1908,7 @@ func (sc *serverConn) processSettings(f *SettingsFrame) error {
 		// duplicate entries.
 		return sc.countError("settings_big_or_dups", ConnectionError(ErrCodeProtocol))
 	}
-	if err := f.ForeachSetting(sc.processSetting); err != nil {
-		return err
-	}
+	f.ForeachSetting(sc.processSetting)!
 	// TODO: judging by RFC 7540, Section 6.5.3 each SETTINGS frame should be
 	// acknowledged individually, even if multiple are received before the ACK.
 	sc.needToSendSettingsAck = true
@@ -1920,9 +1918,7 @@ func (sc *serverConn) processSettings(f *SettingsFrame) error {
 
 func (sc *serverConn) processSetting(s Setting) error {
 	sc.serveG.check()
-	if err := s.Valid(); err != nil {
-		return err
-	}
+	s.Valid()!
 	if VerboseLogs {
 		sc.vlogf("http2: server processing setting %v", s)
 	}
@@ -2228,18 +2224,13 @@ func (sc *serverConn) processHeaders(f *MetaHeadersFrame) error {
 	st := sc.newStream(id, 0, initialState, initialPriority)
 
 	if f.HasPriority() {
-		if err := sc.checkPriority(f.StreamID, f.Priority); err != nil {
-			return err
-		}
+		sc.checkPriority(f.StreamID, f.Priority)!
 		if !sc.writeSchedIgnoresRFC7540() {
 			sc.writeSched.AdjustStream(st.id, f.Priority)
 		}
 	}
 
-	rw, req, err := sc.newWriterAndRequest(st, f)
-	if err != nil {
-		return err
-	}
+	rw, req := sc.newWriterAndRequest(st, f)!
 	st.reqTrailer = req.Trailer
 	if st.reqTrailer != nil {
 		st.trailer = make(Header)
@@ -2327,9 +2318,7 @@ func (sc *serverConn) checkPriority(streamID uint32, p PriorityParam) error {
 }
 
 func (sc *serverConn) processPriority(f *PriorityFrame) error {
-	if err := sc.checkPriority(f.StreamID, f.PriorityParam); err != nil {
-		return err
-	}
+	sc.checkPriority(f.StreamID, f.PriorityParam)!
 	// We need to avoid calling AdjustStream when using the RFC 9218 write
 	// scheduler. Otherwise, incremental's zero value in PriorityParam will
 	// unexpectedly make all streams non-incremental. This causes us to process
@@ -2450,10 +2439,7 @@ func (sc *serverConn) newWriterAndRequest(st *stream, f *MetaHeadersFrame) (*res
 		header.Set(":protocol", rp.Protocol)
 	}
 
-	rw, req, err := sc.newWriterAndRequestNoBody(st, rp)
-	if err != nil {
-		return nil, nil, err
-	}
+	rw, req := sc.newWriterAndRequestNoBody(st, rp)!
 	bodyOpen := !f.StreamEnded()
 	if clens, ok := rp.Header["Content-Length"]; ok {
 		if cl, err := strconv.ParseUint(clens[0], 10, 63); err == nil {
@@ -2638,13 +2624,11 @@ func (sc *serverConn) writeHeaders(st *stream, headerData *writeResHeaders) erro
 		// mutates it.
 		errc = getErrChan()
 	}
-	if err := sc.writeFrameFromHandler(FrameWriteRequest{
+	sc.writeFrameFromHandler(FrameWriteRequest{
 		write:  headerData,
 		stream: st,
 		done:   errc,
-	}); err != nil {
-		return err
-	}
+	})!
 	if errc != nil {
 		select {
 		case err := <-errc:
@@ -3297,10 +3281,7 @@ func (w *responseWriter) Push(target, method string, header Header) error {
 	}
 
 	// Validate the request.
-	u, err := url.Parse(target)
-	if err != nil {
-		return err
-	}
+	u := url.Parse(target)!
 	if u.Scheme == "" {
 		if !strings.HasPrefix(target, "/") {
 			return fmt.Errorf("target must be an absolute URL or an absolute path: %q", target)
@@ -3332,9 +3313,7 @@ func (w *responseWriter) Push(target, method string, header Header) error {
 			return fmt.Errorf("promised request headers cannot include %q", k)
 		}
 	}
-	if err := checkValidHTTP2RequestHeaders(header); err != nil {
-		return err
-	}
+	checkValidHTTP2RequestHeaders(header)!
 
 	// The RFC effectively limits promised requests to GET and HEAD:
 	// "Promised requests MUST be cacheable [GET, HEAD, or POST], and MUST be safe [GET or HEAD]"

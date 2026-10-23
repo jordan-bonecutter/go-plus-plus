@@ -42,9 +42,7 @@ func stat(funcname, name string, followSurrogates bool) (FileInfo, error) {
 		// Not a surrogate for another named entity, because it isn't any kind of reparse point.
 		// The information we got from GetFileAttributesEx is good enough for now.
 		fs := newFileStatFromWin32FileAttributeData(&fa)
-		if err := fs.saveInfoFromPath(name); err != nil {
-			return nil, err
-		}
+		fs.saveInfoFromPath(name)!
 		return fs, nil
 	}
 
@@ -60,9 +58,7 @@ func stat(funcname, name string, followSurrogates bool) (FileInfo, error) {
 		if fd.FileAttributes&syscall.FILE_ATTRIBUTE_REPARSE_POINT == 0 {
 			// Not a surrogate for another named entity. FindFirstFile is good enough.
 			fs := newFileStatFromWin32finddata(&fd)
-			if err := fs.saveInfoFromPath(name); err != nil {
-				return nil, err
-			}
+			fs.saveInfoFromPath(name)!
 			return fs, nil
 		}
 	}

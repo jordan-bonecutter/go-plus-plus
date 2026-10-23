@@ -61,10 +61,7 @@ func (r *Reader) readLineSlice(lim int64) ([]byte, error) {
 	r.closeDot()
 	var line []byte
 	for {
-		l, more, err := r.R.ReadLine()
-		if err != nil {
-			return nil, err
-		}
+		l, more := r.R.ReadLine()!
 		if lim >= 0 && int64(len(line))+int64(len(l)) > lim {
 			return nil, errMessageTooLarge
 		}
@@ -139,17 +136,12 @@ func (r *Reader) readContinuedLineSlice(lim int64, validateFirstLine func([]byte
 	}
 
 	// Read the first line.
-	line, err := r.readLineSlice(lim)
-	if err != nil {
-		return nil, err
-	}
+	line := r.readLineSlice(lim)!
 	if len(line) == 0 { // blank line - no continuation
 		return line, nil
 	}
 
-	if err := validateFirstLine(line); err != nil {
-		return nil, err
-	}
+	validateFirstLine(line)!
 
 	// Optimistically assume that we have started to buffer the next line
 	// and it starts with an ASCII letter (the next header key), or a blank
@@ -178,10 +170,7 @@ func (r *Reader) readContinuedLineSlice(lim int64, validateFirstLine func([]byte
 		if int64(len(r.buf)) >= lim {
 			return nil, errMessageTooLarge
 		}
-		line, err := r.readLineSlice(lim - int64(len(r.buf)))
-		if err != nil {
-			return nil, err
-		}
+		line := r.readLineSlice(lim - int64(len(r.buf)))!
 		r.buf = append(r.buf, trim(line)...)
 	}
 	return r.buf, nil
@@ -206,10 +195,7 @@ func (r *Reader) skipSpace() int {
 }
 
 func (r *Reader) readCodeLine(expectCode int) (code int, continued bool, message string, err error) {
-	line, err := r.ReadLine()
-	if err != nil {
-		return
-	}
+	line := r.ReadLine()!
 	return parseCodeLine(line, expectCode)
 }
 

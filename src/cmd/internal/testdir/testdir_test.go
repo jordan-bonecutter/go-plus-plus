@@ -323,10 +323,7 @@ func goDirFiles(dir string) (filter []fs.DirEntry, _ error) {
 var packageRE = regexp.MustCompile(`(?m)^package ([\p{Lu}\p{Ll}\w]+)`)
 
 func getPackageNameFromSource(fn string) (string, error) {
-	data, err := os.ReadFile(fn)
-	if err != nil {
-		return "", err
-	}
+	data := os.ReadFile(fn)!
 	pkgname := packageRE.FindStringSubmatch(string(data))
 	if pkgname == nil {
 		return "", fmt.Errorf("cannot find package name in %s", fn)
@@ -819,10 +816,7 @@ func (t test) run() error {
 		importcfgfile := importcfg(pkgs)
 
 		for _, pkg := range pkgs {
-			_, err := compileInDir(runcmd, longdir, flags, importcfgfile, pkg.name, pkg.files...)
-			if err != nil {
-				return err
-			}
+			compileInDir(runcmd, longdir, flags, importcfgfile, pkg.name, pkg.files...)!
 		}
 		return nil
 
@@ -901,10 +895,7 @@ func (t test) run() error {
 				cmd = append(cmd, findExecCmd()...)
 				cmd = append(cmd, filepath.Join(tempDir, "a.exe"))
 				cmd = append(cmd, args...)
-				out, err := runcmd(cmd...)
-				if err != nil {
-					return err
-				}
+				out := runcmd(cmd...)!
 				t.checkExpectedOutput(out)
 			}
 		}
@@ -944,10 +935,7 @@ func (t test) run() error {
 		}
 		cmd = append(cmd, flags...)
 		cmd = append(cmd, ".")
-		out, err := runcmd(cmd...)
-		if err != nil {
-			return err
-		}
+		out := runcmd(cmd...)!
 		return t.checkExpectedOutput(out)
 
 	case "build":
@@ -1040,15 +1028,9 @@ func (t test) run() error {
 		longDirGoFile := filepath.Join(filepath.Join(t.gorootTestDir, t.dir), t.goFile)
 		cmd = append(cmd, flags...)
 		cmd = append(cmd, longDirGoFile)
-		_, err := runcmd(cmd...)
-		if err != nil {
-			return err
-		}
+		runcmd(cmd...)!
 		cmd = []string{"./a.exe"}
-		out, err := runcmd(append(cmd, args...)...)
-		if err != nil {
-			return err
-		}
+		out := runcmd(append(cmd, args...)...)!
 
 		return t.checkExpectedOutput(out)
 
@@ -1068,13 +1050,9 @@ func (t test) run() error {
 			// Because we run lots of trivial test programs,
 			// the time adds up.
 			pkg := filepath.Join(tempDir, "pkg.a")
-			if _, err := runcmd(goTool, "tool", "compile", "-p=main", "-importcfg="+stdlibImportcfgFile(), "-o", pkg, t.goFileName()); err != nil {
-				return err
-			}
+			runcmd(goTool, "tool", "compile", "-p=main", "-importcfg="+stdlibImportcfgFile(), "-o", pkg, t.goFileName())!
 			exe := filepath.Join(tempDir, "test.exe")
-			if err := linkFile(runcmd, exe, pkg, stdlibImportcfgFile(), nil); err != nil {
-				return err
-			}
+			linkFile(runcmd, exe, pkg, stdlibImportcfgFile(), nil)!
 			out, err = runcmd(append([]string{exe}, args...)...)
 		} else {
 			cmd := []string{goTool, "run", t.goGcflags()}
@@ -1103,10 +1081,7 @@ func (t test) run() error {
 			cmd = append(cmd, "-linkshared")
 		}
 		cmd = append(cmd, t.goFileName())
-		out, err := runcmd(append(cmd, args...)...)
-		if err != nil {
-			return err
-		}
+		out := runcmd(append(cmd, args...)...)!
 		tfile := filepath.Join(tempDir, "tmp__.go")
 		if err := os.WriteFile(tfile, out, 0666); err != nil {
 			t.Fatalf("write tempfile: %v", err)
@@ -1116,10 +1091,7 @@ func (t test) run() error {
 			cmd = append(cmd, "-linkshared")
 		}
 		cmd = append(cmd, tfile)
-		out, err = runcmd(cmd...)
-		if err != nil {
-			return err
-		}
+		out = runcmd(cmd...)!
 		return t.checkExpectedOutput(out)
 
 	case "errorcheckoutput":
@@ -1874,9 +1846,7 @@ func TestShouldTest(t *testing.T) {
 // overlayDir makes a minimal-overhead copy of srcRoot in which new files may be added.
 func overlayDir(dstRoot, srcRoot string) error {
 	dstRoot = filepath.Clean(dstRoot)
-	if err := os.MkdirAll(dstRoot, 0777); err != nil {
-		return err
-	}
+	os.MkdirAll(dstRoot, 0777)!
 
 	srcRoot, err := filepath.Abs(srcRoot)
 	if err != nil {

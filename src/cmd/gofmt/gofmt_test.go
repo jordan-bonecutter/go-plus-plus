@@ -242,3 +242,15 @@ func TestBackupFile(t *testing.T) {
 	}
 	t.Logf("Created: %s", name)
 }
+
+func TestReadFileReleasesDescriptorSlot(t *testing.T) {
+	old := fdSem
+	fdSem = make(chan bool, 1)
+	defer func() { fdSem = old }()
+	if _, err := readFile(filepath.Join(t.TempDir(), "missing.go"), nil, nil); !os.IsNotExist(err) {
+		t.Fatalf("readFile: expected missing-file error, got %v", err)
+	}
+	if n := len(fdSem); n != 0 {
+		t.Fatalf("readFile leaked %d descriptor slots", n)
+	}
+}

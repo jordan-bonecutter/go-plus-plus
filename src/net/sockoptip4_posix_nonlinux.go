@@ -14,9 +14,7 @@ import (
 
 func joinIPv4Group(fd *netFD, ifi *Interface, ip IP) error {
 	mreq := &syscall.IPMreq{Multiaddr: [4]byte{ip[0], ip[1], ip[2], ip[3]}}
-	if err := setIPv4MreqToInterface(mreq, ifi); err != nil {
-		return err
-	}
+	setIPv4MreqToInterface(mreq, ifi)!
 	err := fd.pfd.SetsockoptIPMreq(syscall.IPPROTO_IP, syscall.IP_ADD_MEMBERSHIP, mreq)
 	runtime.KeepAlive(fd)
 	return wrapSyscallError("setsockopt", err)
@@ -26,10 +24,7 @@ func setIPv4MreqToInterface(mreq *syscall.IPMreq, ifi *Interface) error {
 	if ifi == nil {
 		return nil
 	}
-	ifat, err := ifi.Addrs()
-	if err != nil {
-		return err
-	}
+	ifat := ifi.Addrs()!
 	for _, ifa := range ifat {
 		switch v := ifa.(type) {
 		case *IPAddr:

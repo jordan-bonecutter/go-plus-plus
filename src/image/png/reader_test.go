@@ -70,10 +70,7 @@ var filenamesShort = []string{
 }
 
 func readPNG(filename string) (image.Image, error) {
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
+	f := os.Open(filename)!
 	defer f.Close()
 	return Decode(f)
 }
