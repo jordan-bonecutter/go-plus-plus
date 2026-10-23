@@ -1,42 +1,54 @@
-# The Go Programming Language
+# Go++
 
-Go is an open source programming language that makes it easy to build simple,
-reliable, and efficient software.
+Go but I am the captain now
 
-![Gopher image](https://golang.org/doc/gopher/fiveyears.jpg)
-*Gopher image by [Renee French][rf], licensed under [Creative Commons 4.0 Attribution license][cc4-by].*
+## What did you add?
 
-Our canonical Git repository is located at https://go.googlesource.com/go.
-There is a mirror of the repository at https://github.com/golang/go.
+I added tagged unions, a la:
 
-Unless otherwise noted, the Go source files are distributed under the
-BSD-style license found in the LICENSE file.
+```go
+type Option[T any] union {
+    None
+    Some T
+}
 
-### Download and Install
+func valueOr[T any](option Option[T], fallback T) T {
+    switch value := option.(variant) {
+    case Some:
+        return value // T
+    case None:
+        return fallback
+    }
+}
+```
 
-#### Binary Distributions
+Construct values with `Option[int].Some(42)` or `Option[int].None(unit{})`.
+`unit` aliases `struct{}`; omitting a variant's type makes it a unit.
 
-Official binary distributions are available at https://go.dev/dl/.
+Matches must cover every variant or include a default. Extract a specific
+variant with `x.(Some)` or `value, ok := x.(Some)`.
 
-After downloading a binary release, visit https://go.dev/doc/install
-for installation instructions.
+Payloads overlap inline. Pointer-free unions omit the GC anchor, including
+per generic instantiation: `Option[int]` needs none; `Option[string]` does.
+Unions have their own `reflect.Union` kind and support JSON, gob, and XML.
 
-#### Install From Source
+## Error propagation
 
-If a binary distribution is not available for your combination of
-operating system and architecture, visit
-https://go.dev/doc/install/source
-for source installation instructions.
+```go
+func readConfig(path string) (map[string]any, error) {
+    data := os.ReadFile(path)!
+    var config map[string]any
+    json.Unmarshal(data, &config)!
+    return config, nil
+}
+```
 
-### Contributing
+`call()!` returns early on error; on success, it yields the other results.
+The enclosing function must return a final `error`. Early returns preserve
+named results and zero unnamed results. Defers work normally.
 
-Go is the work of thousands of contributors. We appreciate your help!
+Details: [unions and unit](doc/tagged-unions.txt) · [error propagation](doc/bang-operator.txt).
 
-To contribute, please read the contribution guidelines at https://go.dev/doc/contribute.
+## Musings
 
-Note that the Go project uses the issue tracker for bug reports and
-proposals only. See https://go.dev/wiki/Questions for a list of
-places to ask questions about the Go language.
-
-[rf]: https://reneefrench.blogspot.com/
-[cc4-by]: https://creativecommons.org/licenses/by/4.0/
+Many thanks to the Golang team. I love this language. I always will. It is home.
