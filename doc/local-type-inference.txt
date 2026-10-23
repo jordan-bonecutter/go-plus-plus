@@ -24,13 +24,13 @@ and composite literals may infer omitted type arguments.
 Struct fields, array/slice elements, and map keys and values supply literal
 constraints. Generic aliases are supported, including aliases that reorder or
 transform their parameters. An expected concrete instance can type an empty
-literal or nested literals. Constraints, field visibility, duplicate keys, and
+literal or nested literals, including addressed literals such as &Box{}. Constraints, field visibility, duplicate keys, and
 ordinary assignment rules still apply.
 
 Union constructors also infer type arguments:
 
     option := Option.Some(42) // Option[int]
-    var none Option[string] = Option.None(unit{})
+    var none Option[string] = Option.None()
     var some func(int) Option[int] = Option.Some
 
 Generic function calls first use the existing argument-based inference rules.
@@ -42,7 +42,7 @@ including untyped constant defaulting. An interface destination does not select
 an arbitrary concrete instantiation.
 
 Inference is expression-local. It does not infer a variable's type from later
-statements. Thus x := zero(), List{}, and Option.None(unit{}) without an
+statements. Thus x := zero(), List{}, and Option.None() without an
 expected type remain ambiguous and need explicit type arguments or a typed
 destination. Local function literals keep their existing syntax and typing
 rules; bindings do not gain implicit polymorphism. Generic type arguments in

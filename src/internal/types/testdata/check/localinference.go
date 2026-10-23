@@ -19,7 +19,11 @@ func identity[T any](x T) T         { return x }
 func takeBox(x Box[int])            {}
 func takeInt(x int)                 {}
 
+func pointerBox() *Box[string] { return &Box{} }
+
 func literals() {
+ var _ *Box[string] = &Box{}
+ var _ *Box[Box[int]] = &Box{Value: Box{Value: 42}}
 	var _ Box[int] = Box{42}
 	b := Box{Value: "hello"}
 	var _ Box[string] = b
