@@ -71,7 +71,7 @@ func testGenerics() {
 	b[256] = 99
 	large := Choice[Blob].Some(b)
 	assert(large.Value() == b, "large generic copy")
-	assert(unsafe.Sizeof(large) == (uintptr(len(b))+unsafe.Sizeof(uintptr(0))-1)&^(unsafe.Sizeof(uintptr(0))-1)+unsafe.Sizeof(uintptr(0)), "large alignment")
+	assert(unsafe.Sizeof(large) == uintptr(len(b))+1, "large alignment")
 }
 
 func testControlFlow() {

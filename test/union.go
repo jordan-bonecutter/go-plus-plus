@@ -211,7 +211,7 @@ func main() {
 	if unsafe.Sizeof(Pointer{}) != 3*unsafe.Sizeof(uintptr(0)) {
 		panic("pointer union layout")
 	}
-	if unsafe.Sizeof(Empty{}) != unsafe.Sizeof(uintptr(0)) {
+	if unsafe.Sizeof(Empty{}) != 1 {
 		panic("empty payload layout")
 	}
 	var construct func(int) Foo = Foo.Bar

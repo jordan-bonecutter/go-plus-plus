@@ -162,6 +162,8 @@ func TestUnitAndAnchorSizes(t *testing.T) {
 	const source = `package p
  type Option[T any] union { None; Some T }
  var integer Option[int]
+ var narrow Option[int32]
+ var tiny Option[byte]
  var text Option[string]
  var empty Option[unit]
  var zeroArray Option[[0]*int]
@@ -195,7 +197,7 @@ func TestUnitAndAnchorSizes(t *testing.T) {
 			t.Fatal(err)
 		}
 		word := sizes.Sizeof(types.Typ[types.Uintptr])
-		for name, want := range map[string]int64{"integer": 2 * word, "text": 4 * word, "empty": word, "zeroArray": word, "nested": 3 * word, "rooted": 6 * word} {
+		for name, want := range map[string]int64{"integer": 2 * word, "text": 4 * word, "empty": 1, "narrow": 8, "tiny": 2, "zeroArray": word, "nested": 3 * word, "rooted": 6 * word} {
 			if got := sizes.Sizeof(pkg.Scope().Lookup(name).Type()); got != want {
 				t.Errorf("%s %s size=%d, want %d", arch, name, got, want)
 			}

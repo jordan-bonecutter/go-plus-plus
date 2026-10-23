@@ -59,7 +59,7 @@ func (check *Checker) taggedUnionType(styp *Struct, e *ast.StructType) {
 		check.error(e, InvalidSyntaxTree, "union must have at least one variant")
 	}
 	fields = append(fields,
-		NewField(e.Pos(), check.pkg, "_", NewArray(Typ[Uintptr], 0), false),
+		NewField(e.Pos(), check.pkg, "_", NewStruct(nil, nil), false),
 		NewField(e.Pos(), check.pkg, "union·raw", NewArray(Typ[Uint8], 0), false))
 	tag := Typ[Uint8]
 	switch abi.UnionTagSize(uint64(len(fields) - 2)) {
