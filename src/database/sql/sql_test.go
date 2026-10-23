@@ -2148,12 +2148,12 @@ func TestNullStringParam(t *testing.T) {
 
 func TestGenericNullStringParam(t *testing.T) {
 	spec := nullTestSpec{"nullstring", "string", [6]nullTestRow{
-		{Null[string]{"aqua", true}, "", Null[string]{"aqua", true}},
-		{Null[string]{"brown", false}, "", Null[string]{"", false}},
-		{"chartreuse", "", Null[string]{"chartreuse", true}},
-		{Null[string]{"darkred", true}, "", Null[string]{"darkred", true}},
-		{Null[string]{"eel", false}, "", Null[string]{"", false}},
-		{"foo", Null[string]{"black", false}, nil},
+		{Null{"aqua", true}, "", Null{"aqua", true}},
+		{Null{"brown", false}, "", Null{"", false}},
+		{"chartreuse", "", Null{"chartreuse", true}},
+		{Null{"darkred", true}, "", Null{"darkred", true}},
+		{Null{"eel", false}, "", Null{"", false}},
+		{"foo", Null{"black", false}, nil},
 	}}
 	testDatabase(t, func(t *testing.T, db *DB) {
 		nullTestRun(t, spec, db)
@@ -2266,12 +2266,12 @@ func TestNullUUIDParam(t *testing.T) {
 	u1 := uuid.MustParse("46cd2740-6081-4289-a659-03b61ebb92f7")
 	u2 := uuid.MustParse("46cd2740-6081-4289-a659-03b61ebb92f7")
 	spec := nullTestSpec{"nulluuid", "uuid", [6]nullTestRow{
-		{Null[uuid.UUID]{u1, true}, u2, Null[uuid.UUID]{u1, true}},
-		{Null[uuid.UUID]{u1, false}, u2, Null[uuid.UUID]{u0, false}},
-		{u1, u2, Null[uuid.UUID]{u1, true}},
-		{Null[uuid.UUID]{u1, true}, u2, Null[uuid.UUID]{u1, true}},
-		{Null[uuid.UUID]{u1, false}, u2, Null[uuid.UUID]{u0, false}},
-		{u2, Null[uuid.UUID]{u1, false}, nil},
+		{Null{u1, true}, u2, Null{u1, true}},
+		{Null{u1, false}, u2, Null{u0, false}},
+		{u1, u2, Null{u1, true}},
+		{Null{u1, true}, u2, Null{u1, true}},
+		{Null{u1, false}, u2, Null{u0, false}},
+		{u2, Null{u1, false}, nil},
 	}}
 	testDatabase(t, func(t *testing.T, db *DB) {
 		nullTestRun(t, spec, db)
@@ -5421,7 +5421,7 @@ func (t issue69728Type) Value() (driver.Value, error) {
 }
 
 func TestIssue69728(t *testing.T) {
-	forValue := Null[issue69728Type]{
+	forValue := Null{
 		Valid: true,
 		V: issue69728Type{
 			ID:   42,

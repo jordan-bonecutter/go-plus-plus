@@ -42,7 +42,7 @@ func benchmarkMoveLoad(b *testing.B, f func(moveLoadBenchS) int8) {
 	ss := make([]moveLoadBenchS, len(backing))
 	for i := range backing {
 		backing[i].typ = int8(i)
-		ss[i] = moveLoadBenchS{h: moveLoadBenchHandle[moveLoadBenchBig]{&backing[i]}}
+		ss[i] = moveLoadBenchS{h: moveLoadBenchHandle{&backing[i]}}
 	}
 
 	b.ResetTimer()

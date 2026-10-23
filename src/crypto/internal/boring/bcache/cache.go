@@ -123,7 +123,7 @@ func (c *Cache[K, V]) Put(k *K, v *V) {
 			n++
 		}
 		if add == nil {
-			add = &cacheEntry[K, V]{k: k}
+			add = &cacheEntry{k: k}
 			add.v.Store(v)
 		}
 		add.next = start

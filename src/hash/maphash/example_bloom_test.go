@@ -47,7 +47,7 @@ func NewBloomFilter[V any](hasher maphash.Hasher[V], n int, fpProb float64) *Blo
 		seeds[i] = maphash.MakeSeed()
 	}
 
-	return &BloomFilter[V]{
+	return &BloomFilter{
 		hasher: hasher,
 		bytes:  make([]byte, nbytes),
 		seeds:  seeds,

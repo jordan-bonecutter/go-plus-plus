@@ -80,7 +80,7 @@ type gState[R resource] struct {
 // newGState constructs a new goroutine state for the goroutine
 // identified by the provided ID.
 func newGState[R resource](goID trace.GoID) *gState[R] {
-	return &gState[R]{
+	return &gState{
 		baseName:     fmt.Sprintf("G%d", goID),
 		executing:    R(noResource),
 		activeRanges: make(map[string]activeRange),

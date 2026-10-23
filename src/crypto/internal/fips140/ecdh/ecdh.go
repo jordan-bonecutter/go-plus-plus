@@ -69,7 +69,7 @@ type Point[P any] interface {
 }
 
 func P224() *Curve[*nistec.P224Point] {
-	return &Curve[*nistec.P224Point]{
+	return &Curve{
 		curve:    p224,
 		newPoint: nistec.NewP224Point,
 		N:        p224Order,
@@ -84,7 +84,7 @@ var p224Order = []byte{
 }
 
 func P256() *Curve[*nistec.P256Point] {
-	return &Curve[*nistec.P256Point]{
+	return &Curve{
 		curve:    p256,
 		newPoint: nistec.NewP256Point,
 		N:        p256Order,
@@ -99,7 +99,7 @@ var p256Order = []byte{
 }
 
 func P384() *Curve[*nistec.P384Point] {
-	return &Curve[*nistec.P384Point]{
+	return &Curve{
 		curve:    p384,
 		newPoint: nistec.NewP384Point,
 		N:        p384Order,
@@ -116,7 +116,7 @@ var p384Order = []byte{
 }
 
 func P521() *Curve[*nistec.P521Point] {
-	return &Curve[*nistec.P521Point]{
+	return &Curve{
 		curve:    p521,
 		newPoint: nistec.NewP521Point,
 		N:        p521Order,

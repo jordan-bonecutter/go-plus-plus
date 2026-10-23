@@ -50,16 +50,16 @@ func TestTokenAccessors(t *testing.T) {
 		Kind    Kind
 	}
 	negZero := math.Copysign(0, -1)
-	f32 := func(f32 float32) valueError[float32] { return valueError[float32]{Value: f32} }
-	f32er := func(f32 float32) valueError[float32] { return valueError[float32]{Value: f32, Error: strconv.ErrRange} }
-	f64 := func(f64 float64) valueError[float64] { return valueError[float64]{Value: f64} }
-	f64er := func(f64 float64) valueError[float64] { return valueError[float64]{Value: f64, Error: strconv.ErrRange} }
-	i64 := func(i64 int64) valueError[int64] { return valueError[int64]{Value: i64} }
-	i64er := func(i64 int64) valueError[int64] { return valueError[int64]{Value: i64, Error: strconv.ErrRange} }
-	i64es := func(i64 int64) valueError[int64] { return valueError[int64]{Value: i64, Error: strconv.ErrSyntax} }
-	u64 := func(u64 uint64) valueError[uint64] { return valueError[uint64]{Value: u64} }
-	u64er := func(u64 uint64) valueError[uint64] { return valueError[uint64]{Value: u64, Error: strconv.ErrRange} }
-	u64es := func(u64 uint64) valueError[uint64] { return valueError[uint64]{Value: u64, Error: strconv.ErrSyntax} }
+	f32 := func(f32 float32) valueError[float32] { return valueError{Value: f32} }
+	f32er := func(f32 float32) valueError[float32] { return valueError{Value: f32, Error: strconv.ErrRange} }
+	f64 := func(f64 float64) valueError[float64] { return valueError{Value: f64} }
+	f64er := func(f64 float64) valueError[float64] { return valueError{Value: f64, Error: strconv.ErrRange} }
+	i64 := func(i64 int64) valueError[int64] { return valueError{Value: i64} }
+	i64er := func(i64 int64) valueError[int64] { return valueError{Value: i64, Error: strconv.ErrRange} }
+	i64es := func(i64 int64) valueError[int64] { return valueError{Value: i64, Error: strconv.ErrSyntax} }
+	u64 := func(u64 uint64) valueError[uint64] { return valueError{Value: u64} }
+	u64er := func(u64 uint64) valueError[uint64] { return valueError{Value: u64, Error: strconv.ErrRange} }
+	u64es := func(u64 uint64) valueError[uint64] { return valueError{Value: u64, Error: strconv.ErrSyntax} }
 
 	tests := []struct {
 		in   Token
@@ -160,22 +160,22 @@ func TestTokenAccessors(t *testing.T) {
 				Float32: func() valueError[float32] {
 					defer func() { recover() }()
 					f32, err := tt.in.Float32()
-					return valueError[float32]{f32, err}
+					return valueError{f32, err}
 				}(),
 				Float: func() valueError[float64] {
 					defer func() { recover() }()
 					f64, err := tt.in.Float()
-					return valueError[float64]{f64, err}
+					return valueError{f64, err}
 				}(),
 				Int: func() valueError[int64] {
 					defer func() { recover() }()
 					i64, err := tt.in.Int()
-					return valueError[int64]{i64, err}
+					return valueError{i64, err}
 				}(),
 				Uint: func() valueError[uint64] {
 					defer func() { recover() }()
 					u64, err := tt.in.Uint()
-					return valueError[uint64]{u64, err}
+					return valueError{u64, err}
 				}(),
 				Kind: tt.in.Kind(),
 			}

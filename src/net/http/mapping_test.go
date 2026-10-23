@@ -46,13 +46,13 @@ func TestMappingEachPair(t *testing.T) {
 	for i := 0; i < maxSlice*2; i++ {
 		v := strconv.Itoa(i)
 		m.add(i, v)
-		want = append(want, entry[int, string]{i, v})
+		want = append(want, entry{i, v})
 
 	}
 
 	var got []entry[int, string]
 	m.eachPair(func(k int, v string) bool {
-		got = append(got, entry[int, string]{k, v})
+		got = append(got, entry{k, v})
 		return true
 	})
 	slices.SortFunc(got, func(e1, e2 entry[int, string]) int {
