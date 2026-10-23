@@ -94,7 +94,11 @@ func (check *Checker) taggedConstructor(typ Type, variant *Var) *Func {
 	}
 	param := NewParam(variant.pos, check.pkg, "value", variant.typ.(*Array).elem)
 	result := newVar(ResultVar, variant.pos, check.pkg, "", typ)
-	sig := NewSignatureType(nil, nil, nil, NewTuple(param), NewTuple(result), false)
+	params := NewTuple(param)
+	if Identical(param.typ, Universe.Lookup("unit").Type()) {
+		params = nil
+	}
+	sig := NewSignatureType(nil, nil, nil, params, NewTuple(result), false)
 	f := NewFunc(variant.pos, variant.pkg, strings.TrimPrefix(variant.name, taggedUnionPrefix), sig)
 	check.taggedConstructors[key] = f
 	return f

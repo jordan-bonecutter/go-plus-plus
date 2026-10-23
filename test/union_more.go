@@ -109,7 +109,7 @@ match:
 	case None:
 		panic(data)
 	}
-	switch data := Choice[int].None(struct{}{}).(variant) {
+	switch data := Choice[int].None().(variant) {
 	default:
 		assert(!same(data, v), "default union binding")
 	case Some:
@@ -129,7 +129,7 @@ func testMaps() {
 	for i := 0; i < 2048; i++ {
 		keys[Choice[int].Some(i)] = i + 1
 	}
-	keys[Choice[int].None(struct{}{})] = -1
+	keys[Choice[int].None()] = -1
 	runtime.GC()
 	for i := 0; i < 2048; i++ {
 		assert(keys[Choice[int].Some(i)] == i+1, "map growth lookup")
@@ -158,7 +158,7 @@ func testMaps() {
 	assert(a == b, "equality signature array loop")
 	m := map[Array]int{a: 5}
 	assert(m[b] == 5, "hash signature array loop")
-	b[39] = Choice[string].None(struct{}{})
+	b[39] = Choice[string].None()
 	assert(a != b && m[b] == 0, "last array variant")
 	// Runtime-created maps use runtime typehash instead of the static hasher.
 	typ := reflect.MapOf(reflect.TypeOf(Choice[string]{}), reflect.TypeOf(complex64(0)))
@@ -189,7 +189,7 @@ func testEmptyInterfaceEquality() {
 		A struct{}
 		B [0]int
 	}
-	a, b := Empty.A(struct{}{}), Empty.A(struct{}{})
+	a, b := Empty.A(), Empty.A()
 	assert(any(a) == any(b) && any(Empty{}) == any(a), "empty boxed equality")
 	assert(any(a) != any(Empty.B([0]int{})), "empty boxed variant identity")
 	type Wrapped struct {
@@ -238,8 +238,8 @@ func testReflection() {
 		First  struct{}
 		Second struct{}
 	}
-	assert(reflect.ValueOf(Empty{}).Equal(reflect.ValueOf(Empty.First(struct{}{}))), "direct interface zero union")
-	assert(!reflect.ValueOf(Empty{}).Equal(reflect.ValueOf(Empty.Second(struct{}{}))), "direct interface variant identity")
+	assert(reflect.ValueOf(Empty{}).Equal(reflect.ValueOf(Empty.First())), "direct interface zero union")
+	assert(!reflect.ValueOf(Empty{}).Equal(reflect.ValueOf(Empty.Second())), "direct interface variant identity")
 	type Dynamic union {
 		Value any
 		Empty struct{}
@@ -250,7 +250,7 @@ func testReflection() {
 	assert(Dynamic.Value(0) != Dynamic.Value(int64(0)), "interface dynamic type")
 	assert(map[Dynamic]int{dynamicZero: 1}[Dynamic.Value(nil)] == 1, "nil interface map key")
 	bad := Dynamic.Value([]int{1})
-	assert(bad != Dynamic.Empty(struct{}{}), "different variants avoid interface panic")
+	assert(bad != Dynamic.Empty(), "different variants avoid interface panic")
 	assert(!reflect.ValueOf(bad).Comparable(), "dynamic Comparable")
 	assert(panics(func() { reflect.ValueOf(bad).Equal(reflect.ValueOf(bad)) }), "dynamic Equal panic")
 	assert(!reflect.TypeOf(Slices{}).Comparable(), "noncomparable union type")
@@ -258,14 +258,14 @@ func testReflection() {
 	assert(panics(func() { v := reflect.ValueOf([0]Slices{}); v.Equal(v) }), "zero array union comparison panic")
 	assert(reflect.ValueOf(Slices.Data(nil)).IsZero(), "noncomparable union IsZero")
 	assert(!reflect.ValueOf(Slices.Data([]int{})).IsZero(), "nonnull slice IsZero")
-	assert(!reflect.ValueOf(Slices.Empty(struct{}{})).IsZero(), "nonfirst empty variant IsZero")
+	assert(!reflect.ValueOf(Slices.Empty()).IsZero(), "nonfirst empty variant IsZero")
 	type LargeZero union {
 		Data  [2048]int
 		Empty struct{}
 	}
 	assert(reflect.ValueOf(LargeZero.Data([2048]int{})).IsZero(), "large union IsZero")
-	assert(!reflect.ValueOf(LargeZero.Empty(struct{}{})).IsZero(), "large variant IsZero")
-	assert(panics(func() { reflect.ValueOf(Slices.Empty(struct{}{})).Equal(reflect.ValueOf(Slices.Empty(struct{}{}))) }), "inactive noncomparable variant")
+	assert(!reflect.ValueOf(LargeZero.Empty()).IsZero(), "large variant IsZero")
+	assert(panics(func() { reflect.ValueOf(Slices.Empty()).Equal(reflect.ValueOf(Slices.Empty())) }), "inactive noncomparable variant")
 }
 
 //go:noinline

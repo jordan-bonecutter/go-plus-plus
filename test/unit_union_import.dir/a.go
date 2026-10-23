@@ -18,4 +18,4 @@ func Read[T any](x Option[T]) T {
 		return zero
 	}
 }
-func Nothing() Option[int] { return Option[int].None(unit{}) }
+func Nothing() Option[int] { return Option[int].None() }

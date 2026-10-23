@@ -436,7 +436,11 @@ func (check *Checker) initVars(lhs []*Var, orig_rhs []syntax.Expr, returnStmt sy
 		return
 	}
 
-	rhs, commaOk := check.multiExpr(orig_rhs[0], l == 2 && returnStmt == nil)
+	var target *target
+	if l == 1 {
+		target = newTarget(lhs[0].typ, context)
+	}
+	rhs, commaOk := check.multiExpr(orig_rhs[0], l == 2 && returnStmt == nil, target)
 	r = len(rhs)
 	if l == r {
 		for i, lhs := range lhs {
@@ -482,6 +486,25 @@ func (check *Checker) assignVars(lhs, orig_rhs []syntax.Expr) {
 	isCall := false
 	if r == 1 {
 		_, isCall = syntax.Unparen(orig_rhs[0]).(*syntax.CallExpr)
+	}
+
+	// A single call can use the destination type without changing the
+	// existing diagnostics for calls that produce multiple results.
+	if l == 1 && r == 1 && isCall {
+		typ := check.lhsVar(lhs[0])
+		rhs, _ := check.multiExpr(orig_rhs[0], false, newTarget(typ, context))
+		if len(rhs) == 1 {
+			if !isValid(typ) {
+				rhs[0].invalidate()
+			}
+			if typ == nil {
+				context = "assignment to _ identifier"
+			}
+			check.assignment(rhs[0], typ, context)
+		} else if rhs[0].isValid() {
+			check.assignError(orig_rhs, l, len(rhs))
+		}
+		return
 	}
 
 	// If we have a n:n mapping from lhs variable to rhs expression,

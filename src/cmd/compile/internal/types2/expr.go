@@ -1210,7 +1210,7 @@ func (check *Checker) exprInternal(T *target, x *operand, e syntax.Expr) exprKin
 		goto Error
 
 	case *syntax.CallExpr:
-		return check.callExpr(x, e)
+		return check.callExpr(T, x, e)
 
 	case *syntax.ListExpr:
 		// catch-all for unexpected expression lists
@@ -1405,9 +1405,13 @@ func (check *Checker) genericExpr(T *target, x *operand, e syntax.Expr) {
 // expression, the result is a two-element list containing the value
 // of e, and an untyped bool value or an error value, respectively.
 // If an error occurred, list[0] is not valid.
-func (check *Checker) multiExpr(e syntax.Expr, allowCommaOk bool) (list []*operand, commaOk bool) {
+func (check *Checker) multiExpr(e syntax.Expr, allowCommaOk bool, targets ...*target) (list []*operand, commaOk bool) {
 	var x operand
-	check.rawExpr(nil, &x, e, false)
+	var T *target
+	if len(targets) > 0 {
+		T = targets[0]
+	}
+	check.rawExpr(T, &x, e, false)
 	check.exclude(&x, 1<<novalue|1<<builtin|1<<typexpr)
 
 	if t, ok := x.typ().(*Tuple); ok && x.isValid() {

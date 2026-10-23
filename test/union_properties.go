@@ -128,6 +128,6 @@ func main() {
 	}
 	properties([]Record{{}, {"a", 1}, {"a", 1}, {"b", 2}})
 	properties([]Sum[any]{Sum[any]{}, Sum[any].First(42), Sum[any].Second(42), Sum[any].First([]int{1})})
-	properties([]any{nil, (*int)(nil), 0, int64(0), "", []int{1}, map[int]int{}, func() {}, [0]Uncomparable{}, Uncomparable.Empty(struct{}{})})
+	properties([]any{nil, (*int)(nil), 0, int64(0), "", []int{1}, map[int]int{}, func() {}, [0]Uncomparable{}, Uncomparable.Empty()})
 	runtime.GC()
 }

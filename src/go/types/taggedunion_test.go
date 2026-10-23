@@ -123,6 +123,9 @@ func TestTaggedUnionCases(t *testing.T) {
 		{"blank_variant", `type U union { _ int }`, "one name"},
 		{"wrong_constructor_arity", decl + `var _ = U.A()`, "not enough arguments"},
 		{"extra_constructor_argument", decl + `var _ = U.A(1,2)`, "too many arguments"},
+		{"unit_constructor_argument", `type U union { Empty }; var _ = U.Empty(unit{})`, "too many arguments"},
+		{"named_empty_payload", `type Empty struct{}; type U union { Value Empty }; var _ = U.Value(Empty{})`, ""},
+		{"named_empty_needs_payload", `type Empty struct{}; type U union { Value Empty }; var _ = U.Value()`, "not enough arguments"},
 		{"missing_constructor", decl + `var _ = U.C(1)`, "no field or method C"},
 		{"value_constructor", decl + `var u U; var _ = u.A(1)`, "no field or method A"},
 		{"payload_assignment", decl + `func f(u U) { switch v := u.(variant) { case A: var _ string = v; case B: } }`, "as string"},
@@ -161,6 +164,14 @@ func TestTaggedUnionCases(t *testing.T) {
 func TestUnitAndAnchorSizes(t *testing.T) {
 	const source = `package p
  type Option[T any] union { None; Some T }
+ type Alias = unit
+ type Units union { Implicit; Explicit unit; Alias Alias; Struct struct{} }
+ var _ func() Units = Units.Implicit
+ var _ func() Units = Units.Explicit
+ var _ func() Units = Units.Alias
+ var _ func() Units = Units.Struct
+ var _ = Option[unit].Some()
+ var _ = Units.Explicit()
  var integer Option[int]
  var narrow Option[int32]
  var tiny Option[byte]
@@ -171,7 +182,7 @@ func TestUnitAndAnchorSizes(t *testing.T) {
  var rooted Option[Option[string]]
  var u unit
  var _ struct{} = u
- func shadow() { type unit int; type U union { Empty }; var _ U = U.Empty(struct{}{}) }
+ func shadow() { type unit int; type U union { Empty }; var _ U = U.Empty() }
  `
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, "unit.go", source, parser.ParseComments)

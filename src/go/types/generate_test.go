@@ -165,6 +165,23 @@ var filemap = map[string]action{
 		renameSelectors(f, "ElemList->Elts")
 	},
 	"lookup.go": fixTokenPos,
+	"localinfer.go": func(f *ast.File) {
+		insertImportPath(f, `"go/token"`)
+		renameImportPath(f, `"cmd/compile/internal/syntax"->"go/ast"`)
+		renameSelectorExprs(f, "syntax.Name->ast.Ident", "syntax.Pos->token.Pos", "key.Value->key.Name")
+		renameIdents(f, "syntax->ast")
+		renameSelectors(f, "ElemList->Elts")
+		ast.Inspect(f, func(n ast.Node) bool {
+			if call, ok := n.(*ast.CallExpr); ok {
+				if sel, ok := call.Fun.(*ast.SelectorExpr); ok && sel.Sel.Name == "infer" {
+					// go/types inference takes a positioner instead of a position.
+					pos := call.Args[0].(*ast.CallExpr)
+					call.Args[0] = pos.Fun.(*ast.SelectorExpr).X
+				}
+			}
+			return true
+		})
+	},
 	"lookup_test.go": func(f *ast.File) {
 		renameImportPath(f, `"cmd/compile/internal/types2"->"go/types"`)
 		fixFSet(f)

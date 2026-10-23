@@ -39,7 +39,11 @@ func unionFunction(pos syntax.Pos, typ Type, variant int, operation string, bool
 	var body string
 	switch operation {
 	case "construct":
-		body = fmt.Sprintf(`func f(V T) U { var R U; R.D = %d; A(&R, &V); *(*T)(P(&R.B)) = V; return R }`, variant)
+		if Identical(unionStruct(typ).fields[variant].typ.(*Array).elem, Universe.Lookup("unit").Type()) {
+			body = fmt.Sprintf(`func f() U { var R U; R.D = %d; return R }`, variant)
+		} else {
+			body = fmt.Sprintf(`func f(V T) U { var R U; R.D = %d; A(&R, &V); *(*T)(P(&R.B)) = V; return R }`, variant)
+		}
 	case "assert":
 		body = fmt.Sprintf(`func f(V U) T { if V.D != %d { panic("union variant assertion failed") }; R := *(*T)(P(&V.B)); K(V); return R }`, variant)
 	case "assertok":

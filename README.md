@@ -22,7 +22,7 @@ func valueOr[T any](option Option[T], fallback T) T {
 }
 ```
 
-Construct values with `Option[int].Some(42)` or `Option[int].None(unit{})`.
+Construct values with `Option.Some(42)` or `Option.None()`.
 `unit` aliases `struct{}`; omitting a variant's type makes it a unit.
 
 Matches must cover every variant or include a default. Extract a specific
@@ -54,6 +54,13 @@ Details: [unions and unit](doc/tagged-unions.txt) · [error propagation](doc/ban
 Run `./misc/install-go++.sh` to build and install `go++`, `go++pls`, and
 `go++fmt` in `~/.local/bin`. Requires a stock Go toolchain and network access.
 Set `GOROOT_BOOTSTRAP` if it is not auto-detected. Re-run to update.
+
+## Local type inference
+
+Function signatures stay explicit; inside function bodies, generic literals,
+union constructors, and calls can infer type arguments. Write `Option.Some(42)`
+for `Option[int]`, or let an assignment or return supply the expected type.
+Details: [local type inference](doc/local-type-inference.txt).
 
 ## Musings
 
