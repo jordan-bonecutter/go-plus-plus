@@ -51,19 +51,9 @@ Details: [unions and unit](doc/tagged-unions.txt) · [error propagation](doc/ban
 
 ## Local type inference
 
-Function signatures stay explicit. Inside function bodies, generic literals
-and union constructors infer type arguments from their values:
-
-```go
-box := Box{Value: 42}     // Box[int]
-option := Option.Some(42) // Option[int]
-var value string = zero() // zero[string](), given func zero[T any]() T
-```
-
-Calls can also use the expected type from an assignment, argument, or return.
-Ambiguous expressions still need an annotation; later statements do not
-determine earlier variable types.
-
+Function signatures stay explicit; inside function bodies, generic literals,
+union constructors, and calls can infer type arguments. Write `Option.Some(42)`
+for `Option[int]`, or let an assignment or return supply the expected type.
 Details: [local type inference](doc/local-type-inference.txt).
 
 ## Musings
