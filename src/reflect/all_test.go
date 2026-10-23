@@ -8195,6 +8195,7 @@ func TestValue_Comparable(t *testing.T) {
 		comparable bool
 		deref      bool
 	}{
+		{ValueOf([0]struct{ X []int }{}), false, false},
 		{
 			ValueOf(&iNil),
 			true,

@@ -20,8 +20,16 @@ import (
 func (check *Checker) ident(x *operand, e *syntax.Name, wantType bool) {
 	x.invalidate()
 	x.expr = e
+	if e.Value == "union·type" {
+		x.mode_ = typexpr
+		x.typ_ = e.GetTypeInfo().Type
+		return
+	}
 
 	scope, obj := check.lookupScope(e.Value)
+	if name := unionBuiltin(e.Value); name != "" {
+		scope, obj = Universe, Universe.Lookup(name)
+	}
 	switch obj {
 	case nil:
 		if e.Value == "_" {

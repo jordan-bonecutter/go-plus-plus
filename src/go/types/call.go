@@ -807,6 +807,19 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr, wantType bool) {
 		goto Error
 	}
 
+	if x.mode() == typexpr && !wantType {
+		if variant := taggedVariant(x.typ(), sel); variant != nil {
+			if variant.pkg != check.pkg && !isExported(sel) {
+				check.errorf(e.Sel, UnexportedName, "variant %s is not exported", sel)
+				goto Error
+			}
+			constructor := check.taggedConstructor(x.typ(), variant)
+			check.recordUse(e.Sel, constructor)
+			x.mode_, x.typ_, x.expr = value, constructor.typ, e
+			return
+		}
+	}
+
 	// Avoid crashing when checking an invalid selector in a method declaration.
 	//
 	//   type S[T any] struct{}

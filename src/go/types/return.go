@@ -52,10 +52,10 @@ func (check *Checker) isTerminating(s ast.Stmt, label string) bool {
 		}
 
 	case *ast.SwitchStmt:
-		return check.isTerminatingSwitch(s.Body, label)
+		return check.isTerminatingSwitch(s.Body, label, false)
 
 	case *ast.TypeSwitchStmt:
-		return check.isTerminatingSwitch(s.Body, label)
+		return check.isTerminatingSwitch(s.Body, label, check.exhaustiveVariants[s])
 
 	case *ast.SelectStmt:
 		for _, s := range s.Body.List {
@@ -86,8 +86,7 @@ func (check *Checker) isTerminatingList(list []ast.Stmt, label string) bool {
 	return false // all statements are empty
 }
 
-func (check *Checker) isTerminatingSwitch(body *ast.BlockStmt, label string) bool {
-	hasDefault := false
+func (check *Checker) isTerminatingSwitch(body *ast.BlockStmt, label string, hasDefault bool) bool {
 	for _, s := range body.List {
 		cc := s.(*ast.CaseClause)
 		if cc.List == nil {

@@ -1898,6 +1898,22 @@ func (w *writer) expr(expr syntax.Expr) {
 	base.Assertf(expr != nil, "missing expression")
 
 	expr = syntax.Unparen(expr) // skip parens; unneeded after typecheck
+	if sel, ok := expr.(*syntax.SelectorExpr); ok && sel.Lowered != nil {
+		w.expr(sel.Lowered)
+		return
+	}
+	if name, ok := expr.(*syntax.Name); ok {
+		switch name.Value {
+		case syntax.UnionAnchor:
+			w.Code(exprRuntimeBuiltin)
+			w.String("unionanchor")
+			return
+		case syntax.UnionKeepAlive:
+			w.Code(exprRuntimeBuiltin)
+			w.String("KeepAlive")
+			return
+		}
+	}
 
 	obj, inst := lookupObj(w.p, expr)
 	targs := asTypeSlice(inst.TypeArgs)
@@ -2045,6 +2061,14 @@ func (w *writer) expr(expr syntax.Expr) {
 		}
 
 	case *syntax.AssertExpr:
+		if expr.Lowered != nil {
+			lowered := expr.Lowered
+			if _, ok := w.p.typeOf(expr).(*types2.Tuple); ok {
+				lowered = expr.LoweredOK
+			}
+			w.expr(lowered)
+			break
+		}
 		iface := w.p.typeOf(expr.X)
 
 		w.Code(exprAssert)

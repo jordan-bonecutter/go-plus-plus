@@ -581,6 +581,7 @@ func (check *Checker) recordTypeAndValueInSyntax(x syntax.Expr, mode operandMode
 
 // types2-specific support for recording type information in the syntax tree.
 func (check *Checker) recordCommaOkTypesInSyntax(x syntax.Expr, t0, t1 Type) {
+	check.recordVariantCommaOkTypes(x, t1)
 	if check.StoreTypesInSyntax {
 		// Note: this loop is duplicated because the type of tv is different.
 		// Above it is types2.TypeAndValue, here it is syntax.TypeAndValue.

@@ -735,6 +735,37 @@ func (p *parser) parseFieldDecl() *ast.Field {
 	return field
 }
 
+// union is contextual only at the start of a type declaration's definition.
+// Elsewhere it remains an ordinary identifier, including before literal bodies.
+func (p *parser) parseDeclaredType() ast.Expr {
+	if p.tok != token.IDENT || p.lit != "union" {
+		return p.parseType()
+	}
+	ident := p.parseIdent()
+	if p.tok == token.LBRACE {
+		return p.parseUnionType(ident.Pos())
+	}
+	typ := p.parseTypeName(ident)
+	if p.tok == token.LBRACK {
+		typ = p.parseTypeInstance(typ)
+	}
+	return typ
+}
+
+func (p *parser) parseUnionType(pos token.Pos) *ast.StructType {
+	lbrace := p.expect(token.LBRACE)
+	var list []*ast.Field
+	for p.tok == token.IDENT {
+		doc := p.leadComment
+		name := p.parseIdent()
+		typ := p.parseType()
+		comment := p.expectSemi()
+		list = append(list, &ast.Field{Doc: doc, Names: []*ast.Ident{name}, Type: typ, Comment: comment})
+	}
+	rbrace := p.expect(token.RBRACE)
+	return &ast.StructType{Struct: pos, Union: true, Fields: &ast.FieldList{Opening: lbrace, List: list, Closing: rbrace}}
+}
+
 func (p *parser) parseStructType() *ast.StructType {
 	if p.trace {
 		defer un(trace(p, "StructType"))
@@ -2193,7 +2224,11 @@ func (p *parser) parseCaseClause() *ast.CaseClause {
 
 func isTypeSwitchAssert(x ast.Expr) bool {
 	a, ok := x.(*ast.TypeAssertExpr)
-	return ok && a.Type == nil
+	if !ok {
+		return false
+	}
+	name, _ := a.Type.(*ast.Ident)
+	return a.Type == nil || name != nil && name.Name == "variant"
 }
 
 func (p *parser) isTypeSwitchGuard(s ast.Stmt) bool {
@@ -2585,7 +2620,7 @@ func (p *parser) parseGenericType(spec *ast.TypeSpec, openPos token.Pos, name0 *
 		spec.Assign = p.pos
 		p.next()
 	}
-	spec.Type = p.parseType()
+	spec.Type = p.parseDeclaredType()
 }
 
 func (p *parser) parseTypeSpec(doc *ast.CommentGroup, _ token.Token, _ int) ast.Spec {
@@ -2643,6 +2678,15 @@ func (p *parser) parseTypeSpec(doc *ast.CommentGroup, _ token.Token, _ int) ast.
 				// spec.Name "[" pname "]" ...
 				// spec.Name "[" x ...
 				spec.Type = p.parseArrayType(lbrack, x)
+				if name, ok := x.(*ast.Ident); ok && p.tok == token.LBRACE {
+					if elem, ok := spec.Type.(*ast.ArrayType).Elt.(*ast.Ident); ok && elem.Name == "union" {
+						p.error(name.Pos(), fmt.Sprintf("missing constraint for type parameter %s (use [%s any])", name.Name, name.Name))
+						// Recover as a generic declaration to avoid an undefined-T cascade.
+						bound := &ast.InterfaceType{Interface: name.Pos(), Methods: &ast.FieldList{Opening: name.Pos(), Closing: name.End()}}
+						spec.TypeParams = &ast.FieldList{Opening: lbrack, Closing: name.End(), List: []*ast.Field{{Names: []*ast.Ident{name}, Type: bound}}}
+						spec.Type = p.parseUnionType(elem.Pos())
+					}
+				}
 			}
 		} else {
 			// array type
@@ -2655,7 +2699,7 @@ func (p *parser) parseTypeSpec(doc *ast.CommentGroup, _ token.Token, _ int) ast.
 			spec.Assign = p.pos
 			p.next()
 		}
-		spec.Type = p.parseType()
+		spec.Type = p.parseDeclaredType()
 	}
 
 	spec.Comment = p.expectSemi()

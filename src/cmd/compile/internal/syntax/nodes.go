@@ -207,8 +207,9 @@ type (
 
 	// X.Sel
 	SelectorExpr struct {
-		X   Expr
-		Sel *Name
+		Lowered *FuncLit // compiler-generated constructor, if any
+		X       Expr
+		Sel     *Name
 		expr
 	}
 
@@ -234,16 +235,19 @@ type (
 
 	// X.(Type)
 	AssertExpr struct {
-		X    Expr
-		Type Expr
+		Lowered   Expr
+		LoweredOK Expr
+		X         Expr
+		Type      Expr
 		expr
 	}
 
 	// X.(type)
 	// Lhs := X.(type)
 	TypeSwitchGuard struct {
-		Lhs *Name // nil means no Lhs :=
-		X   Expr  // X.(type)
+		Variant bool  // X.(variant), rather than X.(type)
+		Lhs     *Name // nil means no Lhs :=
+		X       Expr  // X.(type)
 		expr
 	}
 

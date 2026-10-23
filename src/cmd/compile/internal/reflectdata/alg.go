@@ -5,6 +5,7 @@
 package reflectdata
 
 import (
+	"encoding/hex"
 	"fmt"
 	"go/constant"
 	"strconv"
@@ -142,6 +143,12 @@ func hashFunc(sig string) *ir.Func {
 		kind := sig[0]
 		sig = sig[1:]
 		switch kind {
+		case sigUnion:
+			var t *types.Type
+			t, sig = parseUnion(sig)
+			call := ir.NewCallExpr(pos, ir.OCALL, typecheck.LookupRuntime("unionhash"), []ir.Node{TypePtrAt(fn, pos, t), ptr(), nh})
+			fn.Body.Append(ir.NewAssignStmt(pos, nh, call))
+			off += t.Size()
 		case sigMemory:
 			var n int64
 			n, sig = parseNum(sig)
@@ -422,6 +429,15 @@ func eqFunc(sig string) *ir.Func {
 		kind := sig[0]
 		sig = sig[1:]
 		switch kind {
+		case sigUnion:
+			var t *types.Type
+			t, sig = parseUnion(sig)
+			c := ir.NewInt(pos, off)
+			p := ir.NewBinaryExpr(pos, ir.OUNSAFEADD, np, c)
+			q := ir.NewBinaryExpr(pos, ir.OUNSAFEADD, nq, ir.NewInt(pos, off))
+			test(typecheck.Call(fn, pos, typecheck.LookupRuntime("unionequal"), []ir.Node{TypePtrAt(fn, pos, t), p, q}, false))
+			hasCall = true
+			off += t.Size()
 		case sigMemory:
 			var n int64
 			n, sig = parseNum(sig)
@@ -643,6 +659,7 @@ func EqFor(t *types.Type) (ir.Node, bool) {
 //		E      = empty interface
 //		[%d%s] = array: repeat signature %s %d times.
 //	     <%s>   = subroutine: use equality function of signature %s as a subroutine
+//		U%d_%s = union with length-prefixed hex type identity
 //		A%d    = known alignment of type pointers (defaults to ptrSize)
 //
 // An alignment directive is only needed on platforms that can't do
@@ -662,6 +679,7 @@ func eqSignature(t *types.Type) string {
 }
 
 const (
+	sigUnion           = 'U' // length-prefixed hex type identity
 	sigMemory          = 'M' // followed by an integer number of bytes
 	sigSkip            = 'K' // followed by an integer number of bytes
 	sigFloat32         = 'F'
@@ -730,6 +748,14 @@ func (e *eqSigBuilder) iface() {
 }
 
 func (e *eqSigBuilder) build(t *types.Type, top bool) {
+	if types.IsTaggedUnion(t) {
+		key := hex.EncodeToString([]byte(t.LinkString()))
+		unionAlgTypes[key] = t
+		e.flush(false)
+		fmt.Fprintf(&e.r, "%c%d_%s", sigUnion, len(key), key)
+		return
+	}
+
 	if t.Size() > maxExpandSize && !top && types.AlgType(t) != types.AMEM {
 		// A large interior type. Use its equality function as a subroutine.
 		// See issue 81266.
@@ -917,6 +943,10 @@ func sigSize(sig string) int64 {
 		kind := sig[0]
 		sig = sig[1:]
 		switch kind {
+		case sigUnion:
+			var t *types.Type
+			t, sig = parseUnion(sig)
+			size += t.Size()
 		case sigMemory, sigSkip:
 			var n int64
 			n, sig = parseNum(sig)
@@ -948,4 +978,18 @@ func sigTrimSkip(s string) string {
 		}
 	}
 	return s[:i]
+}
+
+// Type identities in union signatures distinguish payload equality algorithms,
+// including interfaces and nested unions, while retaining ordinary signature sharing.
+var unionAlgTypes = make(map[string]*types.Type)
+
+func parseUnion(sig string) (*types.Type, string) {
+	n, rest := parseNum(sig)
+	key := rest[1 : 1+int(n)] // skip the separator
+	t := unionAlgTypes[key]
+	if t == nil {
+		base.Fatalf("missing union algorithm type %s", key)
+	}
+	return t, rest[1+int(n):]
 }

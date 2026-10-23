@@ -126,6 +126,10 @@ func deepValueEqual(v1, v2 Value, visited map[visit]bool) bool {
 		}
 		return deepValueEqual(v1.Elem(), v2.Elem(), visited)
 	case Struct:
+		if payload1, index1, ok := v1.unionPayload(); ok {
+			payload2, index2, _ := v2.unionPayload()
+			return index1 == index2 && deepValueEqual(payload1, payload2, visited)
+		}
 		for i, n := 0, v1.NumField(); i < n; i++ {
 			if !deepValueEqual(v1.Field(i), v2.Field(i), visited) {
 				return false

@@ -423,7 +423,11 @@ func (p *printer) printRawNode(n Node) {
 		if n.Lhs != nil {
 			p.print(n.Lhs, blank, _Define, blank)
 		}
-		p.print(n.X, _Dot, _Lparen, _Type, _Rparen)
+		if n.Variant {
+			p.print(n.X, _Dot, _Lparen, "variant", _Rparen)
+		} else {
+			p.print(n.X, _Dot, _Lparen, _Type, _Rparen)
+		}
 
 	case *CallExpr:
 		p.print(n.Fun, _Lparen)

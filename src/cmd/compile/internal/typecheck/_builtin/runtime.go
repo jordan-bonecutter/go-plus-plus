@@ -313,3 +313,8 @@ func asanregisterglobals(unsafe.Pointer, uintptr)
 
 // used by testing.B.Loop
 func KeepAlive(interface{})
+
+func unionanchor(value interface{}) unsafe.Pointer
+
+func unionequal(typ *byte, p, q unsafe.Pointer) bool
+func unionhash(typ *byte, p unsafe.Pointer, seed uintptr) uintptr

@@ -13,6 +13,7 @@ import (
 	"iter"
 	"math"
 	"runtime"
+	"unicode"
 	"unsafe"
 )
 
@@ -1702,6 +1703,9 @@ func (v Value) IsZero() bool {
 	case String:
 		return v.Len() == 0
 	case Struct:
+		if payload, index, ok := v.unionPayload(); ok {
+			return index == 0 && payload.IsZero()
+		}
 		if v.flag&flagIndir == 0 {
 			return v.ptr == nil
 		}
@@ -3227,6 +3231,10 @@ func (v Value) Comparable() bool {
 		return false
 
 	case Array:
+		// Zero elements do not make an array of noncomparable elements comparable.
+		if !v.Type().Comparable() {
+			return false
+		}
 		switch v.Type().Elem().Kind() {
 		case Interface, Array, Struct:
 			for i := 0; i < v.Type().Len(); i++ {
@@ -3242,6 +3250,9 @@ func (v Value) Comparable() bool {
 		return v.IsNil() || v.Elem().Comparable()
 
 	case Struct:
+		if payload, _, ok := v.unionPayload(); ok {
+			return v.Type().Comparable() && payload.Comparable()
+		}
 		for _, value := range v.Fields() {
 			if !value.Comparable() {
 				return false
@@ -3314,6 +3325,13 @@ func (v Value) Equal(u Value) bool {
 		}
 		return true
 	case Struct:
+		if _, _, ok := v.unionPayload(); ok {
+			eq := v.typ().Equal
+			if eq == nil {
+				break
+			}
+			return eq(v.ptr, u.ptr)
+		}
 		// u and v have the same type so they have the same fields
 		nf := v.NumField()
 		for i := 0; i < nf; i++ {
@@ -3827,3 +3845,86 @@ func contentEscapes(x unsafe.Pointer) {
 		escapes(*(*any)(x)) // the dereference may not always be safe, but never executed
 	}
 }
+
+// unionPayload exposes the active inline value only within reflection.
+func (v Value) unionPayload() (Value, uintptr, bool) {
+	data := unionType(v.typ())
+	if data == nil {
+		return Value{}, 0, false
+	}
+	st := (*abi.StructType)(unsafe.Pointer(v.typ()))
+	// Unions are always indirect: their anchors do not determine equality.
+	p := v.ptr
+	index := uintptr(abi.UnionIndex(st, p))
+	t := (*abi.ArrayType)(unsafe.Pointer(data.Fields[index].Typ)).Elem
+	return Value{t, p, flag(t.Kind()) | flagIndir | v.flag&flagRO}, index, true
+}
+
+// Variant returns the active variant's name and payload for a tagged union.
+// For other values, including an invalid Value, it returns an empty name and
+// an invalid Value. The payload is not settable and retains v's restrictions
+// on accessing unexported fields. Unexported variants also return a payload
+// that cannot be accessed through Interface. The returned payload is a copy
+// and is not addressable; subsequent replacement of v does not change it.
+func (v Value) Variant() (string, Value) {
+	if v.Kind() != Struct {
+		return "", Value{}
+	}
+	payload, index, ok := v.unionPayload()
+	if !ok {
+		return "", Value{}
+	}
+	st := (*abi.StructType)(unsafe.Pointer(v.typ()))
+	data := (*abi.StructType)(unsafe.Pointer(st.Fields[0].Typ))
+	name := data.Fields[index].Name.Name()[len("union·variant·"):]
+	for _, r := range name {
+		if !unicode.IsUpper(r) {
+			payload.flag |= flagStickyRO
+		}
+		break
+	}
+	// Give the payload its own precisely scanned allocation. Union storage
+	// itself is unscanned and can be overwritten after this call returns.
+	p := unsafe_New(payload.typ())
+	typedmemmove(payload.typ(), p, payload.ptr)
+	payload.ptr = p
+	return name, payload
+}
+
+func isExportedVariant(name string) bool {
+	for _, r := range name {
+		return unicode.IsUpper(r)
+	}
+	return false
+}
+
+// SetVariant replaces v with the named variant carrying x. It panics if v
+// is not a settable tagged union, name is unknown or unexported, or x is
+// not assignable to the variant's payload type. The payload is copied;
+// subsequent changes to x do not change v.
+func (v Value) SetVariant(name string, x Value) {
+	v.mustBeAssignable()
+	variant, ok := v.Type().VariantByName(name)
+	if !ok {
+		panic("reflect: unknown union variant " + name)
+	}
+	if !variant.IsExported() {
+		panic("reflect: SetVariant of unexported variant")
+	}
+	// Set checks assignability and visibility before changing the destination.
+	payload := New(variant.Type).Elem()
+	payload.Set(x)
+	anchor := unionAnchor(payload.Addr().Interface())
+	result := New(v.Type()).Elem()
+	memmove(result.ptr, payload.ptr, payload.typ().Size())
+	st := (*abi.StructType)(unsafe.Pointer(v.typ()))
+	*(*unsafe.Pointer)(add(result.ptr, st.Fields[1].Offset, "union anchor")) = anchor
+	tag := result.Field(2)
+	tag.flag &^= flagRO
+	tag.SetUint(uint64(variant.Index))
+	v.Set(result)
+	runtime.KeepAlive(payload)
+}
+
+// implemented in runtime; payload is a pointer to a precisely typed copy.
+func unionAnchor(payload any) unsafe.Pointer

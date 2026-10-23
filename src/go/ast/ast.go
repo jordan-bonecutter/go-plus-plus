@@ -450,10 +450,11 @@ type (
 		Elt    Expr      // element type
 	}
 
-	// A StructType node represents a struct type.
+	// A StructType node represents a struct or tagged union type.
 	StructType struct {
-		Struct     token.Pos  // position of "struct" keyword
+		Struct     token.Pos  // position of "struct" or "union" keyword
 		Fields     *FieldList // list of field declarations
+		Union      bool       // true for a tagged union declaration
 		Incomplete bool       // true if (source) fields are missing in the Fields list
 	}
 

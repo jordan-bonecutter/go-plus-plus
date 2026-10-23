@@ -1,0 +1,132 @@
+Tagged unions in this checkout
+
+Declare variants with one payload type each:
+
+    type Result[T any] union {
+        Ok  T
+        Err string
+    }
+
+Construct a value with Result[int].Ok(42) or Result[int].Err("failed").
+Constructors are ordinary function values, so f := Result[int].Ok works.
+Distinct variants may have the same payload type. Declarations may be local,
+aliased, generic, or derived from another union type.
+
+A union's zero value selects its first variant with a zero payload. Empty
+unions and blank or duplicate variant names are rejected. Representation
+fields are private; Foo{} is valid and produces the zero value.
+
+Match a statically known union using .(variant):
+
+    func (r Result[T]) Get() T {
+        switch data := r.(variant) {
+        case Ok:
+            return data
+        case Err:
+            panic(data)
+        }
+    }
+
+The match expression is evaluated once. Each case names one variant without
+a type qualifier. Its binding has that variant's payload type. A default
+case, if present, binds the original union value. Without a default, every
+variant must appear. Duplicate and unknown cases, wrong payload types, and
+fallthrough are errors. An exhaustive switch whose branches terminate counts
+as terminating for return analysis. Binding usage follows ordinary type-switch
+rules: using the binding in any case is sufficient.
+
+Methods and interface satisfaction follow the ordinary Go rules, including
+methods with generic union receivers:
+
+    func (r Result[T]) HasValue() bool {
+        switch r.(variant) {
+        case Ok:
+            return true
+        case Err:
+            return false
+        }
+    }
+
+    var _ interface{ HasValue() bool } = Result[int].Ok(42)
+
+Layout and collection
+
+Payloads overlap inline. After type arguments are substituted, the value's
+size includes its largest payload, a pointer-sized GC anchor, and an inline
+variant tag, with alignment padding. The tag uses uint8 for up to 256 variants,
+uint16 for up to 65,536, uint32 for up to 2^32, and uint64 beyond that.
+The anchor and tag follow payload storage. Variant dispatch reads the inline
+tag without dereferencing the anchor. unsafe.Sizeof and reflect.Type.Size
+agree on this layout. A union is comparable when every payload type is
+comparable. Equality compares the variant and its active payload; comparable
+unions can be map keys. The zero value equals the first variant with a zero
+payload. Interface payloads retain ordinary Go dynamic comparison rules.
+
+The anchor points to immutable GC metadata containing only the payload's
+pointer roots. Pointer-free payloads use a nil anchor. This keeps raw inline
+payload bytes safe during garbage collection, stack growth, copies, and
+interface conversion without teaching the collector a conditional pointer
+layout. Constructing a pointer-bearing union can allocate this metadata and
+escape the payload's pointer contents. Inline size is therefore
+not a promise of allocation-free construction or total heap usage.
+
+The compiler, go/parser, go/printer, go/format, gofmt, and go/types support the
+syntax. This is a local language extension; other Go toolchains and external
+tools need corresponding support. Existing export encoding is reused through
+private layout metadata rather than introducing a new export-data version.
+
+Build and focused validation
+
+    cd src && bash make.bash
+    ../bin/go test cmd/internal/testdir -run '^Test/(union.go|union_errors.go|union_import.go|union_more.go|union_properties.go|union_format.go|union_syntax.go|union_reflect.go)$'
+    ../bin/go test go/parser go/printer go/types cmd/compile/internal/syntax cmd/compile/internal/types2
+
+The added tests cover dispatch and binding, exhaustiveness diagnostics, layout,
+GC and stack growth, generics, methods and interfaces, import boundaries, and
+formatter/checker round-tripping. They use the existing test harnesses.
+
+Formatting and editor support
+
+    fmt.Println(Foo{})               // Foo.Bar(0)
+    fmt.Println(Foo.Baz("hello"))    // Foo.Baz(hello)
+    fmt.Printf("%#v\n", Foo.Baz("hello")) // main.Foo.Baz("hello")
+
+Formatting includes the active variant and payload, including inside containers.
+User-defined Formatter, Stringer, and GoStringer methods take precedence as usual.
+reflect.Value.Variant returns the active variant name and a non-settable,
+non-addressable copy of the payload;
+unexported fields and variants retain their Interface restrictions. Rebuild
+existing executables with bin/go to pick up the formatting change.
+
+reflect.Type.IsUnion identifies tagged unions (whose Kind remains Struct).
+NumVariant, Variant(i), and VariantByName expose declared variant names, payload
+types, indices, and export visibility. reflect.New(t).Elem().SetVariant(name, x)
+constructs or replaces a union using an assignable payload. SetVariant requires
+a settable destination and an exported variant and preserves the destination
+if validation fails. Extracted payload copies retain their own GC references
+and survive replacement of the original union. Ordinary reflection operations
+including Set, SetZero, Call, container access, comparison, and DeepEqual use
+the same representation and semantics as compiled union operations.
+
+Build the matching editor server from the repository root:
+
+    ./misc/build-gopls-unions.sh
+    python3 misc/test-gopls-unions.py
+
+The script builds bin/gopls from pinned gopls v0.23.0 source using this toolchain
+and applies misc/gopls-unions.patch. It supports union parsing, type diagnostics,
+constructor hover and completion, and hides storage fields from completion.
+Configure the editor to use this bin/gopls and put this checkout's bin directory
+first on PATH so its go command also uses the modified compiler. The patch is
+specific to the pinned gopls source; stock gopls binaries do not include this
+checkout's parser and checker changes.
+
+A declaration such as type Option[T] union now reports a missing constraint for
+T and suggests [T any], rather than reporting an unexpected opening brace.
+
+Assert a variant with x.(Some), using an unqualified variant name. The result
+has that variant's payload type. In y, ok := x.(Some), a matching variant
+returns its payload and true; a mismatch returns the payload's zero value
+and false. The single-result form panics on a mismatch. The union expression
+is evaluated once, and variants are distinguished even when payload types
+are identical.

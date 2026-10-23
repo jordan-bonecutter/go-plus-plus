@@ -824,6 +824,21 @@ func (p *pp) printValue(value reflect.Value, verb rune, depth int) {
 			p.buf.writeByte(']')
 		}
 	case reflect.Struct:
+		if name, payload := f.Variant(); name != "" {
+			typ := f.Type().Name()
+			if p.fmt.sharpV {
+				typ = f.Type().String()
+			}
+			if typ != "" {
+				p.buf.writeString(typ)
+				p.buf.writeByte('.')
+			}
+			p.buf.writeString(name)
+			p.buf.writeByte('(')
+			p.printValue(payload, verb, depth+1)
+			p.buf.writeByte(')')
+			return
+		}
 		if p.fmt.sharpV {
 			p.buf.writeString(f.Type().String())
 		}

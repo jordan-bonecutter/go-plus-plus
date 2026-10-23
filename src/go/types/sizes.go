@@ -229,6 +229,19 @@ func (s *StdSizes) Sizeof(T Type) int64 {
 	case *Slice:
 		return s.WordSize * 3
 	case *Struct:
+		if unionData(t) {
+			var largest int64
+			for _, f := range t.fields[:len(t.fields)-2] {
+				n := s.Sizeof(f.typ.(*Array).elem)
+				if n < 0 {
+					return -1
+				}
+				if n > largest {
+					largest = n
+				}
+			}
+			return align(largest, s.Alignof(T))
+		}
 		n := t.NumFields()
 		if n == 0 {
 			return 0

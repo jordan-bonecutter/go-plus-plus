@@ -66,6 +66,10 @@ func (s *Struct) markComplete() {
 }
 
 func (check *Checker) structType(styp *Struct, e *ast.StructType) {
+	if e.Union {
+		check.taggedUnionType(styp, e)
+		return
+	}
 	list := e.Fields
 	if list == nil {
 		styp.markComplete()

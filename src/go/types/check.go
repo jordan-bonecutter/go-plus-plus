@@ -153,6 +153,9 @@ type Checker struct {
 	usedPkgNames  map[*PkgName]bool         // set of used package names
 	mono          monoGraph                 // graph for detecting non-monomorphizable instantiation loops
 
+	exhaustiveVariants map[*ast.TypeSwitchStmt]bool // exhaustive tagged union switches
+	taggedConstructors map[taggedConstructorKey]*Func
+
 	firstErr   error                 // first error encountered
 	methods    map[*TypeName][]*Func // maps package scope type names to associated non-blank (non-interface) methods
 	untyped    map[ast.Expr]exprInfo // map of expressions without final type
@@ -482,6 +485,8 @@ func (check *Checker) checkFiles(files []*ast.File) {
 	check.seenPkgMap = nil
 	check.brokenAliases = nil
 	check.unionTypeSets = nil
+	check.taggedConstructors = nil
+	check.exhaustiveVariants = nil
 	check.usedVars = nil
 	check.usedPkgNames = nil
 	check.ctxt = nil

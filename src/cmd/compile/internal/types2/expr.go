@@ -1159,6 +1159,30 @@ func (check *Checker) exprInternal(T *target, x *operand, e syntax.Expr) exprKin
 			check.error(e, InvalidSyntaxTree, "invalid use of AssertExpr")
 			goto Error
 		}
+		if st := unionStruct(x.typ()); st != nil {
+			name, ok := e.Type.(*syntax.Name)
+			if !ok {
+				check.error(e.Type, InvalidAssert, "variant assertion must name a variant")
+				goto Error
+			}
+			i := unionVariant(x.typ(), name.Value)
+			if i < 0 {
+				check.errorf(name, InvalidAssert, "unknown variant %s in %s", name.Value, x.typ())
+				goto Error
+			}
+			field := st.fields[i]
+			if field.pkg != check.pkg && !isExported(name.Value) {
+				check.errorf(name, UnexportedName, "variant %s is not exported", name.Value)
+				goto Error
+			}
+			e.Lowered = variantCall(e.Pos(), e.X, x.typ(), i, "assert")
+			e.LoweredOK = variantCall(e.Pos(), e.X, x.typ(), i, "assertok")
+			check.checkVariantCall(e.Lowered.(*syntax.CallExpr))
+			check.checkVariantCall(e.LoweredOK.(*syntax.CallExpr))
+			x.mode_ = commaok
+			x.typ_ = field.typ.(*Array).elem
+			break
+		}
 		if isTypeParam(x.typ()) {
 			check.errorf(x, InvalidAssert, invalidOp+"cannot use type assertion on type parameter value %s", x)
 			goto Error
