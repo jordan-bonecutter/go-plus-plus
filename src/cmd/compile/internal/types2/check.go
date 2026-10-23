@@ -111,6 +111,8 @@ type actionDesc struct {
 // A Checker maintains the state of the type checker.
 // It must be created with NewChecker.
 type Checker struct {
+	inferredConstructors map[*syntax.SelectorExpr]bool // generic union constructors awaiting instantiation
+
 	// package information
 	// (initialized by NewChecker, valid for the life-time of checker)
 	conf *Config

@@ -149,6 +149,11 @@ func (check *Checker) instantiateSignature(pos token.Pos, expr ast.Expr, typ *Si
 	inst := check.instance(pos, typ, targs, nil, check.context()).(*Signature)
 	assert(inst.TypeParams().Len() == 0) // signature is not generic anymore
 	check.recordInstance(expr, targs, inst)
+	if sel, ok := expr.(*ast.SelectorExpr); ok && check.inferredConstructors[sel] {
+		result := inst.results.At(0).typ
+		check.recordInstance(sel.X, targs, result)
+		check.recordTypeAndValue(sel.X, typexpr, result, nil)
+	}
 	assert(len(xlist) <= len(targs))
 
 	// verify instantiation lazily (was go.dev/issue/50450)
@@ -170,7 +175,7 @@ func (check *Checker) instantiateSignature(pos token.Pos, expr ast.Expr, typ *Si
 	return inst
 }
 
-func (check *Checker) callExpr(x *operand, call *ast.CallExpr) exprKind {
+func (check *Checker) callExpr(T *target, x *operand, call *ast.CallExpr) exprKind {
 	ix := unpackIndexedExpr(call.Fun)
 	if ix != nil {
 		if check.indexExpr(x, ix) {
@@ -315,7 +320,7 @@ func (check *Checker) callExpr(x *operand, call *ast.CallExpr) exprKind {
 	// evaluate arguments
 	targetAt := func(i int) *target { return newTarget(sig.argType(i), "function parameter") }
 	args, atargs := check.genericExprList(targetAt, call.Args)
-	sig = check.arguments(call, sig, targs, xlist, args, atargs)
+	sig = check.arguments(call, sig, targs, xlist, args, atargs, T)
 
 	if wasGeneric && sig.TypeParams().Len() == 0 {
 		// Update the recorded type of call.Fun to its instantiated type.
@@ -495,7 +500,7 @@ func (check *Checker) genericExprList(targetAt func(int) *target, elist []ast.Ex
 // functions are instantiated as necessary.
 // The result signature is the (possibly adjusted and instantiated) function signature.
 // If an error occurred, the result signature is the incoming sig.
-func (check *Checker) arguments(call *ast.CallExpr, sig *Signature, targs []Type, xlist []ast.Expr, args []*operand, atargs [][]Type) (rsig *Signature) {
+func (check *Checker) arguments(call *ast.CallExpr, sig *Signature, targs []Type, xlist []ast.Expr, args []*operand, atargs [][]Type, target *target) (rsig *Signature) {
 	rsig = sig
 
 	// Function call argument/parameter count requirements
@@ -647,7 +652,36 @@ func (check *Checker) arguments(call *ast.CallExpr, sig *Signature, targs []Type
 	// infer missing type arguments of callee and function arguments
 	if len(tparams) > 0 {
 		err := check.newError(CannotInferTypeArgs)
-		targs = check.infer(call, tparams, targs, sigParams, args, false, err)
+		// Preserve argument-only inference whenever it succeeds. Result context
+		// fills gaps; it must not change existing defaulting or conversions.
+		inferred := check.infer(call, tparams, targs, sigParams, args, false, err)
+		var result Type
+		// Function boundaries stay explicit; only bodies use result context.
+		if inferred == nil && n > 0 && check.sig != nil && target != nil && !isNonTypeParamInterface(target.typ) {
+			nresults := sig.results.Len()
+			if call.Bang.IsValid() {
+				nresults--
+			}
+			if nresults == 1 {
+				renamed := make([]Type, n)
+				for i, param := range tparams[:n] {
+					renamed[i] = param
+				}
+				result = check.subst(call.Pos(), sig.results.At(0).typ, makeSubstMap(sig.TypeParams().list(), renamed), nil, check.context())
+			}
+		}
+		if inferred == nil && result != nil {
+			var params []*Var
+			if sigParams != nil {
+				params = append(params, sigParams.vars...)
+			}
+			params = append(params, NewParam(call.Pos(), check.pkg, "", result))
+			contextArgs := append([]*operand(nil), args...)
+			contextArgs = append(contextArgs, &operand{mode_: value, expr: call, typ_: target.typ})
+			err = check.newError(CannotInferTypeArgs)
+			inferred = check.infer(call, tparams, targs, NewTuple(params...), contextArgs, false, err)
+		}
+		targs = inferred
 		if targs == nil {
 			// TODO(gri) If infer inferred the first targs[:n], consider instantiating
 			//           the call signature for better error messages/gopls behavior.
@@ -813,7 +847,7 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr, wantType bool) {
 		}
 	}
 
-	check.exprOrType(x, e.X, false)
+	check.exprOrType(x, e.X, true)
 	switch x.mode() {
 	case builtin:
 		// types2 uses the position of '.' for the error
@@ -834,11 +868,30 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr, wantType bool) {
 				check.errorf(e.Sel, UnexportedName, "variant %s is not exported", sel)
 				goto Error
 			}
+			if isGeneric(x.typ()) {
+				if check.sig == nil {
+					check.nonGeneric(nil, x)
+					goto Error
+				}
+				if check.inferredConstructors == nil {
+					check.inferredConstructors = make(map[*ast.SelectorExpr]bool)
+				}
+				check.inferredConstructors[e] = true
+				sig := check.inferredConstructor(e.Pos(), x.typ(), variant.typ.(*Array).elem)
+				check.recordUse(e.Sel, NewFunc(e.Pos(), variant.pkg, sel, sig))
+				x.mode_, x.typ_, x.expr = value, sig, e
+				return
+			}
 			constructor := check.taggedConstructor(x.typ(), variant)
 			check.recordUse(e.Sel, constructor)
 			x.mode_, x.typ_, x.expr = value, constructor.typ, e
 			return
 		}
+	}
+
+	check.nonGeneric(nil, x)
+	if !x.isValid() {
+		goto Error
 	}
 
 	// Avoid crashing when checking an invalid selector in a method declaration.

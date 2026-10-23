@@ -1,0 +1,65 @@
+Local type inference
+
+Named functions and methods keep explicit parameter and result types, including
+explicit type parameters and constraints. Inside function bodies, generic calls
+and composite literals may infer omitted type arguments.
+
+    type Box[T any] struct { Value T }
+    type List[T any] []T
+    type Table[K comparable, V any] map[K]V
+
+    func zero[T any]() T { var x T; return x }
+
+    func example() string {
+        box := Box{Value: 42}       // Box[int]
+        list := List{1, 2, 3}       // List[int]
+        table := Table{"one": 1}    // Table[string, int]
+        var empty Box[string] = Box{}
+        var value string = zero()  // zero[string]()
+        value = zero()             // the assignment also supplies a target
+        _, _, _, _ = box, list, table, empty
+        return zero()              // the declared result supplies a target
+    }
+
+Struct fields, array/slice elements, and map keys and values supply literal
+constraints. Generic aliases are supported, including aliases that reorder or
+transform their parameters. An expected concrete instance can type an empty
+literal or nested literals. Constraints, field visibility, duplicate keys, and
+ordinary assignment rules still apply.
+
+Union constructors also infer type arguments:
+
+    option := Option.Some(42) // Option[int]
+    var none Option[string] = Option.None(unit{})
+    var some func(int) Option[int] = Option.Some
+
+Generic function calls first use the existing argument-based inference rules.
+If these cannot infer every argument, an expected single result type from a
+variable declaration, assignment, function argument, or return supplies another
+constraint. This also works for the single success result of call()!.
+Already successful argument-based inference keeps its existing behavior,
+including untyped constant defaulting. An interface destination does not select
+an arbitrary concrete instantiation.
+
+Inference is expression-local. It does not infer a variable's type from later
+statements. Thus x := zero(), List{}, and Option.None(unit{}) without an
+expected type remain ambiguous and need explicit type arguments or a typed
+destination. Local function literals keep their existing syntax and typing
+rules; bindings do not gain implicit polymorphism. Generic type arguments in
+function signatures and other type declarations remain explicit. Package-level
+initializers retain their existing rules.
+
+Implementation and cost
+
+Both cmd/compile/internal/types2 and go/types use the existing type-argument
+unifier. Ordinary successful generic calls do not perform a second inference
+pass. Calls needing result context retry once with that extra equation.
+Literal expressions are checked once and their operands reused during ordinary
+literal validation. No whole-program solver or search across instantiations is
+introduced, and the runtime representation and exported function signatures
+are unchanged.
+
+BenchmarkLocalInference in go/types compares checking 200 explicit literal/call
+pairs with their inferred equivalents. Parsing and code generation are outside
+that benchmark, so its results describe checker overhead rather than complete
+build times.

@@ -139,7 +139,7 @@ func (check *Checker) builtin(x *operand, call *ast.CallExpr, id builtinId) (_ b
 			// check arguments by creating custom signature
 			sig = makeSig(x.typ(), x.typ(), NewSlice(E)) // []E required for variadic signature
 			sig.variadic = true
-			check.arguments(call, sig, nil, nil, args, nil) // discard result (we know the result type)
+			check.arguments(call, sig, nil, nil, args, nil, nil) // discard result (we know the result type)
 			// ok to continue even if check.arguments reported errors
 		}
 

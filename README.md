@@ -49,6 +49,23 @@ named results and zero unnamed results. Defers work normally.
 
 Details: [unions and unit](doc/tagged-unions.txt) · [error propagation](doc/bang-operator.txt).
 
+## Local type inference
+
+Function signatures stay explicit. Inside function bodies, generic literals
+and union constructors infer type arguments from their values:
+
+```go
+box := Box{Value: 42}     // Box[int]
+option := Option.Some(42) // Option[int]
+var value string = zero() // zero[string](), given func zero[T any]() T
+```
+
+Calls can also use the expected type from an assignment, argument, or return.
+Ambiguous expressions still need an annotation; later statements do not
+determine earlier variable types.
+
+Details: [local type inference](doc/local-type-inference.txt).
+
 ## Musings
 
 Many thanks to the Golang team. I love this language. I always will. It is home.

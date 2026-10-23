@@ -106,6 +106,7 @@ func (check *Checker) funcLit(x *operand, e *syntax.FuncLit) {
 
 func (check *Checker) compositeLit(T *target, x *operand, e *syntax.CompositeLit) {
 	var typ, base Type
+	var inferred map[syntax.Expr]operand
 	var isElem bool // true if composite literal is an untyped element of an enclosing composite literal
 
 	switch {
@@ -119,7 +120,15 @@ func (check *Checker) compositeLit(T *target, x *operand, e *syntax.CompositeLit
 			// and finish setting it up after analyzing the literal.
 			typ = &Array{len: -1, elem: check.varType(atyp.Elem)}
 		} else {
-			typ = check.typ(e.Type)
+			if check.sig != nil {
+				typ = check.typInternal(e.Type, nil)
+				if isGeneric(typ) {
+					typ, inferred = check.literalInstance(T, e, typ)
+				}
+				check.recordTypeAndValue(e.Type, typexpr, typ, nil)
+			} else {
+				typ = check.typ(e.Type)
+			}
 		}
 		base = typ
 
@@ -174,13 +183,13 @@ func (check *Checker) compositeLit(T *target, x *operand, e *syntax.CompositeLit
 				// do all possible checks early (before exiting due to errors)
 				// so we don't drop information on the floor
 				if key == nil {
-					check.genericExpr(nil, x, kv.Value)
+					check.literalExpr(nil, x, kv.Value, inferred)
 					check.errorf(kv, InvalidLitField, "invalid field name %s in struct literal", kv.Key)
 					continue
 				}
 				obj, index, indirect := lookupFieldOrMethod(utyp, false, check.pkg, key.Value, false)
 				if obj == nil {
-					check.genericExpr(nil, x, kv.Value)
+					check.literalExpr(nil, x, kv.Value, inferred)
 					alt, _, _ := lookupFieldOrMethod(utyp, false, check.pkg, key.Value, true)
 					msg := check.lookupError(base, key.Value, alt, true)
 					check.error(kv.Key, MissingLitField, msg)
@@ -188,13 +197,13 @@ func (check *Checker) compositeLit(T *target, x *operand, e *syntax.CompositeLit
 				}
 				fld, _ := obj.(*Var)
 				if fld == nil {
-					check.genericExpr(nil, x, kv.Value)
+					check.literalExpr(nil, x, kv.Value, inferred)
 					check.errorf(kv.Key, MissingLitField, "%s is not a field", kv.Key)
 					continue
 				}
 				// we can now check the value using the field target type
 				etyp := fld.typ
-				check.genericExpr(newTarget(etyp, "struct field"), x, kv.Value)
+				check.literalExpr(newTarget(etyp, "struct field"), x, kv.Value, inferred)
 				if len(index) > 1 && !check.verifyVersionf(kv.Key, go1_27, "use of promoted field %s in struct literal of type %s", fieldPath(utyp, index), base) {
 					continue
 				}
@@ -222,14 +231,14 @@ func (check *Checker) compositeLit(T *target, x *operand, e *syntax.CompositeLit
 					continue
 				}
 				if i >= len(fields) {
-					check.genericExpr(nil, x, e)
+					check.literalExpr(nil, x, e, inferred)
 					check.errorf(x, InvalidStructLit, "too many values in struct literal of type %s", base)
 					break // cannot continue
 				}
 				// i < len(fields)
 				fld := fields[i]
 				etyp := fld.typ
-				check.genericExpr(newTarget(etyp, "struct field"), x, e)
+				check.literalExpr(newTarget(etyp, "struct field"), x, e, inferred)
 				if !fld.Exported() && fld.pkg != check.pkg {
 					check.errorf(x, UnexportedLitField, "implicit assignment to unexported field %s in struct literal of type %s", fld.name, base)
 					continue
@@ -250,7 +259,7 @@ func (check *Checker) compositeLit(T *target, x *operand, e *syntax.CompositeLit
 		}
 
 	case *Array:
-		n := check.indexedElts(e.ElemList, utyp.elem, utyp.len)
+		n := check.indexedElts(e.ElemList, utyp.elem, utyp.len, inferred)
 		// If we have an array of unknown length (usually [...]T arrays, but also
 		// arrays [n]T where n is invalid) set the length now that we know it and
 		// record the type for the array (usually done by check.typ which is not
@@ -271,7 +280,7 @@ func (check *Checker) compositeLit(T *target, x *operand, e *syntax.CompositeLit
 		}
 
 	case *Slice:
-		check.indexedElts(e.ElemList, utyp.elem, -1)
+		check.indexedElts(e.ElemList, utyp.elem, -1, inferred)
 
 	case *Map:
 		// If the map key type is an interface (but not a type parameter),
@@ -285,7 +294,7 @@ func (check *Checker) compositeLit(T *target, x *operand, e *syntax.CompositeLit
 				check.error(e, MissingLitKey, "missing key in map literal")
 				continue
 			}
-			check.genericExpr(newHint(utyp.key, "map key"), x, kv.Key)
+			check.literalExpr(newHint(utyp.key, "map key"), x, kv.Key, inferred)
 			check.assignment(x, utyp.key, "map literal")
 			if !x.isValid() {
 				continue
@@ -310,7 +319,7 @@ func (check *Checker) compositeLit(T *target, x *operand, e *syntax.CompositeLit
 					continue
 				}
 			}
-			check.genericExpr(newHint(utyp.elem, "map value"), x, kv.Value)
+			check.literalExpr(newHint(utyp.elem, "map value"), x, kv.Value, inferred)
 			check.assignment(x, utyp.elem, "map literal")
 		}
 
@@ -350,7 +359,7 @@ func (check *Checker) compositeLit(T *target, x *operand, e *syntax.CompositeLit
 // against the literal's element type (typ), and the element indices against
 // the literal length if known (length >= 0). It returns the length of the
 // literal (maximum index value + 1).
-func (check *Checker) indexedElts(elts []syntax.Expr, typ Type, length int64) int64 {
+func (check *Checker) indexedElts(elts []syntax.Expr, typ Type, length int64, inferred map[syntax.Expr]operand) int64 {
 	visited := make(map[int64]bool, len(elts))
 	var index, max int64
 	for _, e := range elts {
@@ -387,7 +396,7 @@ func (check *Checker) indexedElts(elts []syntax.Expr, typ Type, length int64) in
 
 		// check element against composite literal element type
 		var x operand
-		check.genericExpr(newHint(typ, "array or slice element"), &x, eval)
+		check.literalExpr(newHint(typ, "array or slice element"), &x, eval, inferred)
 		check.assignment(&x, typ, "array or slice literal")
 	}
 	return max
