@@ -433,7 +433,7 @@ func matchMetadata(dir string, info fs.DirEntry) bool {
 
 // matchPotentialSourceFile reports whether info may be relevant to a build operation.
 func matchPotentialSourceFile(dir string, info fs.DirEntry, goVersion string) bool {
-	if strings.HasSuffix(info.Name(), "_test.go") {
+	if strings.HasSuffix(info.Name(), "_test.go") || strings.HasSuffix(info.Name(), "_test.go++") {
 		return false
 	}
 	if info.Name() == "go.mod" || info.Name() == "go.sum" {
@@ -445,7 +445,7 @@ func matchPotentialSourceFile(dir string, info fs.DirEntry, goVersion string) bo
 			return false
 		}
 	}
-	if strings.HasSuffix(info.Name(), ".go") {
+	if strings.HasSuffix(info.Name(), ".go") || strings.HasSuffix(info.Name(), ".go++") {
 		f, err := fsys.Open(filepath.Join(dir, info.Name()))
 		if err != nil {
 			base.Fatal(err)

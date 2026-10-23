@@ -91,7 +91,7 @@ func initParserMode() {
 }
 
 func isGoFilename(name string) bool {
-	return !strings.HasPrefix(name, ".") && strings.HasSuffix(name, ".go")
+	return !strings.HasPrefix(name, ".") && (strings.HasSuffix(name, ".go") || strings.HasSuffix(name, ".go++"))
 }
 
 // A sequencer performs concurrent tasks that may write output, but emits that

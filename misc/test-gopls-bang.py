@@ -70,13 +70,13 @@ def apply_edits(text, edits):
 def run(binary):
     with tempfile.TemporaryDirectory(prefix="bang-lsp-") as temporary:
         directory = pathlib.Path(temporary)
-        path = directory / "main.go"
+        path = directory / ("main" + os.environ.get("GOPP_TEST_EXT", ".go"))
         path.write_text(SOURCE)
         model = directory / "model" / "model.go"
         model.parent.mkdir()
         model.write_text(MODEL)
         (directory / "go.mod").write_text("module bangeditor\n\ngo 1.26\n")
-        uri = path.as_uri()
+        uri = path.as_uri().replace("%2B", "+") # gopls canonicalizes plus signs in file URIs
         env = dict(os.environ, PATH=str(ROOT / "bin") + ":" + os.environ["PATH"],
                    GOROOT=str(ROOT), GOCACHE=os.environ.get("GOCACHE", str(directory / "cache")),
                    GOPLSCACHE=str(directory / "index"), GOWORK="off", GOTOOLCHAIN="local",

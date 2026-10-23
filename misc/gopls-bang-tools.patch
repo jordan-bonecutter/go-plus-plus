@@ -206,3 +206,11 @@
 +	if a, ok := t.(*types.Alias); ok && a.Obj().Pkg() == nil && a.Obj().Name() == "unit" {
 +		t = types.Unalias(a)
 +	}
+--- a/go/packages/golist.go
++++ b/go/packages/golist.go
+@@ -589 +589 @@
+-				if ext := filepath.Ext(f); ext != ".go" && ext != "" { // ext == "" means the file is from the cache, so probably cgo-processed file
++				if ext := filepath.Ext(f); ext != ".go" && ext != ".go++" && ext != "" { // ext == "" means the file is from the cache, so probably cgo-processed file
+@@ -1060 +1060 @@
+-		if strings.HasSuffix(f, ".go") {
++		if (strings.HasSuffix(f, ".go") || strings.HasSuffix(f, ".go++")) {

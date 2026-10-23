@@ -653,7 +653,7 @@ func (tools gccgoToolchain) supportsCgoIncomplete(b *Builder, a *Action) bool {
 			fail(err)
 		}
 
-		on := strings.TrimSuffix(fn, ".go") + ".o"
+		on := strings.TrimSuffix(strings.TrimSuffix(fn, "++"), ".go") + ".o"
 		if cfg.BuildN || cfg.BuildX {
 			sh.ShowCmd(tmpdir, "%s -c -o %s %s || true", tools.compiler(), on, fn)
 			// Since this function affects later builds,

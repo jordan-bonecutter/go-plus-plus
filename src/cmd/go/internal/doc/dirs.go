@@ -118,7 +118,7 @@ func (d *Dirs) bfsWalkRoot(root Dir) {
 				// For plain files, remember if this directory contains any .go
 				// source files, but ignore them otherwise.
 				if !entry.IsDir() {
-					if !hasGoFiles && strings.HasSuffix(name, ".go") {
+					if !hasGoFiles && (strings.HasSuffix(name, ".go") || strings.HasSuffix(name, ".go++")) {
 						hasGoFiles = true
 					}
 					continue

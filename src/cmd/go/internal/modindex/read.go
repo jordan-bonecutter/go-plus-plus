@@ -491,7 +491,7 @@ func (rp *IndexPackage) Import(bctxt build.Context, mode build.ImportMode) (p *b
 		name := tf.name()
 		// Check errors for go files and call badGoFiles to put them in
 		// InvalidGoFiles if they do have an error.
-		if strings.HasSuffix(name, ".go") {
+		if strings.HasSuffix(name, ".go") || strings.HasSuffix(name, ".go++") {
 			if error := tf.error(); error != "" {
 				badGoFile(name, errors.New(tf.error()))
 				continue
@@ -522,7 +522,7 @@ func (rp *IndexPackage) Import(bctxt build.Context, mode build.ImportMode) (p *b
 
 		ext := nameExt(name)
 		if !shouldBuild || tf.ignoreFile() {
-			if ext == ".go" {
+			if ext == ".go" || ext == ".go++" {
 				p.IgnoredGoFiles = append(p.IgnoredGoFiles, name)
 			} else if fileListForExt(p, ext) != nil {
 				p.IgnoredOtherFiles = append(p.IgnoredOtherFiles, name)
@@ -532,7 +532,7 @@ func (rp *IndexPackage) Import(bctxt build.Context, mode build.ImportMode) (p *b
 
 		// Going to save the file. For non-Go files, can stop here.
 		switch ext {
-		case ".go":
+		case ".go", ".go++":
 			// keep going
 		case ".S", ".sx":
 			// special case for cgo, handled at end
@@ -550,7 +550,7 @@ func (rp *IndexPackage) Import(bctxt build.Context, mode build.ImportMode) (p *b
 			p.IgnoredGoFiles = append(p.IgnoredGoFiles, name)
 			continue
 		}
-		isTest := strings.HasSuffix(name, "_test.go")
+		isTest := (strings.HasSuffix(name, "_test.go") || strings.HasSuffix(name, "_test.go++"))
 		isXTest := false
 		if isTest && strings.HasSuffix(tf.pkgName(), "_test") && p.Name != tf.pkgName() {
 			isXTest = true
@@ -709,7 +709,7 @@ func (rp *IndexPackage) IsGoDir() (_ bool, err error) {
 		}
 	}()
 	for _, sf := range rp.sourceFiles {
-		if strings.HasSuffix(sf.name(), ".go") {
+		if strings.HasSuffix(sf.name(), ".go") || strings.HasSuffix(sf.name(), ".go++") {
 			return true, nil
 		}
 	}
@@ -734,7 +734,7 @@ func (rp *IndexPackage) ScanDir(tags map[string]bool) (sortedImports []string, s
 Files:
 	for _, sf := range rp.sourceFiles {
 		name := sf.name()
-		if strings.HasPrefix(name, "_") || strings.HasPrefix(name, ".") || !strings.HasSuffix(name, ".go") || !imports.MatchFile(name, tags) {
+		if strings.HasPrefix(name, "_") || strings.HasPrefix(name, ".") || !(strings.HasSuffix(name, ".go") || strings.HasSuffix(name, ".go++")) || !imports.MatchFile(name, tags) {
 			continue
 		}
 
@@ -761,7 +761,7 @@ Files:
 		}
 		numFiles++
 		m := imports_
-		if strings.HasSuffix(name, "_test.go") {
+		if strings.HasSuffix(name, "_test.go") || strings.HasSuffix(name, "_test.go++") {
 			m = testImports
 		}
 		for _, p := range imps {

@@ -107,7 +107,7 @@ func (b *Builder) Do(ctx context.Context, root *Action) {
 	// Write action graph, without timing information, in case we fail and exit early.
 	writeActionGraph := func() {
 		if file := cfg.DebugActiongraph; file != "" {
-			if strings.HasSuffix(file, ".go") {
+			if strings.HasSuffix(file, ".go") || strings.HasSuffix(file, ".go++") {
 				// Do not overwrite Go source code in:
 				//	go build -debug-actiongraph x.go
 				base.Fatalf("go: refusing to write action graph to %v\n", file)
@@ -533,7 +533,7 @@ func (b *Builder) runCover(ctx context.Context, a *Action) error {
 			sourceFile = filepath.Join(p.Dir, file)
 			coverFile = a.Objdir + file
 		}
-		coverFile = strings.TrimSuffix(coverFile, ".go") + ".cover.go"
+		coverFile = strings.TrimSuffix(strings.TrimSuffix(coverFile, "++"), ".go") + ".cover.go"
 		infiles = append(infiles, sourceFile)
 		outfiles = append(outfiles, coverFile)
 		if i < len(gofiles) {
@@ -1511,7 +1511,7 @@ func (b *Builder) loadCachedCompiledGoFiles(a *Action) error {
 	for name := range strings.SplitSeq(string(list), "\n") {
 		if name == "" { // end of list
 			continue
-		} else if !strings.HasSuffix(name, ".go") {
+		} else if !(strings.HasSuffix(name, ".go") || strings.HasSuffix(name, ".go++")) {
 			continue
 		}
 		if strings.HasPrefix(name, "./") {
@@ -1589,7 +1589,7 @@ func buildVetConfig(a *Action, srcfiles []string, vetDeps []*Action) {
 	// srcfiles does not include raw cgo files.
 	var gofiles, nongofiles []string
 	for _, name := range srcfiles {
-		if strings.HasSuffix(name, ".go") {
+		if strings.HasSuffix(name, ".go") || strings.HasSuffix(name, ".go++") {
 			gofiles = append(gofiles, name)
 		} else {
 			nongofiles = append(nongofiles, name)
@@ -3539,7 +3539,7 @@ func (b *Builder) runCgo(_ context.Context, a *Action) error {
 	gofiles := []string{objdir + "_cgo_gotypes.go"}
 	cfiles := []string{objdir + "_cgo_export.c"}
 	for _, fn := range cgofiles {
-		f := strings.TrimSuffix(filepath.Base(fn), ".go")
+		f := strings.TrimSuffix(strings.TrimSuffix(filepath.Base(fn), "++"), ".go")
 		gofiles = append(gofiles, objdir+f+".cgo1.go")
 		cfiles = append(cfiles, objdir+f+".cgo2.c")
 	}
