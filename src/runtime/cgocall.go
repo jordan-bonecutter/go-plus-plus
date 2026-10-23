@@ -710,6 +710,12 @@ func cgoCheckArg(t *_type, p unsafe.Pointer, indir, top bool, msg cgoErrorMsg) {
 		if !top && !isPinned(ss.str) {
 			panic(cgoFormatErr(msg, t.Kind()))
 		}
+	case abi.Union:
+		st := (*structtype)(unsafe.Pointer(t))
+		index := abi.UnionIndex(st, p)
+		data := (*structtype)(unsafe.Pointer(st.Fields[0].Typ))
+		payload := (*arraytype)(unsafe.Pointer(data.Fields[index].Typ)).Elem
+		cgoCheckArg(payload, p, true, top, msg)
 	case abi.Struct:
 		st := (*structtype)(unsafe.Pointer(t))
 		if !indir {
@@ -856,6 +862,8 @@ func cgoFormatErr(error cgoErrorMsg, kind abi.Kind) errorString {
 		kindname = "string"
 	case abi.Struct:
 		kindname = "struct"
+	case abi.Union:
+		kindname = "union"
 	case abi.UnsafePointer:
 		kindname = "unsafe pointer"
 	default:

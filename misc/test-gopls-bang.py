@@ -12,6 +12,8 @@ import time
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SOURCE = '''package main
 import ("fmt"; "bangeditor/model")
+type UnitOption[T any] union { Empty; Value T }
+func emptyUnit() UnitOption[int] { return UnitOption[int].Empty(unit{}) }
 type Item struct { Field int }
 func value() (Item, error) { return Item{7}, nil }
 func pair() (int, string, error) { return 7, "ok", nil }
@@ -208,6 +210,10 @@ def run(binary):
                 assert "error" in signature["signatures"][0]["label"], signature
                 rename = request("textDocument/rename", dict(at("item :=", 1), newName="renamed"))
                 assert "renamed" in json.dumps(rename), rename
+                unit_at = at("UnitOption[int].Empty", len("UnitOption[int]."))
+                unit_hover = request("textDocument/hover", unit_at)
+                assert "unit" in unit_hover["contents"]["value"], unit_hover
+                assert request("textDocument/definition", unit_at), "missing implicit-unit variant definition"
                 variant_hover = request("textDocument/hover", at("Choice.First", len("Choice.")))
                 assert "func First" in variant_hover["contents"]["value"], variant_hover
                 variant_rename = request("textDocument/rename", dict(at("Choice.First", len("Choice.")), newName="Primary"))

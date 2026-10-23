@@ -1457,6 +1457,20 @@ func (w *writer) stmt1(stmt syntax.Stmt) {
 		}
 
 	case *syntax.ExprStmt:
+		if call, ok := stmt.X.(*syntax.CallExpr); ok {
+			if name, ok := call.Fun.(*syntax.Name); ok && (name.Value == syntax.UnionAnchor || name.Value == syntax.UnionKeepAlive) {
+				if name.Value == syntax.UnionAnchor {
+					w.Code(stmtUnionAnchor)
+				} else {
+					w.Code(stmtUnionKeepAlive)
+				}
+				w.pos(stmt)
+				for _, arg := range call.ArgList {
+					w.expr(arg)
+				}
+				return
+			}
+		}
 		w.Code(stmtExpr)
 		w.expr(stmt.X)
 

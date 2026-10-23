@@ -29,6 +29,13 @@ variables.
 
 # Types and Values
 
+Tagged unions use a struct schema with exported variant names and payload types.
+Each value transmits exactly one active field, including zero-valued payloads.
+Decoding selects the variant by name and rejects empty, unknown, or multiple
+active variants. The usual payload type restrictions apply, including the
+prohibition on nil pointer payloads. Custom GobEncoder and GobDecoder methods
+take precedence.
+
 The source and destination values/types need not correspond exactly. For structs,
 fields (identified by name) that are in the source but absent from the receiving
 variable will be ignored. Fields that are in the receiving variable but missing

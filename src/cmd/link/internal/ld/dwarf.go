@@ -683,7 +683,7 @@ func (d *dwctxt) newtype(gotype loader.Sym) *dwarf.DWDie {
 		die = d.newdie(&dwtypes, dwarf.DW_ABRV_STRINGTYPE, name)
 		newattr(die, dwarf.DW_AT_byte_size, dwarf.DW_CLS_CONSTANT, bytesize, 0)
 
-	case abi.Struct:
+	case abi.Struct, abi.Union:
 		die = d.newdie(&dwtypes, dwarf.DW_ABRV_STRUCTTYPE, name)
 		typedefdie = d.dotypedef(&dwtypes, name, die)
 		newattr(die, dwarf.DW_AT_byte_size, dwarf.DW_CLS_CONSTANT, bytesize, 0)

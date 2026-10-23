@@ -310,6 +310,30 @@ func (enc *Encoder) encodeStruct(b *encBuffer, engine *encEngine, value reflect.
 	state := enc.newEncoderState(b)
 	defer enc.freeEncoderState(state)
 	state.fieldnum = -1
+	if value.Type().IsUnion() {
+		name, payload := value.Variant()
+		variant, _ := value.Type().VariantByName(name)
+		if !variant.IsExported() || !payload.CanInterface() {
+			errorf("cannot encode unexported union variant %s", name)
+		}
+		state.sendZero = true // The variant must survive even when its payload is zero.
+		for j := 0; j < len(engine.instr)-1; j++ {
+			instr := &engine.instr[j]
+			if instr.index[0] != variant.Index {
+				continue
+			}
+			if instr.indir > 0 {
+				payload = encIndirect(payload, instr.indir)
+			}
+			if !valid(payload) {
+				errorf("cannot encode nil pointer in union variant %s", name)
+			}
+			instr.op(instr, state, payload)
+			break
+		}
+		encStructTerminator(nil, state, reflect.Value{})
+		return
+	}
 	for i := 0; i < len(engine.instr); i++ {
 		instr := &engine.instr[i]
 		if i >= value.NumField() {
@@ -539,7 +563,7 @@ func encOpFor(rt reflect.Type, inProgress map[reflect.Type]*encOp, building map[
 				state.update(i)
 				state.enc.encodeMap(state.b, mv, *keyOp, *elemOp, keyIndir, elemIndir)
 			}
-		case reflect.Struct:
+		case reflect.Struct, reflect.Union:
 			// Generate a closure that calls out to the engine for the nested type.
 			getEncEngine(userType(typ), building)
 			info := mustGetTypeInfo(typ)
@@ -602,17 +626,12 @@ func compileEnc(ut *userTypeInfo, building map[*typeInfo]bool) *encEngine {
 	if ut.externalEnc != 0 {
 		rt = ut.user
 	}
-	if ut.externalEnc == 0 && srt.Kind() == reflect.Struct {
-		for fieldNum, wireFieldNum := 0, 0; fieldNum < srt.NumField(); fieldNum++ {
-			f := srt.Field(fieldNum)
-			if !isSent(&f) {
-				continue
-			}
+	if ut.externalEnc == 0 && (srt.Kind() == reflect.Struct || srt.Kind() == reflect.Union) {
+		for wireFieldNum, f := range transmittedFields(srt) {
 			op, indir := encOpFor(f.Type, seen, building)
 			engine.instr = append(engine.instr, encInstr{*op, wireFieldNum, f.Index, indir})
-			wireFieldNum++
 		}
-		if srt.NumField() > 0 && len(engine.instr) == 0 {
+		if (srt.Kind() == reflect.Union || srt.NumField() > 0) && len(engine.instr) == 0 {
 			errorf("type %s has no exported fields", rt)
 		}
 		engine.instr = append(engine.instr, encInstr{encStructTerminator, 0, nil, 0})
@@ -666,7 +685,7 @@ func (enc *Encoder) encode(b *encBuffer, value reflect.Value, ut *userTypeInfo) 
 	for i := 0; i < indir; i++ {
 		value = reflect.Indirect(value)
 	}
-	if ut.externalEnc == 0 && value.Kind() == reflect.Struct {
+	if ut.externalEnc == 0 && (value.Kind() == reflect.Struct || value.Kind() == reflect.Union) {
 		enc.encodeStruct(b, engine, value)
 	} else {
 		enc.encodeSingle(b, engine, value)

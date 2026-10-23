@@ -251,11 +251,10 @@ func typehash(t *_type, p unsafe.Pointer, h uintptr) uintptr {
 			h = typehash(a.Elem, add(p, i*a.Elem.Size_), h)
 		}
 		return h
+	case abi.Union:
+		return unionhash(t, p, h)
 	case abi.Struct:
 		s := (*structtype)(unsafe.Pointer(t))
-		if s.IsTaggedUnion() {
-			return unionhash(t, p, h)
-		}
 		for _, f := range s.Fields {
 			if f.Name.IsBlank() {
 				continue

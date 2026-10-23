@@ -45,3 +45,34 @@ func TestUnionIndex(t *testing.T) {
 		}
 	}
 }
+
+type kindUnion union {
+	Number int
+	Text   string
+}
+
+func TestUnionDescriptor(t *testing.T) {
+	typ := abi.TypeFor[kindUnion]()
+	if typ.Kind() != abi.Union || typ.Kind().String() != "union" {
+		t.Fatalf("kind %v", typ.Kind())
+	}
+	st := typ.StructType()
+	if st == nil || !st.IsTaggedUnion() {
+		t.Fatal("missing union layout")
+	}
+	if abi.Union >= 32 {
+		t.Fatal("union kind does not fit reflection's five-bit kind field")
+	}
+	for _, width := range []int{4, 8} {
+		if abi.RTypeSize(abi.Union, width) != abi.RTypeSize(abi.Struct, width) {
+			t.Fatal("descriptor size")
+		}
+	}
+	// The physical tag remains private even though the public kind is distinct.
+	if st.Fields[2].Typ.Kind() != abi.Uint8 {
+		t.Fatal("tag width")
+	}
+	if typ.DescriptorSize() <= abi.RTypeSize(abi.Union, int(unsafe.Sizeof(uintptr(0)))) {
+		t.Fatal("descriptor fields missing")
+	}
+}

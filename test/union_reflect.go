@@ -358,7 +358,7 @@ type Wide union {
 
 func testWideTag() {
 	t := reflect.TypeFor[Wide]()
-	check(t.Field(2).Type.Kind() == reflect.Uint16)
+	check(t.Kind() == reflect.Union && t.NumVariant() == 257)
 	v := Wide.V256("wide")
 	switch x := v.(variant) {
 	case V256:

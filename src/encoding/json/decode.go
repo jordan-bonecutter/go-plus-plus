@@ -623,6 +623,9 @@ func (d *decodeState) object(v reflect.Value) error {
 	}
 	v = pv
 	t := v.Type()
+	if t.IsUnion() {
+		return d.union(v)
+	}
 
 	// Decoding into nil interface? Switch to non-reflect code.
 	if v.Kind() == reflect.Interface && v.NumMethod() == 0 {
@@ -836,6 +839,67 @@ func (d *decodeState) object(v reflect.Value) error {
 		if d.opcode != scanObjectValue {
 			panic(phasePanicMsg)
 		}
+	}
+	return nil
+}
+
+// union requires exactly one exported variant and commits only a valid payload.
+func (d *decodeState) union(v reflect.Value) error {
+	var name string
+	var payload reflect.Value
+	count := 0
+	valid := true
+	for {
+		d.scanWhile(scanSkipSpace)
+		if d.opcode == scanEndObject {
+			break
+		}
+		start := d.readIndex()
+		d.rescanLiteral()
+		key, _ := unquoteBytes(d.data[start:d.readIndex()])
+		name = string(key)
+		variant, ok := v.Type().VariantByName(name)
+		count++
+		var dst reflect.Value
+		if ok && variant.IsExported() {
+			dst = reflect.New(variant.Type).Elem()
+		} else {
+			valid = false
+		}
+		if d.opcode == scanSkipSpace {
+			d.scanWhile(scanSkipSpace)
+		}
+		if d.opcode != scanObjectKey {
+			panic(phasePanicMsg)
+		}
+		d.scanWhile(scanSkipSpace)
+		before := d.savedError
+		d.savedError = nil
+		err := d.value(dst)
+		if d.savedError != nil {
+			valid = false
+		}
+		if before != nil {
+			d.savedError = before
+		}
+		if err != nil {
+			return err
+		}
+		payload = dst
+		if d.opcode == scanSkipSpace {
+			d.scanWhile(scanSkipSpace)
+		}
+		if d.opcode == scanEndObject {
+			break
+		}
+		if d.opcode != scanObjectValue {
+			panic(phasePanicMsg)
+		}
+	}
+	if count != 1 || !valid {
+		d.saveError(fmt.Errorf("json: expected exactly one exported variant of %v", v.Type()))
+	} else {
+		v.SetVariant(name, payload)
 	}
 	return nil
 }

@@ -557,7 +557,7 @@ func eq(arg1 reflect.Value, arg2 ...reflect.Value) (bool, error) {
 				if isNil(arg1) || isNil(arg) {
 					truth = isNil(arg) == isNil(arg1)
 				} else {
-					if !arg.Type().Comparable() {
+					if !arg.Comparable() || !arg1.Comparable() {
 						return false, fmt.Errorf("non-comparable type %s: %v", arg, arg.Type())
 					}
 					truth = arg1.Interface() == arg.Interface()

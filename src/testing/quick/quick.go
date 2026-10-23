@@ -150,6 +150,24 @@ func sizedValue(t reflect.Type, rand *rand.Rand, size int) (value reflect.Value,
 			codePoints[i] = rune(rand.Intn(0x10ffff))
 		}
 		v.SetString(string(codePoints))
+	case reflect.Union:
+		var variants []reflect.UnionVariant
+		for i := 0; i < concrete.NumVariant(); i++ {
+			variant := concrete.Variant(i)
+			if variant.IsExported() {
+				variants = append(variants, variant)
+			}
+		}
+		if len(variants) == 0 {
+			return reflect.Value{}, false
+		}
+		variant := variants[rand.Intn(len(variants))]
+		elem, ok := sizedValue(variant.Type, rand, size)
+		if !ok {
+			return reflect.Value{}, false
+		}
+		v.SetVariant(variant.Name, elem)
+		break
 	case reflect.Struct:
 		n := v.NumField()
 		// Divide sizeLeft evenly among the struct fields.

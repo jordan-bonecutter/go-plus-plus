@@ -198,3 +198,11 @@
  		for i, n := 0, ttuple.Len(); i < n; i++ {
  			results = append(results,
  				emitConv(fn, emitExtract(fn, tuple, i),
+--- a/internal/gcimporter/iexport.go
++++ b/internal/gcimporter/iexport.go
+@@ -989,0 +990,5 @@
++	// unit is a predeclared alias without a package. Encode its identical
++	// underlying struct type, preserving the existing indexed export format.
++	if a, ok := t.(*types.Alias); ok && a.Obj().Pkg() == nil && a.Obj().Name() == "unit" {
++		t = types.Unalias(a)
++	}

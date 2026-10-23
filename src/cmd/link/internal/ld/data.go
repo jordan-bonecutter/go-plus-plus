@@ -1447,7 +1447,7 @@ func (p *GCProg) AddType(off int64, typ loader.Sym) {
 			p.w.ZeroUntil((off + elemSize) / ptrsize)
 			p.w.Repeat(elemSize/ptrsize, n-1)
 		}
-	case abi.Struct:
+	case abi.Struct, abi.Union:
 		nField := decodetypeStructFieldCount(ldr, p.ctxt.Arch, typ)
 		for i := 0; i < nField; i++ {
 			fTyp := decodetypeStructFieldType(p.ctxt, p.ctxt.Arch, typ, i)

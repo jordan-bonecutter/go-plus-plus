@@ -39,13 +39,13 @@ func unionFunction(pos syntax.Pos, typ Type, variant int, operation string, bool
 	var body string
 	switch operation {
 	case "construct":
-		body = fmt.Sprintf(`func f(V T) U { var R U; R.D = %d; R.C = H(A(&V)); *(*T)(P(&R.B)) = V; return R }`, variant)
+		body = fmt.Sprintf(`func f(V T) U { var R U; R.D = %d; A(&R, &V); *(*T)(P(&R.B)) = V; return R }`, variant)
 	case "assert":
-		body = fmt.Sprintf(`func f(V U) T { if V.D != %d { panic("union variant assertion failed") }; R := *(*T)(P(&V.B)); K(V.C); return R }`, variant)
+		body = fmt.Sprintf(`func f(V U) T { if V.D != %d { panic("union variant assertion failed") }; R := *(*T)(P(&V.B)); K(V); return R }`, variant)
 	case "assertok":
-		body = fmt.Sprintf(`func f(V U) (T, bool) { if V.D != %d { var R T; return R, false }; R := *(*T)(P(&V.B)); K(V.C); return R, true }`, variant)
+		body = fmt.Sprintf(`func f(V U) (T, bool) { if V.D != %d { var R T; return R, false }; R := *(*T)(P(&V.B)); K(V); return R, true }`, variant)
 	case "extract":
-		body = `func f(V U) T { R := *(*T)(P(&V.B)); K(V.C); return R }`
+		body = `func f(V U) T { R := *(*T)(P(&V.B)); K(V); return R }`
 	case "index":
 		body = `func f(V U) W { return W(V.D) }`
 	}
@@ -227,7 +227,7 @@ func (check *Checker) variantSwitchStmt(inner stmtContext, s *syntax.SwitchStmt,
 }
 
 func init() {
-	Universe.Insert(NewFunc(nopos, nil, syntax.UnionAnchor, makeSig(Typ[UnsafePointer], &emptyInterface)))
+	Universe.Insert(NewFunc(nopos, nil, syntax.UnionAnchor, makeSig(nil, &emptyInterface, &emptyInterface)))
 	Universe.Insert(NewFunc(nopos, nil, syntax.UnionKeepAlive, makeSig(nil, &emptyInterface)))
 }
 
@@ -256,5 +256,55 @@ func (check *Checker) recordVariantCommaOkTypes(x syntax.Expr, t1 Type) {
 		call := variantCall(assertion.Pos(), assertion.X, typ, i, "assertok", t1)
 		check.checkVariantCall(call)
 		assertion.LoweredOK = call
+	}
+}
+
+// unionWithoutAnchor reports whether fields describe a pointer-free tagged union.
+// Match the physical layout decision in cmd/compile/internal/types/size.go.
+func unionWithoutAnchor(fields []*Var) bool {
+	if len(fields) != 3 || fields[0].name != "union·data" || fields[1].name != "union·anchor" || fields[2].name != "union·tag" {
+		return false
+	}
+	data, ok := fields[0].typ.Underlying().(*Struct)
+	if !ok {
+		return false
+	}
+	for _, f := range data.fields[:len(data.fields)-2] {
+		if unionPayloadPointers(f.typ.(*Array).elem, make(map[Type]bool)) {
+			return false
+		}
+	}
+	return true
+}
+
+func unionPayloadPointers(t Type, active map[Type]bool) bool {
+	if t == nil || active[t] {
+		return true
+	}
+	active[t] = true
+	defer delete(active, t)
+	switch u := t.Underlying().(type) {
+	case *Basic:
+		return u.kind == String || u.kind == UnsafePointer || u.kind == Invalid
+	case *Array:
+		return u.len != 0 && unionPayloadPointers(u.elem, active)
+	case *Struct:
+		if len(u.fields) == 3 && u.fields[0].name == "union·data" && u.fields[1].name == "union·anchor" && u.fields[2].name == "union·tag" {
+			data := u.fields[0].typ.Underlying().(*Struct)
+			for _, f := range data.fields[:len(data.fields)-2] {
+				if unionPayloadPointers(f.typ.(*Array).elem, active) {
+					return true
+				}
+			}
+			return false
+		}
+		for _, f := range u.fields {
+			if unionPayloadPointers(f.typ, active) {
+				return true
+			}
+		}
+		return false
+	default:
+		return true // pointers, strings, interfaces, slices, maps, funcs, channels, and type parameters
 	}
 }

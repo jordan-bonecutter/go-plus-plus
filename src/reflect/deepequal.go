@@ -125,11 +125,11 @@ func deepValueEqual(v1, v2 Value, visited map[visit]bool) bool {
 			return true
 		}
 		return deepValueEqual(v1.Elem(), v2.Elem(), visited)
+	case Union:
+		payload1, index1, _ := v1.unionPayload()
+		payload2, index2, _ := v2.unionPayload()
+		return index1 == index2 && deepValueEqual(payload1, payload2, visited)
 	case Struct:
-		if payload1, index1, ok := v1.unionPayload(); ok {
-			payload2, index2, _ := v2.unionPayload()
-			return index1 == index2 && deepValueEqual(payload1, payload2, visited)
-		}
 		for i, n := 0, v1.NumField(); i < n; i++ {
 			if !deepValueEqual(v1.Field(i), v2.Field(i), visited) {
 				return false
@@ -184,6 +184,9 @@ func deepValueEqual(v1, v2 Value, visited map[visit]bool) bool {
 // Values of distinct types are never deeply equal.
 //
 // Array values are deeply equal when their corresponding elements are deeply equal.
+//
+// Union values are deeply equal if their variant indexes match and their
+// active payloads are deeply equal.
 //
 // Struct values are deeply equal if their corresponding fields,
 // both exported and unexported, are deeply equal.

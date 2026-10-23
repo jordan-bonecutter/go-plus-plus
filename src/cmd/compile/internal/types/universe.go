@@ -114,6 +114,9 @@ func InitTypes(defTypeName func(sym *Sym, typ *Type) Object) {
 	AnyType.SetUnderlying(NewInterface(nil))
 	ResumeCheckSize()
 
+	// unit is an alias: its IR type remains the unnamed empty struct.
+	defTypeName(BuiltinPkg.Lookup("unit"), NewStruct(nil))
+
 	Types[TUNSAFEPTR] = defBasic(TUNSAFEPTR, UnsafePkg, "Pointer")
 
 	Types[TBLANK] = newType(TBLANK)

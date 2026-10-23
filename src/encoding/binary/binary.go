@@ -700,6 +700,9 @@ func dataSize(v reflect.Value) int {
 	case reflect.Slice, reflect.Array:
 		t := v.Type().Elem()
 		if size, ok := structSize.Load(t); ok {
+			if size.(int) < 0 {
+				return -1
+			}
 			return size.(int) * v.Len()
 		}
 
@@ -731,6 +734,9 @@ func dataSize(v reflect.Value) int {
 
 // sizeof returns the size >= 0 of variables for the given type or -1 if the type is not acceptable.
 func sizeof(t reflect.Type) int {
+	if t.IsUnion() {
+		return -1
+	}
 	switch t.Kind() {
 	case reflect.Array:
 		if s := sizeof(t.Elem()); s >= 0 {

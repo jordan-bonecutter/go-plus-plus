@@ -44,7 +44,10 @@ func (check *Checker) taggedUnionType(styp *Struct, e *ast.StructType) {
 			continue
 		}
 		name := f.Names[0]
-		typ := check.varType(f.Type)
+		var typ Type = Universe.Lookup("unit").Type()
+		if f.Type != nil {
+			typ = check.varType(f.Type)
+		}
 		field := NewField(name.Pos(), check.pkg, name.Name, typ, false)
 		if !check.declareInSet(&names, name.Pos(), field) {
 			continue
@@ -202,4 +205,54 @@ func (check *Checker) variantSwitch(inner stmtContext, s *ast.TypeSwitchStmt, gu
 func unionData(t *Struct) bool {
 	n := len(t.fields)
 	return n >= 3 && t.fields[n-1].name == "union·raw" && strings.HasPrefix(t.fields[0].name, "union·variant·")
+}
+
+// unionWithoutAnchor reports whether fields describe a pointer-free tagged union.
+// Match the physical layout decision in cmd/compile/internal/types/size.go.
+func unionWithoutAnchor(fields []*Var) bool {
+	if len(fields) != 3 || fields[0].name != "union·data" || fields[1].name != "union·anchor" || fields[2].name != "union·tag" {
+		return false
+	}
+	data, ok := fields[0].typ.Underlying().(*Struct)
+	if !ok {
+		return false
+	}
+	for _, f := range data.fields[:len(data.fields)-2] {
+		if unionPayloadPointers(f.typ.(*Array).elem, make(map[Type]bool)) {
+			return false
+		}
+	}
+	return true
+}
+
+func unionPayloadPointers(t Type, active map[Type]bool) bool {
+	if t == nil || active[t] {
+		return true
+	}
+	active[t] = true
+	defer delete(active, t)
+	switch u := t.Underlying().(type) {
+	case *Basic:
+		return u.kind == String || u.kind == UnsafePointer || u.kind == Invalid
+	case *Array:
+		return u.len != 0 && unionPayloadPointers(u.elem, active)
+	case *Struct:
+		if len(u.fields) == 3 && u.fields[0].name == "union·data" && u.fields[1].name == "union·anchor" && u.fields[2].name == "union·tag" {
+			data := u.fields[0].typ.Underlying().(*Struct)
+			for _, f := range data.fields[:len(data.fields)-2] {
+				if unionPayloadPointers(f.typ.(*Array).elem, active) {
+					return true
+				}
+			}
+			return false
+		}
+		for _, f := range u.fields {
+			if unionPayloadPointers(f.typ, active) {
+				return true
+			}
+		}
+		return false
+	default:
+		return true // pointers, strings, interfaces, slices, maps, funcs, channels, and type parameters
+	}
 }

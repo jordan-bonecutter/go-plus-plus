@@ -117,3 +117,5 @@ func BenchmarkCgoCall(b *testing.B)      { benchCgoCall(b) }
 func BenchmarkGoString(b *testing.B)     { benchGoString(b) }
 func BenchmarkCGoCallback(b *testing.B)  { benchCallback(b) }
 func BenchmarkCGoInCThread(b *testing.B) { benchCGoInCthread(b) }
+
+func TestUnionKind(t *testing.T) { testUnionKind(t) }

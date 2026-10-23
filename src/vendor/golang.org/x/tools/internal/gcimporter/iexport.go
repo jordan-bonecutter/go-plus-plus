@@ -990,6 +990,11 @@ func (w *exportWriter) flush() uint64 {
 }
 
 func (p *iexporter) typOff(t types.Type, pkg *types.Package) uint64 {
+	// unit is a predeclared alias without a package. Encode its identical
+	// underlying struct type, preserving the existing indexed export format.
+	if a, ok := t.(*types.Alias); ok && a.Obj().Pkg() == nil && a.Obj().Name() == "unit" {
+		t = types.Unalias(a)
+	}
 	off, ok := p.typIndex[t]
 	if !ok {
 		w := p.newWriter()

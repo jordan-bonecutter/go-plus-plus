@@ -1,11 +1,25 @@
 Tagged unions in this checkout
 
+The predeclared type unit is an alias for struct{}; it has size zero and one
+value, unit{}. It can be shadowed like other predeclared type names.
+
 Declare variants with one payload type each:
 
     type Result[T any] union {
         Ok  T
         Err string
     }
+
+A variant without a payload type implicitly uses the builtin unit, even when
+unit is shadowed in its scope:
+
+    type Option[T any] union {
+        None
+        Some T
+    }
+
+Construct the empty variant with Option[int].None(unit{}). Constructors still
+take one payload argument; omission changes the payload type, not the arity.
 
 Construct a value with Result[int].Ok(42) or Result[int].Err("failed").
 Constructors are ordinary function values, so f := Result[int].Ok works.
@@ -52,8 +66,10 @@ methods with generic union receivers:
 Layout and collection
 
 Payloads overlap inline. After type arguments are substituted, the value's
-size includes its largest payload, a pointer-sized GC anchor, and an inline
-variant tag, with alignment padding. The tag uses uint8 for up to 256 variants,
+size includes its largest payload and an inline variant tag, with alignment
+padding. A pointer-sized GC anchor is included only if at least one payload
+type contains GC pointers. This decision is made per concrete instantiation:
+Option[int] omits it, while Option[string] retains it. The tag uses uint8 for up to 256 variants,
 uint16 for up to 65,536, uint32 for up to 2^32, and uint64 beyond that.
 The anchor and tag follow payload storage. Variant dispatch reads the inline
 tag without dereferencing the anchor. unsafe.Sizeof and reflect.Type.Size
@@ -63,7 +79,12 @@ unions can be map keys. The zero value equals the first variant with a zero
 payload. Interface payloads retain ordinary Go dynamic comparison rules.
 
 The anchor points to immutable GC metadata containing only the payload's
-pointer roots. Pointer-free payloads use a nil anchor. This keeps raw inline
+pointer roots. Pointer-free variants of pointer-bearing unions use a nil
+anchor. Pointer-free unions have a zero-size private layout placeholder in its
+place, with no pointer slot or anchor setup call. Pointer checks recurse through
+structs, non-empty arrays, and nested unions; strings, slices, maps, channels,
+functions, interfaces, pointers, and unsafe.Pointer need roots. uintptr and
+zero-length arrays do not. This keeps raw inline
 payload bytes safe during garbage collection, stack growth, copies, and
 interface conversion without teaching the collector a conditional pointer
 layout. Constructing a pointer-bearing union can allocate this metadata and
@@ -98,7 +119,10 @@ non-addressable copy of the payload;
 unexported fields and variants retain their Interface restrictions. Rebuild
 existing executables with bin/go to pick up the formatting change.
 
-reflect.Type.IsUnion identifies tagged unions (whose Kind remains Struct).
+Tagged unions have their own reflect.Union kind ("union"), distinct from
+reflect.Struct. reflect.Type.IsUnion is equivalent to Kind() == reflect.Union.
+Struct-only APIs such as Field, NumField, and VisibleFields reject unions;
+use NumVariant, Variant, VariantByName, Value.Variant, and SetVariant instead.
 NumVariant, Variant(i), and VariantByName expose declared variant names, payload
 types, indices, and export visibility. reflect.New(t).Elem().SetVariant(name, x)
 constructs or replaces a union using an assignable payload. SetVariant requires
@@ -130,3 +154,85 @@ returns its payload and true; a mismatch returns the payload's zero value
 and false. The single-result form panics on a mismatch. The union expression
 is evaluated once, and variants are distinguished even when payload types
 are identical.
+
+Standard-library serialization and reflection
+
+encoding/json (both the legacy implementation and jsonv2) uses Serde's default
+externally tagged newtype representation. Every variant has a payload in this
+language, including struct{} payloads:
+
+    Result[int].Ok(42)     -> {"Ok":42}
+    Result[int].Err("bad") -> {"Err":"bad"}
+
+Decoding requires exactly one member whose name exactly matches an exported
+variant. Unknown, unexported, duplicate, and multiple variants are errors,
+independently of DisallowUnknownFields. Payloads use the ordinary recursive
+JSON rules and decoder options. A failed decode leaves the union unchanged.
+JSON null follows the existing struct rules: legacy JSON leaves the value
+unchanged; jsonv2 resets it to the zero union. Custom JSON and text methods
+retain their usual precedence. Anonymous union fields encode under their field
+name instead of promoting their private representation fields.
+
+encoding/gob transmits a union as a struct schema with exported variant names
+and payload types. Each value sends exactly one active field, even when that
+payload is zero. Receivers select the variant by name and reject empty,
+unknown, or multiple active variants. This also supports union arguments and
+replies in net/rpc. GobEncoder/GobDecoder retain precedence. Gob's existing
+restrictions still apply: nil pointer payloads cannot be transmitted, interface
+payloads may require Register, and payload types must be supported by gob.
+
+encoding/xml also uses an outer variant tag. Inside the union's usual enclosing
+element, one variant element wraps zero or more value elements:
+
+    Result[int].Ok(42) -> <Result><Ok><value>42</value></Ok></Result>
+
+The value wrapper lets slice payloads contain repeated value elements and nil
+pointer payloads omit their value element without losing the active variant.
+Payloads follow XML's usual type restrictions and field-tag rules. Decoding
+requires exactly one exported variant and commits it after decoding succeeds.
+Custom XML and text methods retain precedence; anonymous unions are named
+fields rather than embedded storage.
+
+encoding/binary and encoding/asn1 reject unions, including unions nested inside
+ordinary containers or structures. These formats require an explicit fixed
+layout or ASN.1 schema; the private in-memory union layout is not a wire format.
+
+Reflection-use audit (non-vendored standard library):
+
+- The compiler emits abi.Union metadata. Runtime hashing, dynamic map key
+  validation, type identity, GC masks, linker metadata, and reflection calling
+  conventions recognize that kind while retaining the private aggregate layout.
+  Race instrumentation covers the entire union, including its tag. Cgo pointer
+  checks inspect the active payload, not the implementation GC anchor.
+
+- reflect already handles union copying, calls, containers, comparison, zero
+  checks, and DeepEqual through the active payload. internal/reflectlite's
+  generic copying and swapping use the same runtime type operations.
+- fmt already prints the active variant. internal/fmtsort now orders union keys
+  by declaration index, then active payload, without reading GC anchors or raw
+  bytes. text/template inherits that order; equality checks dynamic payload
+  comparability before comparing. go/ast.Print prints the active variant and
+  hides payloads that reflection cannot expose.
+- unique preserves union payloads and their GC anchors while interning values;
+  it does not clone strings inside union payloads, just as it does not clone
+  strings reached through interfaces.
+- testing/quick chooses among exported variants and generates their payloads;
+  unions with no exported variants are unsupported, like other inaccessible
+  values. Payload generators and existing recursion limits still apply.
+- html/template's JavaScript serialization and log/slog's JSON handler inherit
+  encoding/json's tagged representation. Their text formatting uses fmt.
+- database/sql and database/sql/driver retain Scanner/Valuer and normal
+  assignability rules. Other union conversions are unsupported, like ordinary
+  composite values. flag retains its text-marshaling interfaces; fmt.Scan
+  requires a Scanner for composite values.
+- net/rpc uses the corrected gob path; net/rpc/jsonrpc uses the corrected JSON
+  path. Generic reflective method calls need no special union handling.
+- HTTP compatibility shims inspect specific known struct shapes or concrete
+  types; they do not traverse arbitrary union payloads. archive/tar uses
+  DeepEqual. errors uses assignability and Set, not field traversal.
+- Internal fuzzing supports an explicit set of primitive corpus types, so
+  unions remain unsupported. Build-configuration generators, AST/code
+  generators, and compiler diagnostics inspect their own fixed struct types,
+  not arbitrary application values. Reflection over their ordinary structs
+  retains its existing behavior. Vendored third-party walkers are outside
+  this standard-library audit.

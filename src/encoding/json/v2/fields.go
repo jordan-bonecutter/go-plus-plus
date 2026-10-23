@@ -141,7 +141,7 @@ func makeStructFields(root reflect.Type) (fs structFields, serr *SemanticError) 
 				typ:          sf.Type,
 				fieldOptions: options,
 			}
-			if sf.Anonymous && !f.hasName {
+			if sf.Anonymous && !f.hasName && indirectType(f.typ).Kind() != reflect.Union {
 				if indirectType(f.typ).Kind() != reflect.Struct {
 					serr = orErrorf(serr, t, "embedded Go struct field %s of non-struct type must be explicitly given a JSON name", sf.Name)
 				} else {

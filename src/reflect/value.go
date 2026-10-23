@@ -1702,10 +1702,10 @@ func (v Value) IsZero() bool {
 		return v.IsNil()
 	case String:
 		return v.Len() == 0
+	case Union:
+		payload, index, _ := v.unionPayload()
+		return index == 0 && payload.IsZero()
 	case Struct:
-		if payload, index, ok := v.unionPayload(); ok {
-			return index == 0 && payload.IsZero()
-		}
 		if v.flag&flagIndir == 0 {
 			return v.ptr == nil
 		}
@@ -1832,7 +1832,7 @@ func (v Value) SetZero() {
 		*(*abi.EmptyInterface)(v.ptr) = abi.EmptyInterface{}
 	case Chan, Func, Map, Pointer, UnsafePointer:
 		*(*unsafe.Pointer)(v.ptr) = nil
-	case Array, Struct:
+	case Array, Struct, Union:
 		typedmemclr(v.typ(), v.ptr)
 	default:
 		// This should never happen, but will act as a safeguard for later,
@@ -3236,7 +3236,7 @@ func (v Value) Comparable() bool {
 			return false
 		}
 		switch v.Type().Elem().Kind() {
-		case Interface, Array, Struct:
+		case Interface, Array, Struct, Union:
 			for i := 0; i < v.Type().Len(); i++ {
 				if !v.Index(i).Comparable() {
 					return false
@@ -3249,10 +3249,10 @@ func (v Value) Comparable() bool {
 	case Interface:
 		return v.IsNil() || v.Elem().Comparable()
 
+	case Union:
+		payload, _, _ := v.unionPayload()
+		return v.Type().Comparable() && payload.Comparable()
 	case Struct:
-		if payload, _, ok := v.unionPayload(); ok {
-			return v.Type().Comparable() && payload.Comparable()
-		}
 		for _, value := range v.Fields() {
 			if !value.Comparable() {
 				return false
@@ -3324,14 +3324,13 @@ func (v Value) Equal(u Value) bool {
 			}
 		}
 		return true
-	case Struct:
-		if _, _, ok := v.unionPayload(); ok {
-			eq := v.typ().Equal
-			if eq == nil {
-				break
-			}
-			return eq(v.ptr, u.ptr)
+	case Union:
+		eq := v.typ().Equal
+		if eq == nil {
+			break
 		}
+		return eq(v.ptr, u.ptr)
+	case Struct:
 		// u and v have the same type so they have the same fields
 		nf := v.NumField()
 		for i := 0; i < nf; i++ {
@@ -3867,7 +3866,7 @@ func (v Value) unionPayload() (Value, uintptr, bool) {
 // that cannot be accessed through Interface. The returned payload is a copy
 // and is not addressable; subsequent replacement of v does not change it.
 func (v Value) Variant() (string, Value) {
-	if v.Kind() != Struct {
+	if v.Kind() != Union {
 		return "", Value{}
 	}
 	payload, index, ok := v.unionPayload()
@@ -3914,13 +3913,15 @@ func (v Value) SetVariant(name string, x Value) {
 	// Set checks assignability and visibility before changing the destination.
 	payload := New(variant.Type).Elem()
 	payload.Set(x)
-	anchor := unionAnchor(payload.Addr().Interface())
 	result := New(v.Type()).Elem()
 	memmove(result.ptr, payload.ptr, payload.typ().Size())
 	st := (*abi.StructType)(unsafe.Pointer(v.typ()))
-	*(*unsafe.Pointer)(add(result.ptr, st.Fields[1].Offset, "union anchor")) = anchor
-	tag := result.Field(2)
-	tag.flag &^= flagRO
+	if st.Fields[1].Typ.Pointers() {
+		anchor := unionAnchor(payload.Addr().Interface())
+		*(*unsafe.Pointer)(add(result.ptr, st.Fields[1].Offset, "union anchor")) = anchor
+	}
+	tagType := st.Fields[2].Typ
+	tag := Value{tagType, add(result.ptr, st.Fields[2].Offset, "union tag"), flag(tagType.Kind()) | flagIndir | flagAddr}
 	tag.SetUint(uint64(variant.Index))
 	v.Set(result)
 	runtime.KeepAlive(payload)

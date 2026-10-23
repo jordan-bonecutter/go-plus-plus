@@ -40,8 +40,7 @@ import (
 // so they can be used as map keys.
 // Two Type values are equal if they represent identical types.
 type Type interface {
-	// IsUnion reports whether this type is a tagged union. Tagged unions
-	// currently have Kind Struct; their representation fields are private.
+	// IsUnion reports whether this type has Kind Union.
 	IsUnion() bool
 
 	// NumVariant returns the number of declared variants.
@@ -342,6 +341,7 @@ const (
 	String
 	Struct
 	UnsafePointer
+	Union
 )
 
 // Ptr is the old name for the [Pointer] kind.
@@ -540,6 +540,7 @@ var kindNames = []string{
 	Slice:         "slice",
 	String:        "string",
 	Struct:        "struct",
+	Union:         "union",
 	UnsafePointer: "unsafe.Pointer",
 }
 
@@ -1716,7 +1717,7 @@ func haveIdenticalUnderlyingType(T, V *abi.Type, cmpTags bool) bool {
 	case Pointer, Slice:
 		return haveIdenticalType(T.Elem(), V.Elem(), cmpTags)
 
-	case Struct:
+	case Struct, Union:
 		t := (*structType)(unsafe.Pointer(T))
 		v := (*structType)(unsafe.Pointer(V))
 		if len(t.Fields) != len(v.Fields) {
@@ -2087,6 +2088,15 @@ func isReflexive(t *abi.Type) bool {
 	case Array:
 		tt := (*arrayType)(unsafe.Pointer(t))
 		return isReflexive(tt.Elem)
+	case Union:
+		data := unionType(t)
+		for _, f := range data.Fields {
+			payload := (*arrayType)(unsafe.Pointer(f.Typ)).Elem
+			if !isReflexive(payload) {
+				return false
+			}
+		}
+		return true
 	case Struct:
 		tt := (*structType)(unsafe.Pointer(t))
 		for _, f := range tt.Fields {
@@ -2114,6 +2124,15 @@ func needKeyUpdate(t *abi.Type) bool {
 	case Array:
 		tt := (*arrayType)(unsafe.Pointer(t))
 		return needKeyUpdate(tt.Elem)
+	case Union:
+		data := unionType(t)
+		for _, f := range data.Fields {
+			payload := (*arrayType)(unsafe.Pointer(f.Typ)).Elem
+			if needKeyUpdate(payload) {
+				return true
+			}
+		}
+		return false
 	case Struct:
 		tt := (*structType)(unsafe.Pointer(t))
 		for _, f := range tt.Fields {
@@ -2136,6 +2155,15 @@ func hashMightPanic(t *abi.Type) bool {
 	case Array:
 		tt := (*arrayType)(unsafe.Pointer(t))
 		return hashMightPanic(tt.Elem)
+	case Union:
+		data := unionType(t)
+		for _, f := range data.Fields {
+			payload := (*arrayType)(unsafe.Pointer(f.Typ)).Elem
+			if hashMightPanic(payload) {
+				return true
+			}
+		}
+		return false
 	case Struct:
 		tt := (*structType)(unsafe.Pointer(t))
 		for _, f := range tt.Fields {
@@ -2672,7 +2700,7 @@ func runtimeStructField(field StructField) (structField, string) {
 // keep in sync with ../cmd/compile/internal/reflectdata/reflect.go
 func typeptrdata(t *abi.Type) uintptr {
 	switch t.Kind() {
-	case abi.Struct:
+	case abi.Struct, abi.Union:
 		st := (*structType)(unsafe.Pointer(t))
 		// find the last field that has pointers.
 		field := -1
@@ -2991,7 +3019,7 @@ func addTypeBits(bv *bitVector, offset uintptr, t *abi.Type) {
 			addTypeBits(bv, offset+uintptr(i)*tt.Elem.Size_, tt.Elem)
 		}
 
-	case Struct:
+	case Struct, Union:
 		// apply fields
 		tt := (*structType)(unsafe.Pointer(t))
 		for i := range tt.Fields {
@@ -3013,7 +3041,7 @@ type UnionVariant struct {
 func (v UnionVariant) IsExported() bool { return v.PkgPath == "" }
 
 func unionType(t *abi.Type) *abi.StructType {
-	if t.Kind() != abi.Struct {
+	if t.Kind() != abi.Union {
 		return nil
 	}
 	st := (*abi.StructType)(unsafe.Pointer(t))
@@ -3023,7 +3051,7 @@ func unionType(t *abi.Type) *abi.StructType {
 	return (*abi.StructType)(unsafe.Pointer(st.Fields[0].Typ))
 }
 
-func (t *rtype) IsUnion() bool { return unionType(t.common()) != nil }
+func (t *rtype) IsUnion() bool { return t.Kind() == Union }
 
 func (t *rtype) NumVariant() int {
 	data := unionType(t.common())

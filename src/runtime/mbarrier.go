@@ -378,6 +378,9 @@ func typedmemclr(typ *_type, ptr unsafe.Pointer) {
 //
 //go:linkname reflect_typedmemclr reflect.typedmemclr
 func reflect_typedmemclr(typ *_type, ptr unsafe.Pointer) {
+	if raceenabled {
+		raceWriteObjectPC(typ, ptr, sys.GetCallerPC(), abi.FuncPCABIInternal(reflect_typedmemclr))
+	}
 	typedmemclr(typ, ptr)
 }
 
